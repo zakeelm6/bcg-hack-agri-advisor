@@ -1,0 +1,9 @@
+{
+  "name": "Farm Advisor",
+  "short_name": "Farm Advisor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6EAD4",
+  "theme_color": "#31572C",
+  "icons": [{ "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

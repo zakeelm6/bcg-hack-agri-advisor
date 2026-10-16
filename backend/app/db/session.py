@@ -1,0 +1,58 @@
+"""Engine, sessions and database start-up (migrations, then demo data on a new database)."""
+import os
+from contextlib import contextmanager
+
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine, inspect
+from sqlalchemy.orm import Session, sessionmaker
+
+from ..core.config import BACKEND_DIR, settings
+
+_url = settings.sqlalchemy_url
+engine = create_engine(_url, connect_args={"check_same_thread": False} if _url.startswith("sqlite") else {}, future=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+
+
+def get_db():
+    """FastAPI dependency: one session per request."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@contextmanager
+def session_scope():
+    """For code that runs outside a request (start-up, scripts)."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def _alembic_config(url: str) -> Config:
+    cfg = Config(os.path.join(BACKEND_DIR, "alembic.ini"))
+    cfg.set_main_option("script_location", os.path.join(BACKEND_DIR, "migrations"))
+    cfg.set_main_option("sqlalchemy.url", url.replace("%", "%%"))
+    return cfg
+
+
+def run_migrations(url: str | None = None):
+    """Brings the database to the latest schema. A database created before migrations existed is adopted, not rebuilt."""
+    url = url or _url
+    eng = engine if url == _url else create_engine(url)
+    names = set(inspect(eng).get_table_names())
+    cfg = _alembic_config(url)
+    if "fields" in names and "alembic_version" not in names:
+        command.stamp(cfg, "0001")
+    command.upgrade(cfg, "head")
+
+
+def init_db():
+    from .seed import seed_demo_data
+    run_migrations()
+    with session_scope() as db:
+        seed_demo_data(db)

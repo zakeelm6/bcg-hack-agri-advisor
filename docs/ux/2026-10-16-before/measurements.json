@@ -1,0 +1,2819 @@
+{
+ "phone-en-home": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-field": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "A",
+    "w": 42,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "B",
+    "w": 41,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "C",
+    "w": 43,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "D",
+    "w": 43,
+    "h": 48
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-tasks": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day today ",
+    "txt": "F16",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "S17",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "S18",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "M19",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "T20",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "W21",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "T22",
+    "w": 43,
+    "h": 64
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-task": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Why",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Cost",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Plan B",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "How sure",
+    "w": 298,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-follow": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-soil": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-alerts": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-sell": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Notes",
+    "w": 298,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-me": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-about": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-console": [],
+ "desktop-en-home": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-field": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "A",
+    "w": 42,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "B",
+    "w": 41,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "C",
+    "w": 43,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "D",
+    "w": 43,
+    "h": 48
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-tasks": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-task": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Why",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Cost",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Plan B",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "How sure",
+    "w": 714,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-follow": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-soil": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-alerts": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-sell": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Notes",
+    "w": 714,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-me": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-about": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-console": [],
+ "phone-fr-home": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-field": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "A",
+    "w": 42,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "B",
+    "w": 41,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "C",
+    "w": 43,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "D",
+    "w": 43,
+    "h": 48
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-tasks": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day today ",
+    "txt": "V16",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "S17",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "D18",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "L19",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "M20",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "M21",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "J22",
+    "w": 43,
+    "h": 64
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-task": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Pourquoi",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Coût",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Plan B",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Degré de certitude",
+    "w": 298,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-follow": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-soil": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-alerts": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-sell": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Notes",
+    "w": 298,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-me": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-about": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-console": [],
+ "desktop-fr-home": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-field": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "A",
+    "w": 42,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "B",
+    "w": 41,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "C",
+    "w": 43,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "D",
+    "w": 43,
+    "h": 48
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-tasks": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-task": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Pourquoi",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Coût",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Plan B",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Degré de certitude",
+    "w": 714,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-follow": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-soil": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-alerts": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-sell": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "Notes",
+    "w": 714,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-me": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-about": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-console": [],
+ "phone-ar-home": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-field": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "A",
+    "w": 42,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "B",
+    "w": 41,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "C",
+    "w": 43,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "D",
+    "w": 43,
+    "h": 48
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-tasks": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day today ",
+    "txt": "ج16",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "س17",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "ح18",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "ن19",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "ث20",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "ر21",
+    "w": 43,
+    "h": 64
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "day  ",
+    "txt": "خ22",
+    "w": 43,
+    "h": 64
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-task": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "لماذا",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "التكلفة",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "الخطة البديلة",
+    "w": 298,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "درجة التأكد",
+    "w": 298,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-follow": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-soil": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-alerts": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-sell": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "ملاحظات",
+    "w": 298,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-me": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-about": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 150,
+    "h": 26
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-console": [],
+ "desktop-ar-home": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-field": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "A",
+    "w": 42,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "B",
+    "w": 41,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "C",
+    "w": 43,
+    "h": 48
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "chip on",
+    "txt": "D",
+    "w": 43,
+    "h": 48
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-tasks": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-task": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "لماذا",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "التكلفة",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "الخطة البديلة",
+    "w": 714,
+    "h": 32
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "درجة التأكد",
+    "w": 714,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-follow": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-soil": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-alerts": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-sell": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "SUMMARY",
+    "cls": "",
+    "txt": "ملاحظات",
+    "w": 714,
+    "h": 32
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-me": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-about": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "A",
+    "cls": "brand",
+    "txt": "Farm Advisor",
+    "w": 168,
+    "h": 29
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "EN",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "",
+    "txt": "FR",
+    "w": 44,
+    "h": 36
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "on",
+    "txt": "عربي",
+    "w": 50,
+    "h": 36
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-console": []
+}
