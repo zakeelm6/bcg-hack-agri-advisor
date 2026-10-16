@@ -116,11 +116,12 @@ function Onboarding() {
           </button>
         ))}
       </div>
-      <h1 className="mt-10 font-serif text-4xl leading-tight md:text-5xl">{t("headline")}</h1>
+      <img src="/images/field-drip.webp" alt="" width={960} height={640} className="mt-6 aspect-[16/9] w-full rounded-2xl object-cover" />
+      <h1 className="mt-8 font-serif text-4xl leading-tight md:text-5xl">{t("headline")}</h1>
       <ul className="mt-8 space-y-4 text-lg">
         <li className="flex items-center gap-4"><Feature name="mic" />{t("feat1")}</li>
-        <li className="flex items-center gap-4"><Feature name="cloud-sun" />{t("feat2")}</li>
-        <li className="flex items-center gap-4"><Feature name="tasks-done" />{t("feat3")}</li>
+        <li className="flex items-center gap-4"><Feature name="field-sun" />{t("feat2")}</li>
+        <li className="flex items-center gap-4"><Feature name="growth-time" />{t("feat3")}</li>
       </ul>
       <div className="mt-auto pt-10 md:mt-12">
         <button className="btn w-full py-4 text-lg" onClick={() => setStep(0)}>{t("getStarted")}</button>

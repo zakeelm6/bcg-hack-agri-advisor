@@ -3,17 +3,10 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { askCopilot } from "@/lib/copilot";
-import { today, uid, useFarm, useT, type Advice } from "@/lib/farm";
-import type { Key } from "@/lib/i18n";
+import { today, uid, useFarm, useT, useTx, type Advice } from "@/lib/farm";
 import { Icon } from "@/lib/icons";
+import { PhotoCardBody, photoCard, starters } from "@/lib/starters";
 import { canListen, canSpeak, listen, speak, stopSpeaking } from "@/lib/voice";
-
-const starters: { icon: string; title: Key; q: Key }[] = [
-  { icon: "drip", title: "starterWater", q: "askIrrigate" },
-  { icon: "bug", title: "starterSick", q: "starterSickQ" },
-  { icon: "coins", title: "starterCosts", q: "starterCostsQ" },
-  { icon: "tasks", title: "starterToday", q: "askWhatQ" },
-];
 
 export default function Page() {
   return <Suspense><CoPilot /></Suspense>;
@@ -22,9 +15,11 @@ export default function Page() {
 function CoPilot() {
   const farm = useFarm();
   const t = useT();
-  const prefill = useSearchParams().get("q") ?? ""; // from shortcuts on other pages
+  const params = useSearchParams();
+  const prefill = params.get("q") ?? ""; // from shortcuts on other pages
+  const autoAsk = params.has("ask"); // My Farm photo cards: send straight away
   const [text, setText] = useState(prefill);
-  const [typing, setTyping] = useState(!!prefill || !canListen()); // voice first; keyboard on request or when there's no mic support
+  const [typing, setTyping] = useState((!!prefill && !autoAsk) || !canListen()); // voice first; keyboard on request or when there's no mic support
   const [photo, setPhoto] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -34,6 +29,10 @@ function CoPilot() {
 
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [farm.messages.length, busy]);
   useEffect(() => stopSpeaking, []);
+  const asked = useRef(false); // guards the double effect run in dev
+  useEffect(() => {
+    if (autoAsk && prefill && !asked.current) { asked.current = true; send(prefill); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function send(q = text) {
     if ((!q.trim() && !photo) || busy) return;
@@ -80,15 +79,13 @@ function CoPilot() {
           <h1 className="font-serif text-[2rem] leading-tight md:text-5xl">{t("copilotHello")}</h1>
           <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {starters.map((s) => (
-              <button key={s.title} onClick={() => send(t(s.q))} className="card flex flex-col items-center gap-2 py-5 text-center active:scale-[.98]">
-                <Icon name={s.icon} className="h-9 w-9 text-leaf" />
-                <span className="text-lg font-medium">{t(s.title)}</span>
-              </button>
+              <button key={s.title} onClick={() => send(t(s.q))} className={photoCard}><PhotoCardBody s={s} label={t(s.title)} /></button>
             ))}
           </div>
         </section>
       ) : (
         <div className="space-y-4 pt-2">
+          <button type="button" onClick={() => { stopSpeaking(); farm.clearMessages(); }} className="text-muted underline underline-offset-4">{t("newChat")}</button>
           {farm.messages.map((m) =>
             m.role === "user" ? (
               <div key={m.id} className="ms-auto w-fit max-w-[85%] rounded-2xl rounded-ee-sm bg-leaf px-4 py-3 text-lg text-white md:max-w-[75%]">
@@ -160,6 +157,7 @@ function PhotoButton({ label, onPick, small }: { label: string; onPick: (f?: Fil
 function AdviceCard({ advice, autoPlay }: { advice: Advice; autoPlay: boolean }) {
   const { addTask, lang } = useFarm();
   const t = useT();
+  const x = useTx(); // stored answers are translated at display time
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -167,14 +165,14 @@ function AdviceCard({ advice, autoPlay }: { advice: Advice; autoPlay: boolean })
 
   function play() {
     setSpeaking(true);
-    speak([advice.recommendation, ...steps].join(". "), lang, () => setSpeaking(false));
+    speak([advice.recommendation, ...steps].map(x).join(". "), lang, () => setSpeaking(false));
   }
   useEffect(() => { if (autoPlay) play(); }, [autoPlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <article className="card space-y-4">
       <div className="flex items-start gap-2">
-        <p className="flex-1 font-serif text-xl leading-snug">{advice.recommendation}</p>
+        <p className="flex-1 font-serif text-xl leading-snug">{x(advice.recommendation)}</p>
         {canSpeak() && (
           <button type="button" onClick={() => (speaking ? (stopSpeaking(), setSpeaking(false)) : play())}
             aria-label={speaking ? t("stop") : t("readAloud")} aria-pressed={speaking}
@@ -185,16 +183,16 @@ function AdviceCard({ advice, autoPlay }: { advice: Advice; autoPlay: boolean })
       </div>
       <ol className="space-y-3">
         {steps.map((s, i) => (
-          <li key={s} className="flex items-start gap-3 text-lg leading-snug">
+          <li key={i} className="flex items-start gap-3 text-lg leading-snug">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-leaf-soft text-leaf"><Icon name={advice.icons?.[i] ?? "check"} className="h-5 w-5" /></span>
-            <span className="pt-1.5">{s}</span>
+            <span className="pt-1.5">{x(s)}</span>
           </li>
         ))}
       </ol>
       <details className="text-muted">
         <summary className="cursor-pointer py-1">{t("why")}</summary>
-        <p className="mt-1 leading-relaxed">{advice.why}</p>
-        {advice.missing.length > 0 && <p className="mt-1"><span className="font-medium text-sun">{t("missing")}</span> {advice.missing.join(", ")}</p>}
+        <p className="mt-1 leading-relaxed">{x(advice.why)}</p>
+        {advice.missing.length > 0 && <p className="mt-1"><span className="font-medium text-sun">{t("missing")}</span> {advice.missing.map(x).join(", ")}</p>}
       </details>
       {saved ? (
         <p className="font-medium text-leaf">{t("savedTask")}</p>

@@ -1,5 +1,5 @@
 import { daysSince, type Activity, type Advice, type Profile, type Task } from "./farm";
-import { cropName, tr, type Key, type Lang } from "./i18n";
+import { crops, type Key, type Lang, type Text } from "./i18n";
 
 export type Context = { profile: Profile; activities: Activity[]; tasks: Task[] };
 
@@ -18,24 +18,27 @@ export async function askCopilot(question: string, photo: string | undefined, ct
     return res.json();
   }
   await new Promise((r) => setTimeout(r, 700));
-  return mockAdvice(question, !!photo, ctx, lang);
+  return mockAdvice(question, !!photo, ctx);
 }
 
-// ponytail: keyword matching in en/fr/ar, not reasoning. Replaced entirely by the LLM backend.
+// ponytail: keyword matching in en/fr/ar, not reasoning.
+// Answers are dictionary references (Text), translated when shown, so they follow later language switches. Replaced entirely by the LLM backend.
 const PEST = /leaf|leaves|yellow|spot|pest|disease|insect|wilt|problem|sick|feuille|jaun|tache|malad|insecte|ورق|أوراق|تصفر|اصفر|مرض|حشر|بقع/;
 const WATER = /irrigat|water|arros|eau|سقي|أسقي|ماء/;
 const TASKS = /task|today|plan|to do|todo|tâche|aujourd|faire|مهم|اليوم|أفعل/;
 const COST = /cost|expense|spend|money|profit|price|coût|dépens|argent|prix|مصاريف|مصروف|تكلف|مال|ثمن|سعر/;
 const FERT = /fertili[sz]|nitrogen|npk|manure|nutrient|engrais|fumier|سماد|أسمدة/;
 
-export function mockAdvice(q: string, hasPhoto: boolean, { profile: p, activities, tasks }: Context, lang: Lang): Advice {
-  const t = (k: Key, v?: Record<string, string | number>) => tr(lang, k, v);
+export function mockAdvice(q: string, hasPhoto: boolean, { profile: p, activities, tasks }: Context): Advice {
+  const t = (k: Key, v?: Record<string, Text | number>): Text => ({ k, v });
   const text = q.toLowerCase();
-  const crop = p.crop ? cropName(lang, p.crop).toLowerCase() : t("yourCrop");
+  const known = crops.some((c) => c.id === p.crop);
+  const crop: Text = !p.crop ? t("yourCrop") : known ? { k: `crop_${p.crop}` as Key, low: true } : p.crop.toLowerCase();
+  const Crop: Text = !p.crop ? t("yourCrop") : known ? t(`crop_${p.crop}` as Key) : p.crop.charAt(0).toUpperCase() + p.crop.slice(1);
   const age = p.plantedOn ? t("weeksAfter", { n: Math.floor(daysSince(p.plantedOn) / 7) }) : t("unknownStage");
   const ago = (d: string) => { const n = daysSince(d); return n === 0 ? t("ago_0") : n === 1 ? t("ago_1") : t("agoN", { n }); };
   const last = (type: Activity["type"]) => activities.find((a) => a.type === type);
-  const missing: string[] = [];
+  const missing: Text[] = [];
   if (!p.crop) missing.push(t("m_crop"));
   if (!p.plantedOn) missing.push(t("m_planted"));
   if (!p.irrigation) missing.push(t("m_irrigation"));
@@ -44,9 +47,9 @@ export function mockAdvice(q: string, hasPhoto: boolean, { profile: p, activitie
     const treat = last("treatment");
     return {
       recommendation: t("pestRec", { crop }),
-      why: t("pestWhy", { src: t(hasPhoto ? "src_photo" : "src_desc") }) + (treat ? t("pestWhyTreat", { when: ago(treat.date) }) : ""),
+      why: [t("pestWhy", { src: t(hasPhoto ? "src_photo" : "src_desc") }), treat ? t("pestWhyTreat", { when: ago(treat.date) }) : ""],
       steps: [t("pest1"), t("pest2"), t("pest3")],
-      icons: ["search", "bug", "chat"],
+      icons: ["search", "no-pest", "care"],
       missing: [...missing, t(hasPhoto ? "m_photoUnder" : "m_photo")],
     };
   }
@@ -85,13 +88,12 @@ export function mockAdvice(q: string, hasPhoto: boolean, { profile: p, activitie
       recommendation: t("fertRec", { crop }),
       why: t("fertWhy", { age }),
       steps: [t("fert1"), t("fert2"), t("fert3")],
-      icons: ["shovel", "lab", "chat"],
+      icons: ["rake", "soil-test", "chat"],
       missing: [...missing, t("m_soilTest")],
     };
   }
   // Default: watering, the most common daily decision.
   const irr = last("irrigation");
-  const Crop = crop.charAt(0).toUpperCase() + crop.slice(1);
   return {
     recommendation: irr && daysSince(irr.date) <= 1 ? t("irrRecHold", { when: ago(irr.date) }) : t("irrRecCheck", { crop }),
     why: irr ? t("irrWhyHas", { when: ago(irr.date), crop: Crop, age }) : t("irrWhyNone", { crop: Crop, age }),

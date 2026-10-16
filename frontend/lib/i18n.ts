@@ -68,6 +68,7 @@ const S = {
   ch_yield: ["Harvest", "La récolte", "المحصول"],
 
   // My Farm
+  myField: ["My field", "Mon champ", "حقلي"],
   weekN: ["Week {n} since planting", "Semaine {n} depuis la plantation", "الأسبوع {n} منذ الزراعة"],
   plantingUnknown: ["Planting time not set", "Date de plantation inconnue", "وقت الزراعة غير محدد"],
   edit: ["Edit", "Modifier", "تعديل"],
@@ -128,6 +129,7 @@ const S = {
   readAloud: ["Read aloud", "Lire à voix haute", "اقرأ بصوت عالٍ"],
   saveTask: ["Save as a task", "Enregistrer comme tâche", "احفظها كمهمة"],
   savedTask: ["Saved on My Farm", "Enregistré dans Ma ferme", "حُفظت في مزرعتي"],
+  newChat: ["New conversation", "Nouvelle conversation", "محادثة جديدة"],
   forWhen: ["For when?", "Pour quand ?", "متى؟"],
 
   // Mock co-pilot answers (lib/copilot.ts)
@@ -192,6 +194,17 @@ export function tr(lang: Lang, key: Key, vars: Record<string, string | number> =
   return S[key][idx[lang]].replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
 }
 
+// Text that is stored (advice, tasks) and must follow later language switches: a plain string (farmer's own words,
+// or a backend answer already in the asked language), a dictionary reference translated at display time, or a list joined.
+export type Text = string | Text[] | { k: Key; v?: Record<string, Text | number>; low?: boolean };
+export function tx(lang: Lang, x: Text): string {
+  if (typeof x === "string") return x;
+  if (Array.isArray(x)) return x.map((y) => tx(lang, y)).join("");
+  const vars = Object.fromEntries(Object.entries(x.v ?? {}).map(([k, v]) => [k, typeof v === "number" ? v : tx(lang, v)]));
+  const s = tr(lang, x.k, vars);
+  return x.low ? s.toLowerCase() : s; // low: crop names inside a sentence ("vos tomates")
+}
+
 // Picture-first choices. Stored values stay stable English keys so saved data survives a language switch.
 export const crops = [
   { id: "tomatoes", icon: "tomato" }, { id: "wheat", icon: "wheat" }, { id: "olives", icon: "olive" }, { id: "potatoes", icon: "potato" },
@@ -202,8 +215,8 @@ export const cropName = (lang: Lang, crop: string) =>
   crops.some((c) => c.id === crop) ? tr(lang, `crop_${crop}` as Key) : crop;
 
 export const plantedChoices = [
-  { weeks: 0, key: "planted_0", icon: "sprout" }, { weeks: 3, key: "planted_3", icon: "seedling" },
-  { weeks: 6, key: "planted_6", icon: "shrub" }, { weeks: 14, key: "planted_14", icon: "tree" },
+  { weeks: 0, key: "planted_0", icon: "sowing" }, { weeks: 3, key: "planted_3", icon: "sprout" },
+  { weeks: 6, key: "planted_6", icon: "seedlings" }, { weeks: 14, key: "planted_14", icon: "growth-time" },
 ] as const;
 
 export const irrigations = [
@@ -211,11 +224,11 @@ export const irrigations = [
   { id: "flood / furrow", key: "irr_flood", icon: "flood" }, { id: "rain-fed", key: "irr_rain", icon: "rain" },
 ] as const;
 export const challenges = [
-  { id: "water", key: "ch_water", icon: "water" }, { id: "crop health", key: "ch_health", icon: "bug" },
-  { id: "costs", key: "ch_costs", icon: "coins" }, { id: "yield", key: "ch_yield", icon: "basket" },
+  { id: "water", key: "ch_water", icon: "water" }, { id: "crop health", key: "ch_health", icon: "no-pest" },
+  { id: "costs", key: "ch_costs", icon: "coins" }, { id: "yield", key: "ch_yield", icon: "wheelbarrow" },
 ] as const;
 export const activityTypes = [
   { id: "irrigation", key: "act_irrigation", icon: "drip" }, { id: "treatment", key: "act_treatment", icon: "spray" },
-  { id: "planting", key: "act_planting", icon: "sprout" }, { id: "expense", key: "act_expense", icon: "coins" },
-  { id: "other", key: "act_other", icon: "shovel" },
+  { id: "planting", key: "act_planting", icon: "sowing" }, { id: "expense", key: "act_expense", icon: "coins" },
+  { id: "other", key: "act_other", icon: "rake" },
 ] as const;

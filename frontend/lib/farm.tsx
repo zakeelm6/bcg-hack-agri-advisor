@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { tr, type Key, type Lang } from "./i18n";
+import { tr, tx, type Key, type Lang, type Text } from "./i18n";
 
 export type Challenge = "water" | "crop health" | "costs" | "yield";
 export type Profile = {
@@ -14,10 +14,10 @@ export type Profile = {
   lat?: number; // from "Use my location"; weather uses these over the town name
   lon?: number;
 };
-export type Task = { id: string; title: string; due: string; done: boolean };
+export type Task = { id: string; title: Text; due: string; done: boolean };
 export type ActivityType = "irrigation" | "treatment" | "planting" | "expense" | "other";
 export type Activity = { id: string; type: ActivityType; date: string; note: string; cost?: number };
-export type Advice = { recommendation: string; why: string; steps: string[]; missing: string[]; icons?: string[] }; // icons[i] pictures steps[i]
+export type Advice = { recommendation: Text; why: Text; steps: Text[]; missing: Text[]; icons?: string[] }; // icons[i] pictures steps[i]
 export type Message =
   | { id: string; role: "user"; text: string; photo?: string }
   | { id: string; role: "ai"; text?: string; advice?: Advice };
@@ -60,7 +60,7 @@ function useFarmState() {
     ...s,
     setLang: (lang: Lang) => set({ lang }),
     saveProfile: (profile: Profile) => set({ profile }),
-    addTask: (title: string, due: string) => set({ tasks: [{ id: uid(), title, due, done: false }, ...s.tasks] }),
+    addTask: (title: Text, due: string) => set({ tasks: [{ id: uid(), title, due, done: false }, ...s.tasks] }),
     toggleTask: (id: string) => set({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }),
     logActivity: (a: Omit<Activity, "id">) => {
       const id = uid();
@@ -69,6 +69,7 @@ function useFarmState() {
     },
     removeActivity: (id: string) => set({ activities: s.activities.filter((a) => a.id !== id) }),
     addMessages: (...m: Message[]) => setState((prev) => ({ ...(prev ?? empty), messages: [...(prev ?? empty).messages, ...m] })),
+    clearMessages: () => set({ messages: [] }),
     reset: () => setState(empty),
   };
 }
@@ -82,4 +83,8 @@ export const useFarm = () => useContext(Ctx)!;
 export function useT() {
   const { lang } = useFarm();
   return (key: Key, vars?: Record<string, string | number>) => tr(lang, key, vars);
+}
+export function useTx() {
+  const { lang } = useFarm();
+  return (x: Text) => tx(lang, x);
 }

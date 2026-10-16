@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { daysSince, today, useFarm, useT, type Profile, type Task } from "@/lib/farm";
+import { daysSince, today, useFarm, useT, useTx, type Profile, type Task } from "@/lib/farm";
 import { activityTypes, cropIcon, cropName, irrigations } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
+import { PhotoCardBody, photoCard, starters } from "@/lib/starters";
 
 type Weather = { place: string; temp: number; days: { date: string; max: number; min: number; rain: number; code: number }[] };
 
 // Open-Meteo: free, keyless. Uses GPS coordinates when the farmer shared them, else geocodes the town name.
-async function getWeather(p: Profile): Promise<Weather | null> {
+async function getWeather(p: Profile, lang: string): Promise<Weather | null> {
   let lat = p.lat, lon = p.lon, place = p.location;
   if (lat === undefined || lon === undefined) {
-    const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&name=${encodeURIComponent(p.location.split(",")[0])}`).then((r) => r.json());
+    const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=${lang}&name=${encodeURIComponent(p.location.split(",")[0])}`).then((r) => r.json());
     const g = geo.results?.[0];
     if (!g) return null;
     ({ latitude: lat, longitude: lon } = g);
@@ -30,19 +31,20 @@ async function getWeather(p: Profile): Promise<Weather | null> {
 }
 
 // WMO weather codes → a picture anyone can read.
-const sky = (c: number) => c === 0 ? "sun" : c <= 2 ? "cloud-sun" : c === 3 ? "cloud" : c <= 48 ? "fog" : c <= 67 || (c >= 80 && c <= 82) ? "rain" : c <= 86 ? "snow" : "storm";
+const sky = (c: number) => c === 0 ? "field-sun" : c <= 2 ? "cloud-sun" : c === 3 ? "cloud" : c <= 48 ? "fog" : c <= 67 || (c >= 80 && c <= 82) ? "rain" : c <= 86 ? "snow" : "storm";
 
 export default function MyFarm() {
   const { profile: p, tasks, activities, toggleTask, lang } = useFarm();
   const t = useT();
+  const tx = useTx();
   const [weather, setWeather] = useState<Weather | null | "error">();
   const day = (d: string, o: Intl.DateTimeFormatOptions) => new Date(`${d}T00:00`).toLocaleDateString(lang, o);
   const short = (d: string) => day(d, { month: "short", day: "numeric" });
   const rain = (mm: number) => (mm > 0 ? t("rainMm", { mm }) : t("dry"));
 
   useEffect(() => {
-    if (p?.location) getWeather(p).then(setWeather, () => setWeather("error"));
-  }, [p?.location, p?.lat, p?.lon]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (p?.location) getWeather(p, lang).then(setWeather, () => setWeather("error"));
+  }, [p?.location, p?.lat, p?.lon, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const open = tasks.filter((x) => !x.done).sort((a, b) => a.due.localeCompare(b.due));
   const due = open.filter((x) => x.due <= today());
@@ -50,6 +52,7 @@ export default function MyFarm() {
   const recentlyDone = tasks.filter((x) => x.done).slice(0, 3);
   const irr = irrigations.find((i) => i.id === p?.irrigation);
   const facts = [
+    p?.crop && [cropIcon(p.crop), cropName(lang, p.crop)],
     p?.area && ["ruler", p.area.replace("ha", t("hectares"))],
     irr && [irr.icon, t(irr.key)],
     p?.location && ["pin", p.location],
@@ -60,12 +63,12 @@ export default function MyFarm() {
       <label className="flex cursor-pointer items-start gap-4 py-2.5">
         <input type="checkbox" checked={x.done} onChange={() => toggleTask(x.id)} className="mt-0.5 h-7 w-7 shrink-0 accent-leaf" />
         <span className="flex-1">
-          <span className={`block text-lg leading-snug ${x.done ? "text-muted line-through" : ""}`}>{x.title}</span>
+          <span className={`block text-lg leading-snug ${x.done ? "text-muted line-through" : ""}`}>{tx(x.title)}</span>
           <span className={`flex items-center gap-1 ${overdue ? "font-medium text-sun" : "text-muted"}`}>{overdue && <Icon name="alert" className="h-4 w-4" />}{overdue ? `${t("late")}, ${short(x.due)}` : short(x.due)}</span>
         </span>
       </label>
       {x.done && (
-        <Link href={`/activities?note=${encodeURIComponent(x.title)}`} className="mb-2 ms-11 inline-block font-medium text-leaf underline underline-offset-4">
+        <Link href={`/activities?note=${encodeURIComponent(tx(x.title))}`} className="mb-2 ms-11 inline-block font-medium text-leaf underline underline-offset-4">
           {t("recordWhat")}
         </Link>
       )}
@@ -76,9 +79,8 @@ export default function MyFarm() {
     <div className="grid gap-x-16 gap-y-12 pt-4 lg:grid-cols-2">
       <div className="space-y-12">
         <section>
-          <h1 className="flex items-center gap-4 font-serif text-5xl leading-none md:text-6xl">
-            <Icon name={cropIcon(p?.crop ?? "")} className="h-12 w-12 shrink-0 text-leaf md:h-14 md:w-14" />{p?.crop ? cropName(lang, p.crop) : t("navFarm")}
-          </h1>
+          <img src="/images/field-drip.webp" alt="" width={960} height={640} className="mb-6 aspect-[21/9] w-full rounded-2xl object-cover" />
+          <h1 className="font-serif text-5xl leading-none md:text-6xl">{t("myField")}</h1>
           <p className="mt-3 text-lg text-muted">
             {p?.plantedOn ? t("weekN", { n: Math.floor(daysSince(p.plantedOn) / 7) + 1 }) : t("plantingUnknown")}
           </p>
@@ -110,10 +112,19 @@ export default function MyFarm() {
                   </li>
                 ))}
               </ul>
-              <Link href={{ pathname: "/copilot", query: { q: t("askIrrigate") } }}
-                className="btn mt-6 inline-flex items-center gap-2"><Icon name="drip" className="h-5 w-5" />{t("askIrrigate")}</Link>
             </>
           )}
+        </section>
+
+        <section>
+          <h2 className="font-serif text-3xl">{t("askCopilot")}</h2>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {starters.map((s) => (
+              <Link key={s.title} href={{ pathname: "/copilot", query: { q: t(s.q), ask: 1 } }} className={photoCard}>
+                <PhotoCardBody s={s} label={t(s.title)} />
+              </Link>
+            ))}
+          </div>
         </section>
       </div>
 

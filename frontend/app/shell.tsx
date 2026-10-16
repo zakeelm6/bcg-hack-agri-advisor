@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useFarm, useT } from "@/lib/farm";
+import { langs } from "@/lib/i18n";
+import { Icon } from "@/lib/icons";
 
 const nav = [
   { href: "/farm", key: "navFarm", icon: "M3 11l9-7 9 7v9H3zM9 20v-6h6v6" },
@@ -12,7 +14,7 @@ const nav = [
 ] as const;
 
 export default function Shell({ children }: { children: React.ReactNode }) {
-  const { ready, profile, lang } = useFarm();
+  const { ready, profile, lang, setLang } = useFarm();
   const t = useT();
   const path = usePathname();
   const router = useRouter();
@@ -33,6 +35,16 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-3xl lg:max-w-5xl">
       <header className="flex items-center justify-between px-5 pt-5 pb-2 md:px-8 md:pt-6">
         <Link href="/" className="font-serif text-xl font-semibold text-leaf">growmate</Link>
+        {/* Language switch on every page: returning farmers never see the welcome screen's picker. */}
+        <div role="group" aria-label={t("chooseLang")} className="order-last flex items-center gap-1 text-muted md:order-none md:ms-auto md:me-4">
+          <Icon name="languages" className="h-5 w-5" />
+          {langs.map((l) => (
+            <button key={l.id} type="button" onClick={() => setLang(l.id)} aria-pressed={lang === l.id} lang={l.id}
+              className={`rounded-lg px-2.5 py-1.5 text-sm ${lang === l.id ? "bg-leaf-soft font-semibold text-leaf" : "hover:bg-card"}`}>
+              {{ ar: "عربي", fr: "FR", en: "EN" }[l.id]}
+            </button>
+          ))}
+        </div>
       {!onboarding && (
         // Phones: fixed bottom tab bar. Tablet/desktop (md+): inline in the header.
         <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-paper/95 backdrop-blur md:static md:border-0 md:bg-transparent md:backdrop-blur-none">
