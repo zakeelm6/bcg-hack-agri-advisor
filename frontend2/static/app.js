@@ -333,7 +333,7 @@ function taskScreen(id) {
         : `<div style="margin:14px 0 4px"><span class="pill ${t.status === "done" ? "dk" : "ol"}">${t.status === "done" ? "Done" : "Skipped"}</span></div>`}
       <div class="row" style="margin:10px 0 6px"><div class="meter">${[1, 2, 3].map(i => `<i class="${i <= lvl ? "" : "off"}"></i>`).join("")}</div><b style="font-size:14px">${t.confidence}</b></div>
       ${det("Why", t.why)}${det("Cost", t.cost)}${det("Plan B", t.plan_b)}${det("How sure", t.conf_reason)}</div></div>
-    <div><div class="btns"><button class="btn sec" data-cp-open="1">${ic("mic", 22)} Copilot</button>${t.confidence !== "High" ? `<button class="btn sec" data-go="#/soil/${esc(t.zone_code)}">${ic("flask", 22)} Soil test</button>` : ""}</div></div></div>` });
+    <div><div class="btns"><button class="btn sec" data-say="${t.id}">${ic("speaker", 22)} Listen</button><button class="btn sec" data-cp-open="1">${ic("mic", 22)} Copilot</button>${t.confidence !== "High" ? `<button class="btn sec" data-go="#/soil/${esc(t.zone_code)}">${ic("flask", 22)} Soil test</button>` : ""}</div></div></div>` });
 }
 
 function followScreen(id) {
@@ -437,7 +437,7 @@ function aboutScreen() {
 }
 
 /* ---------- Copilot: chat, voice in, voice out ---------- */
-const cp = { open: false, msgs: [], busy: false, status: null, listening: false, speaking: false, speak: lsGet("fa_speak", false), rec: null, voiceTurn: false, hintFixed: false };
+const cp = { open: false, msgs: [], busy: false, status: null, listening: false, speaking: false, speak: lsGet("fa_speak", false), rec: null, voiceTurn: false, hintFixed: false, speakId: 0, convo: false, silent: 0 };
 const cpTaskId = () => { const m = /^#\/(?:task|follow)\/(\d+)/.exec(location.hash); return m ? +m[1] : null; };
 const speechCtor = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 async function loadCopilotStatus() {
@@ -471,7 +471,7 @@ function cpRenderMsgs() {
   box.scrollTop = box.scrollHeight;
   translateTree(box);
 }
-const CHIPS = [["chat", "Why?"], ["shield", "Plan B?"], ["clock", "What if I wait 2 days?"], ["tasks", "My plan for today"]];
+const CHIPS = [["speaker", "Read my tasks"], ["chat", "Why?"], ["shield", "Plan B?"], ["clock", "What if I wait 2 days?"], ["tasks", "My plan for today"]];
 function cpRenderHead() {
   const b = document.getElementById("cp-badge"); if (!b) return;
   b.textContent = tt(offline ? "Offline" : cp.status ? (cp.status.mode === "model" ? "Model, checked" : "Rule engine") : "");
@@ -488,23 +488,61 @@ function cpUpdateMic() {
     mic.classList.toggle("listening", cp.listening); mic.disabled = !ok && !cp.listening;
     mic.setAttribute("aria-label", tt(cp.listening ? "Stop" : "Speak")); mic.title = !speechCtor() ? tt("Voice needs Chrome or Edge") : offline ? tt("Voice needs internet") : tt("Speak");
   }
+  const tk = document.getElementById("cp-talk"); if (tk) { tk.classList.toggle("on", cp.convo); tk.setAttribute("aria-pressed", String(cp.convo)); }
   if (sp) { sp.classList.toggle("on", cp.speak); sp.innerHTML = ic(cp.speak ? "speaker" : "mute", 20); sp.setAttribute("aria-pressed", String(cp.speak)); sp.setAttribute("aria-label", tt("Read answers aloud")); }
-  if (hint && !cp.hintFixed) hint.textContent = cp.listening ? tt("Listening...") : "";
+  if (hint && !cp.hintFixed) hint.textContent = cp.listening ? tt("Listening...") : cp.convo ? tt("Talk mode on") : "";
 }
 function cpHint(msg) { const h = document.getElementById("cp-hint"); if (h) { h.textContent = tt(msg); cp.hintFixed = true; setTimeout(() => { cp.hintFixed = false; cpUpdateMic(); }, 3500); } }
-function stopSpeaking() { try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch { /* no speech output */ } cp.speaking = false; }
-function speakText(text) {
-  if (!("speechSynthesis" in window) || !text) return;
+let voices = [];
+const loadVoices = () => { try { voices = speechSynthesis.getVoices() || []; } catch { voices = []; } };
+if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function pickVoice(code) {                           // exact language code first, then any voice of the same language
+  const norm = v => (v.lang || "").toLowerCase().replace("_", "-"), c = code.toLowerCase(), base = c.slice(0, 2);
+  const same = voices.filter(v => norm(v).startsWith(base));
+  return same.find(v => norm(v) === c) || same[0] || null;
+}
+function stopSpeaking() { cp.speakId++; try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch { /* no speech output */ } cp.speaking = false; }
+function speakText(text, done) {                     // reads sentence by sentence (long texts get cut by some browsers); done() runs after the last one
+  if (!("speechSynthesis" in window) || !text) { done && done(); return; }
   stopSpeaking();
-  const u = new SpeechSynthesisUtterance(text.replace(/[«»"*_]/g, ""));
-  u.lang = LANGS[lang].speech; u.rate = 0.95;
-  const v = (speechSynthesis.getVoices() || []).find(x => x.lang && x.lang.toLowerCase().startsWith(u.lang.slice(0, 2).toLowerCase()));
-  if (v) u.voice = v;
-  u.onend = u.onerror = () => { cp.speaking = false; };
-  cp.speaking = true; speechSynthesis.speak(u);
+  const id = ++cp.speakId, code = LANGS[lang].speech, v = pickVoice(code);
+  const parts = text.replace(/[«»"*_]/g, "").split(/(?<=[.!?؟:])\s+/).filter(p => p.trim());
+  if (voices.length && !v) cpHint("No voice for this language on this device");
+  cp.speaking = true;
+  const next = i => {
+    if (id !== cp.speakId) return;
+    if (i >= parts.length) { cp.speaking = false; done && done(); return; }
+    const u = new SpeechSynthesisUtterance(parts[i]);
+    u.lang = code; u.rate = 0.95; if (v) u.voice = v;
+    u.onend = () => next(i + 1);
+    u.onerror = () => { if (id === cp.speakId) cp.speaking = false; };
+    speechSynthesis.speak(u);
+  };
+  next(0);
+}
+/* voice commands: answered on the device, so they also work for reading the tasks while the connection is poor */
+const CMD_STOP = /^\s*(stop|be quiet|silence|arr[eê]te|tais[- ]toi|توقف|اسكت|قف)/i;
+const CMD_REPEAT = /(repeat|say (it )?again|r[ée]p[èe]te|encore une fois|أعد|كرر)/i;
+const CMD_TASKS = /(read|list|tell).*(task|to ?do)|my tasks|mes t[âa]ches|lis.*t[âa]ches|اقرأ.*مهام|مهامي/i;
+const cpListenAgain = () => { if (cp.convo) setTimeout(cpMic, 250); };
+function cpCommand(q, text) {
+  if (CMD_STOP.test(q)) { stopSpeaking(); cp.convo = false; cpUpdateMic(); cpHint("Stopped"); return true; }
+  if (CMD_REPEAT.test(q)) { const last = [...cp.msgs].reverse().find(m => m.role === "bot"); if (last) speakText(last.text, cpListenAgain); return true; }
+  if (CMD_TASKS.test(q)) {
+    cp.msgs.push({ role: "user", text }); cp.msgs.push({ role: "bot", ...localAnswer("plan for today", null) }); cpRenderMsgs();
+    speakText(cp.msgs[cp.msgs.length - 1].text, cpListenAgain); return true;
+  }
+  return false;
+}
+function cpTalk() {                                  // talk mode: the Copilot reads the tasks, then listens, answers aloud, listens again
+  if (cp.convo) { cp.convo = false; cp.rec && cp.listening && cp.rec.stop(); stopSpeaking(); cpUpdateMic(); return cpHint("Talk mode off"); }
+  if (!speechCtor()) return cpHint("Voice needs Chrome or Edge");
+  if (offline) return cpHint("Voice needs internet");
+  cp.convo = true; cp.silent = 0; cpUpdateMic(); cpHint("Talk mode on");
+  cpCommand("read my tasks", tt("Read my tasks"));
 }
 function cpMic() {                                   // browser speech recognition (Chrome and Edge send the audio to their speech service)
-  if (cp.listening) { cp.rec && cp.rec.stop(); return; }
+  if (cp.listening) { cp.convo = false; cp.rec && cp.rec.stop(); cpUpdateMic(); return; }
   const SR = speechCtor();
   if (!SR) return cpHint("Voice needs Chrome or Edge");
   if (offline) return cpHint("Voice needs internet");
@@ -513,22 +551,26 @@ function cpMic() {                                   // browser speech recogniti
   rec.lang = LANGS[lang].speech; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
   rec.onstart = () => { cp.listening = true; cpUpdateMic(); };
   rec.onresult = e => { let t = ""; for (let i = e.resultIndex; i < e.results.length; i++) { t += e.results[i][0].transcript; if (e.results[i].isFinal) finalText = t; } input.value = t; };
-  rec.onerror = e => { cpHint(e.error === "not-allowed" || e.error === "service-not-allowed" ? "Microphone is blocked" : e.error === "no-speech" ? "I heard nothing" : e.error === "network" ? "Voice needs internet" : "Voice did not work"); };
-  rec.onend = () => { cp.listening = false; cpUpdateMic(); const q = (finalText || input.value).trim(); input.value = ""; if (q) { cp.voiceTurn = true; cpSend(q); } };
+  rec.onerror = e => { if (e.error !== "no-speech" && e.error !== "aborted") cp.convo = false; cpHint(e.error === "not-allowed" || e.error === "service-not-allowed" ? "Microphone is blocked" : e.error === "no-speech" ? "I heard nothing" : e.error === "network" ? "Voice needs internet" : "Voice did not work"); };
+  rec.onend = () => { cp.listening = false; cpUpdateMic(); const q = (finalText || input.value).trim(); input.value = "";
+    if (q) { cp.silent = 0; cp.voiceTurn = true; cpSend(q); }
+    else if (cp.convo) { if (++cp.silent >= 2) { cp.convo = false; cpUpdateMic(); cpHint("Talk mode off"); } else setTimeout(cpMic, 300); } };
   cp.rec = rec;
   try { rec.start(); } catch { cpHint("Voice did not work"); }
 }
 async function cpSend(text) {
   const q = (text || "").trim(); if (!q || cp.busy) return;
   const voice = cp.voiceTurn; cp.voiceTurn = false;
-  cp.msgs.push({ role: "user", text: q }); cp.busy = true; cpRenderMsgs();
+  if (cpCommand(q, tt(q))) return;
+  cp.msgs.push({ role: "user", text: tt(q) }); cp.busy = true; cpRenderMsgs();
   let res;
   try {
     res = await fetchJson("/api/copilot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q, task_id: cpTaskId(), lang }) }, 30000);
     offline = false;
   } catch { offline = true; res = localAnswer(q, cpTaskId()); }
   cp.busy = false; cp.msgs.push({ role: "bot", ...res }); cpRenderMsgs(); cpRenderHead();
-  if (voice || cp.speak) speakText(res.text);
+  if (voice || cp.speak || cp.convo) speakText(res.text, cpListenAgain);
+  else cpListenAgain();
 }
 function cpToggle(open) {
   const panel = document.getElementById("cp-panel"), fab = document.getElementById("cp-fab");
@@ -547,7 +589,7 @@ function cpPlace() {                                 // dock the panel on the ho
 }
 const cpMarkup = () => `<button id="cp-fab" aria-label="Open the Copilot">${ic("mic", 24)}<span>Copilot</span></button>
   <section id="cp-panel" class="cp" hidden aria-label="Copilot">
-    <header><div><b>${ic("bulb", 18)} Copilot</b><small id="cp-badge"></small></div><span class="cp-tools"><button id="cp-speak" aria-label="Read answers aloud" aria-pressed="false"></button><button id="cp-close" aria-label="Close the Copilot">${ic("x", 20)}</button></span></header>
+    <header><div><b>${ic("bulb", 18)} Copilot</b><small id="cp-badge"></small></div><span class="cp-tools"><button id="cp-talk" aria-label="Talk mode" aria-pressed="false">${ic("chat", 20)}</button><button id="cp-speak" aria-label="Read answers aloud" aria-pressed="false"></button><button id="cp-close" aria-label="Close the Copilot">${ic("x", 20)}</button></span></header>
     <div id="cp-ctx" hidden></div><div id="cp-msgs" aria-live="polite"></div><div id="cp-chips"></div>
     <div class="cp-bar"><button id="cp-mic" class="mic" aria-label="Speak">${ic("mic", 30)}</button>
       <form id="cp-form" autocomplete="off"><input id="cp-input" maxlength="400" placeholder="Ask"><button type="submit" aria-label="Send">${ic("send", 22)}</button></form></div>
@@ -561,17 +603,18 @@ function cpRetext() {                                // rebuild the static texts
 function cpInit() {
   const root = document.createElement("div"); root.id = "cp-root";
   root.innerHTML = cpMarkup(); document.body.appendChild(root);
-  root.addEventListener("click", e => {
-    const el = e.target.closest("button"); if (!el) return;
+  document.addEventListener("click", e => {          // on the home page the panel is docked inside #app, outside #cp-root, so listen on the document
+    const el = e.target.closest("#cp-panel button, #cp-fab"); if (!el) return;
     if (el.id === "cp-fab") return cpToggle(true);
     if (el.id === "cp-close") return cpToggle(false);
     if (el.id === "cp-mic") return cpMic();
+    if (el.id === "cp-talk") return cpTalk();
     if (el.id === "cp-speak") { cp.speak = !cp.speak; lsSet("fa_speak", cp.speak); if (!cp.speak) stopSpeaking(); return cpUpdateMic(); }
     if (el.dataset.cpPlay !== undefined) { const m = cp.msgs[+el.dataset.cpPlay]; return m && speakText(m.text); }
     if (el.dataset.cpQ) return cpSend(el.dataset.cpQ);
     if (el.dataset.cpGo) { if (window.innerWidth < 900 && !document.getElementById("cp-panel").classList.contains("docked")) cpToggle(false); return go(el.dataset.cpGo); }
   });
-  root.addEventListener("submit", e => { e.preventDefault(); const i = document.getElementById("cp-input"); const v = i.value; i.value = ""; cpSend(v); });
+  document.addEventListener("submit", e => { if (!e.target.closest("#cp-panel")) return; e.preventDefault(); const i = document.getElementById("cp-input"); const v = i.value; i.value = ""; cpSend(v); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && cp.open) cpToggle(false); });
   window.addEventListener("hashchange", cpRenderHead);
   translateTree(root); loadCopilotStatus();
@@ -628,12 +671,13 @@ window.addEventListener("offline", () => { offline = true; render(); });
 
 /* ---------- events ---------- */
 $app.addEventListener("click", async e => {
-  const el = e.target.closest("[data-go],[data-layer],[data-day],[data-filter],[data-read],[data-result],[data-opt],[data-act],[data-soilzone],[data-ztoggle],[data-cp-open],[data-lang]");
+  const el = e.target.closest("[data-go],[data-layer],[data-day],[data-filter],[data-read],[data-result],[data-opt],[data-act],[data-soilzone],[data-ztoggle],[data-cp-open],[data-say],[data-lang]");
   if (!el) return;
   const d = el.dataset;
   if (d.read) { const a = S.alerts.find(x => x.id === +d.read); if (a) a.unread = 0; lsSet(SKEY(), { t: Date.now(), j: S }); if (!d.go) return render(); }
   if (d.go) return go(d.go);
   if (d.lang) return setLang(d.lang);
+  if (d.say) { const t = S.tasks.find(x => x.id === +d.say); return t && speakText(`${t.title}. ${t.when_text}. ${t.why}`); }
   if (d.cpOpen) { const p = document.getElementById("cp-panel"); return p.classList.contains("docked") ? document.getElementById("cp-input").focus() : cpToggle(true); }
   if (d.ztoggle) { ui.hideZones[d.ztoggle] = !ui.hideZones[d.ztoggle]; return render(); }
   if (d.soilzone) { ui.soil.zone = d.soilzone; ui.soilMsg = ""; return render(); }

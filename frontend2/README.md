@@ -37,6 +37,12 @@ soil-test form). It refuses to diagnose a disease and cannot change a task.
 - **Optional model** (`.env`, see `.env.example`): `anthropic`, any OpenAI-compatible API, or a local Ollama. The model only
   rewrites and widens the answer. **Any model text containing a number that is not in the facts is rejected** and the
   engine's text is shown instead, with a note. Keys stay on the server; the model gets no tools and no database access.
+- **Voice.** The microphone sends what you say to the Copilot; answers can be read aloud (speaker button, or the play
+  button on each answer). **"Read my tasks"** (chip or by voice) reads today's tasks from the saved advice. **Talk mode**
+  (chat button in the Copilot header) reads the tasks, then listens, answers aloud and listens again; say "stop" or press
+  the mic to end it, and it ends by itself after two silences. On a task page, **Listen** reads that task. Voice commands:
+  read my tasks, repeat, stop (English, French, Arabic). Voice input uses the browser's speech service (Chrome or Edge, internet needed);
+  voice output uses the voices installed on the device, and Arabic may have none (the app says so).
 - **Photo reading** (vision model only): after a task, a photo is described as observations and things to check, never a
   diagnosis. Without a vision model the photo is saved and the app says reading is off.
 - Every question and answer is stored in an audit log (`GET /api/audit`). A simple limit of 30 calls per minute protects a paid key.
