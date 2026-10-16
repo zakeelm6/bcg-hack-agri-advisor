@@ -191,9 +191,9 @@ function shell({ title, nav, body }) {
 }
 
 /* ---------- the land: Sentinel-2 picture of the surroundings with the four zones on top ---------- */
-function landSvg(tight) {
+function landSvg(tight, margin = 20) {
   const z = S.zones, Ly = ui.layer, F = 155, fx = 240 - F / 2, fy = 240 - F / 2, r = tight ? 7.5 : 10.5, fs = tight ? 7 : 10.5;
-  const vb = tight ? `${fx - 20} ${fy - 20} ${F + 40} ${F + 40}` : "0 0 480 480";
+  const vb = tight ? `${fx - margin} ${fy - margin} ${F + 2 * margin} ${F + 2 * margin}` : "0 0 480 480";
   const col = zn => {
     if (Ly === "vigor") return zn.ndvi < 0.45 ? ND.low : zn.ndvi < 0.65 ? ND.mid : ND.high;
     if (Ly === "moisture") return zn.moisture == null ? "#bbb" : zn.moisture < 0.23 ? ND.low : zn.moisture < 0.28 ? ND.mid : "#3A8F85";
@@ -208,9 +208,9 @@ function landSvg(tight) {
     s += `<rect x="${x}" y="${y}" width="${w}" height="${w}" fill="${col(zn)}" fill-opacity=".62" stroke="#fff" stroke-width="1.4"/>`;
     s += `<text x="${x + 4}" y="${y + fs + 2}" font-size="${fs}" font-weight="700" fill="#fff" stroke="#1D2B1A" stroke-width=".5" paint-order="stroke">${zn.code}</text>`;
     const mid = (t, dy = 0, size = fs * 1.3) => `<text x="${x + w / 2}" y="${y + w / 2 + dy}" text-anchor="middle" font-size="${size}" font-weight="700" fill="#fff" stroke="#1D2B1A" stroke-width=".6" paint-order="stroke">${t}</text>`;
-    if (Ly === "vigor") s += mid(zn.ndvi.toFixed(2), fs);
-    if (Ly === "moisture" && zn.moisture != null) s += mid(`${Math.round(zn.moisture * 100)}%`, fs);
-    if (Ly === "soil") s += st && st.ph != null ? mid("pH " + st.ph, fs) : "";
+    if (Ly === "vigor") s += mid(zn.ndvi.toFixed(2), fs * 2.4 - w / 2);
+    if (Ly === "moisture" && zn.moisture != null) s += mid(`${Math.round(zn.moisture * 100)}%`, fs * 2.4 - w / 2);
+    if (Ly === "soil") s += st && st.ph != null ? mid("pH " + st.ph, fs * 2.4 - w / 2) : "";
     if (zn.has_sensor) s += `<circle cx="${x + w - r - 1}" cy="${y + w - r - 1}" r="${r * .62}" fill="#fff" stroke="#22401F" stroke-width="1.2"/><circle cx="${x + w - r - 1}" cy="${y + w - r - 1}" r="${r * .26}" fill="#22401F"/>`;
   });
   s += `<rect x="${fx}" y="${fy}" width="${F}" height="${F}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>`;
@@ -244,7 +244,7 @@ function homeScreen() {
     <div class="home-grid">
       <section>${hero}
         <div class="card landcard"><div class="landhead"><b>${esc(f.name)}</b><span>${f.area_ha} ha</span></div>${layerChips()}
-        <div class="landwrap">${landSvg(false)}</div>${legendBar()}${landNote()}</div></section>
+        <div class="landwrap">${landSvg(true, 45)}</div>${legendBar()}${landNote()}</div></section>
       <section id="cp-slot" class="cp-slot" aria-label="Copilot"></section>
     </div></main>${bottomNav("#/")}</div>`;
 }
