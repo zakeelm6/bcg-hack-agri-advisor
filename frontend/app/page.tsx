@@ -2,87 +2,171 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { useFarm, type Profile } from "@/lib/farm";
+import { useFarm, useT, type Profile } from "@/lib/farm";
+import { challenges, cropName, crops, irrigations, langs, plantedChoices, tr, type Key } from "@/lib/i18n";
+import { Icon } from "@/lib/icons";
+import { speak } from "@/lib/voice";
 
 const blank: Profile = { location: "", crop: "", plantedOn: "", area: "", irrigation: "", challenge: "" };
+const weeksAgo = (w: number) => new Date(Date.now() - w * 7 * 864e5).toISOString().slice(0, 10);
+
+// Reverse-geocodes GPS to a town name (BigDataCloud client endpoint: free, keyless, only called when the farmer taps the button).
+async function townAt(lat: number, lon: number, lang: string) {
+  const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`).then((x) => x.json());
+  return r.city || r.locality || r.principalSubdivision || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+}
 
 function Onboarding() {
-  const { profile, saveProfile } = useFarm();
+  const { profile, saveProfile, lang, setLang } = useFarm();
+  const t = useT();
   const router = useRouter();
   const [p, setP] = useState<Profile>(profile ?? blank);
   const edit = useSearchParams().has("edit");
   const [step, setStep] = useState(edit ? 0 : -1); // -1 = welcome screen
+  const [locating, setLocating] = useState<"" | "busy" | "failed">("");
+
   // Returning farmers land on My Farm; the welcome + questions are for new users or ?edit.
   useEffect(() => { if (profile && !edit) router.replace("/farm"); }, [profile, edit, router]);
-  if (profile && !edit) return null;
-  const set = (k: keyof Profile) => (e: { target: { value: string } }) => setP({ ...p, [k]: e.target.value });
-  const choice = (k: keyof Profile, options: string[]) => (
-    <div className="grid grid-cols-2 gap-2">
-      {options.map((o) => (
-        <button key={o} type="button" onClick={() => setP({ ...p, [k]: o })}
-          className={`rounded-xl border px-3 py-3.5 text-left capitalize ${p[k] === o ? "border-leaf bg-leaf-soft font-medium text-leaf" : "border-line bg-card"}`}>
-          {o}
-        </button>
-      ))}
-    </div>
-  );
 
-  const steps = [
-    { q: "Where is your farm?", hint: "Town or region is enough. Used for weather.",
-      body: <input className="field" autoFocus value={p.location} onChange={set("location")} placeholder="e.g. Meknes, Morocco" /> },
-    { q: "What's your main crop?", hint: "And when you planted it, if you know.",
-      body: <div className="space-y-3">
-        <input className="field" autoFocus value={p.crop} onChange={set("crop")} placeholder="e.g. Tomatoes" />
-        <label className="block"><span className="label">Planted on</span>
-          <input className="field mt-1" type="date" max={new Date().toISOString().slice(0, 10)} value={p.plantedOn} onChange={set("plantedOn")} /></label>
-      </div> },
-    { q: "How big is the field?", hint: "Any unit you use.",
-      body: <input className="field" autoFocus value={p.area} onChange={set("area")} placeholder="e.g. 2 hectares" /> },
-    { q: "How do you irrigate?", hint: "",
-      body: choice("irrigation", ["drip", "sprinkler", "flood / furrow", "rain-fed"]) },
-    { q: "What's your biggest challenge right now?", hint: "I'll focus my advice on this.",
-      body: choice("challenge", ["water", "crop health", "costs", "yield"]) },
+  const steps: { q: Key; body: React.ReactNode; pick?: boolean }[] = [
+    { q: "qLocation", body: location() },
+    { q: "qCrop", pick: true, body: <>
+      <Pictures value={p.crop} onPick={(crop) => pick({ crop })}
+        options={crops.map((c) => ({ id: c.id, icon: c.icon, label: cropName(lang, c.id) }))} />
+      <input className="field mt-3" value={crops.some((c) => c.id === p.crop) ? "" : p.crop}
+        onChange={(e) => setP({ ...p, crop: e.target.value })} placeholder={t("otherCrop")} aria-label={t("otherCrop")} />
+    </> },
+    { q: "qPlanted", pick: true, body: <Pictures value={p.plantedOn} cols={2} onPick={(d) => pick({ plantedOn: d === "unknown" ? "" : d })}
+        options={[...plantedChoices.map((c) => ({ id: weeksAgo(c.weeks), icon: c.icon, label: t(c.key) })), { id: "unknown", icon: "unknown", label: t("planted_unknown") }]} /> },
+    { q: "qArea", body: area() },
+    { q: "qIrrigation", pick: true, body: <Pictures value={p.irrigation} cols={2} onPick={(irrigation) => pick({ irrigation })}
+        options={irrigations.map((c) => ({ id: c.id, icon: c.icon, label: t(c.key) }))} /> },
+    { q: "qChallenge", pick: true, body: <Pictures value={p.challenge} cols={2} onPick={(challenge) => pick({ challenge: challenge as Profile["challenge"] })}
+        options={challenges.map((c) => ({ id: c.id, icon: c.icon, label: t(c.key) }))} /> },
   ];
   const last = step === steps.length - 1;
-  const next = () => {
+
+  // Read each question aloud: the farmer doesn't have to read it.
+  useEffect(() => { if (step >= 0) speak(t(steps[step].q), lang); }, [step, lang]);
+
+  if (profile && !edit) return null;
+
+  function next(np = p) {
     if (!last) return setStep(step + 1);
-    saveProfile(p);
+    saveProfile(np);
     router.replace("/farm");
-  };
+  }
+  // Picture choices move on by themselves: one tap per question.
+  function pick(patch: Partial<Profile>) {
+    const np = { ...p, ...patch };
+    setP(np);
+    setTimeout(() => next(np), 250);
+  }
+
+  // Plain render functions, not components: a component defined in here would remount and drop input focus on every keystroke.
+  function location() {
+    function locate() {
+      setLocating("busy");
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords: { latitude: lat, longitude: lon } }) => {
+          const location = await townAt(lat, lon, lang).catch(() => `${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+          setP((x) => ({ ...x, location, lat, lon }));
+          setLocating("");
+        },
+        () => setLocating("failed"),
+        { timeout: 15000 },
+      );
+    }
+    return (
+      <div className="space-y-4">
+        <button type="button" onClick={locate} disabled={locating === "busy"} className="btn flex w-full items-center justify-center gap-3 py-5 text-lg">
+          <Icon name="pin" />{locating === "busy" ? t("locating") : t("useLocation")}
+        </button>
+        {p.location && p.lat !== undefined && <p className="flex items-center justify-center gap-2 text-xl font-medium"><Icon name="pin" className="h-6 w-6 text-leaf" />{p.location}<Icon name="check" className="h-6 w-6 text-leaf" /></p>}
+        {locating === "failed" && <p role="alert" className="text-sun">{t("locationFailed")}</p>}
+        <input className="field" value={p.lat === undefined ? p.location : ""} placeholder={t("typeTown")} aria-label={t("typeTown")}
+          onChange={(e) => setP({ ...p, location: e.target.value, lat: undefined, lon: undefined })} />
+      </div>
+    );
+  }
+
+  function area() {
+    const n = parseFloat(p.area) || 1;
+    const setN = (v: number) => setP({ ...p, area: `${Math.max(0.5, v)} ha` });
+    return (
+      <div className="flex items-center justify-between gap-4">
+        <button type="button" onClick={() => setN(n - 0.5)} aria-label={t("less")} className="btn-ghost h-20 w-20 text-4xl">−</button>
+        <div className="text-center">
+          <div className="font-serif text-6xl">{n}</div>
+          <div className="text-lg text-muted">{t("hectares")}</div>
+        </div>
+        <button type="button" onClick={() => setN(n + 0.5)} aria-label={t("more")} className="btn-ghost h-20 w-20 text-4xl">+</button>
+      </div>
+    );
+  }
 
   if (step < 0) return (
-    <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-16">
-      <p className="label mt-6">Your AI farming co-pilot</p>
-      <h1 className="mt-3 font-serif text-4xl leading-tight md:text-5xl">Better decisions for your farm, every day.</h1>
-      <ul className="mt-6 space-y-2 text-muted">
-        <li>✓ Ask by text, voice or photo</li>
-        <li>✓ Advice based on your crop, field and weather</li>
-        <li>✓ Turn advice into tasks and track what you did</li>
+    <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-12">
+      <div role="group" aria-label={t("chooseLang")} className="grid grid-cols-3 gap-2">
+        {langs.map((l) => (
+          <button key={l.id} type="button" aria-pressed={lang === l.id}
+            onClick={() => { setLang(l.id); speak(tr(l.id, "headline"), l.id); }}
+            className={`rounded-xl border py-3 text-lg ${lang === l.id ? "border-leaf bg-leaf-soft font-semibold text-leaf" : "border-line bg-card"}`}>
+            {l.name}
+          </button>
+        ))}
+      </div>
+      <h1 className="mt-10 font-serif text-4xl leading-tight md:text-5xl">{t("headline")}</h1>
+      <ul className="mt-8 space-y-4 text-lg">
+        <li className="flex items-center gap-4"><Feature name="mic" />{t("feat1")}</li>
+        <li className="flex items-center gap-4"><Feature name="cloud-sun" />{t("feat2")}</li>
+        <li className="flex items-center gap-4"><Feature name="tasks-done" />{t("feat3")}</li>
       </ul>
-      <p className="mt-6 text-sm text-muted">5 quick questions · about a minute</p>
-      <div className="mt-auto flex flex-col gap-3 pt-10 md:mt-10 md:flex-row">
-        <button className="btn flex-1" onClick={() => setStep(0)}>Get started</button>
+      <div className="mt-auto pt-10 md:mt-12">
+        <button className="btn w-full py-4 text-lg" onClick={() => setStep(0)}>{t("getStarted")}</button>
       </div>
     </div>
   );
 
   return (
     <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-10">
-      <div className="mt-2 flex gap-1.5" aria-label={`Step ${step + 1} of ${steps.length}`}>
-        {steps.map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-leaf" : "bg-line"}`} />)}
+      <div className="mt-2 flex gap-1.5" aria-label={`${step + 1} / ${steps.length}`}>
+        {steps.map((_, i) => <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-leaf" : "bg-line"}`} />)}
       </div>
-      <form className="mt-10 flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
-        <h1 className="font-serif text-3xl leading-tight">{steps[step].q}</h1>
-        {steps[step].hint && <p className="mt-2 text-muted">{steps[step].hint}</p>}
+      <form className="mt-8 flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
+        <div className="flex items-start gap-3">
+          <h1 className="flex-1 font-serif text-3xl leading-tight">{t(steps[step].q)}</h1>
+          <button type="button" onClick={() => speak(t(steps[step].q), lang)} aria-label={t("listen")}
+            className="shrink-0 rounded-full bg-leaf-soft p-3 text-leaf"><Icon name="speaker" /></button>
+        </div>
         <div className="mt-6">{steps[step].body}</div>
         <div className="mt-auto flex gap-3 pt-10">
-          <button type="button" className="btn-ghost" onClick={() => setStep(step - 1)}>Back</button>
-          <button type="button" className="btn-ghost flex-1 text-muted" onClick={next}>Skip</button>
-          <button className="btn flex-1">{last ? "Start" : "Next"}</button>
+          <button type="button" className="btn-ghost" onClick={() => setStep(step - 1)}>{t("back")}</button>
+          <button type="button" className="btn-ghost flex-1 text-muted" onClick={() => next()}>{t("skip")}</button>
+          {!steps[step].pick && <button className="btn flex-1">{last ? t("start") : t("next")}</button>}
         </div>
       </form>
     </div>
   );
+
+}
+
+function Pictures({ options, value, onPick, cols = 4 }: { options: { id: string; icon: string; label: string }[]; value: string; onPick: (id: string) => void; cols?: 2 | 4 }) {
+  return (
+    <div className={`grid gap-2 ${cols === 4 ? "grid-cols-3 sm:grid-cols-4" : "grid-cols-2"}`}>
+      {options.map((o) => (
+        <button key={o.label} type="button" onClick={() => onPick(o.id)} aria-pressed={value === o.id}
+          className={`flex flex-col items-center gap-1 rounded-2xl border px-2 py-4 text-center ${value === o.id ? "border-leaf bg-leaf-soft font-semibold text-leaf" : "border-line bg-card"}`}>
+          <Icon name={o.icon} className="h-9 w-9 text-leaf" />
+          <span className="leading-tight">{o.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Feature({ name }: { name: string }) {
+  return <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-leaf-soft text-leaf"><Icon name={name} /></span>;
 }
 
 export default function Page() {

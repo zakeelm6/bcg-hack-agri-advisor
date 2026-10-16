@@ -2,68 +2,98 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { today, useFarm, type ActivityType } from "@/lib/farm";
+import { today, useFarm, useT, type ActivityType } from "@/lib/farm";
+import { activityTypes } from "@/lib/i18n";
+import { Icon } from "@/lib/icons";
 
-const types: ActivityType[] = ["irrigation", "treatment", "planting", "expense", "other"];
+const yesterday = () => new Date(Date.now() - 864e5).toISOString().slice(0, 10);
 
 function Activities() {
-  const { activities, logActivity } = useFarm();
-  const prefill = useSearchParams().get("note") ?? "";
-  const [type, setType] = useState<ActivityType>("irrigation");
-  const [date, setDate] = useState(today());
-  const [note, setNote] = useState(prefill);
+  const { activities, logActivity, removeActivity, lang } = useFarm();
+  const t = useT();
+  const note = useSearchParams().get("note") ?? ""; // "Record what you did" from a finished task
+  const [when, setWhen] = useState<"today" | "yesterday">("today");
+  const [asking, setAsking] = useState<ActivityType>(); // expense: ask the amount before saving
   const [cost, setCost] = useState("");
-  const [flash, setFlash] = useState(false);
+  const [last, setLast] = useState<{ id: string; type: ActivityType }>();
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    logActivity({ type, date, note: note.trim(), cost: cost ? Number(cost) : undefined });
-    setNote(""); setCost("");
-    setFlash(true);
-    setTimeout(() => setFlash(false), 2000);
+  // One tap records it. Only spending needs a number.
+  function record(type: ActivityType, amount?: number) {
+    if (type === "expense" && amount === undefined) return setAsking("expense");
+    const id = logActivity({ type, date: when === "today" ? today() : yesterday(), note, cost: amount });
+    setLast({ id, type });
+    setAsking(undefined); setCost("");
   }
+  const label = (type: ActivityType) => activityTypes.find((a) => a.id === type)!;
 
   return (
-    <div className="grid gap-5 pt-2 lg:grid-cols-2 lg:items-start">
-      <h1 className="font-serif text-3xl lg:col-span-2">Activities</h1>
+    <div className="mx-auto max-w-2xl space-y-8 pt-2">
+      <section>
+        <h1 className="font-serif text-4xl">{t("whatDidYouDo")}</h1>
+        <p className="mt-2 text-lg text-muted">{t("tapToRecord")}</p>
+        {note && <p className="mt-2 flex items-center gap-2 text-lg"><Icon name="tasks" className="h-5 w-5 text-muted" />{note}</p>}
 
-      <form onSubmit={submit} className="card space-y-3">
-        <p className="label">Record what you did</p>
-        <div className="flex flex-wrap gap-2">
-          {types.map((t) => (
-            <button key={t} type="button" onClick={() => setType(t)} aria-pressed={type === t}
-              className={`rounded-full border px-3.5 py-1.5 text-sm capitalize ${type === t ? "border-leaf bg-leaf-soft font-medium text-leaf" : "border-line"}`}>
-              {t}
+        <div role="group" className="mt-5 grid grid-cols-2 gap-2">
+          {(["today", "yesterday"] as const).map((w) => (
+            <button key={w} type="button" onClick={() => setWhen(w)} aria-pressed={when === w}
+              className={`rounded-full border py-2.5 text-lg ${when === w ? "border-leaf bg-leaf-soft font-semibold text-leaf" : "border-line bg-card"}`}>
+              {t(w)}
             </button>
           ))}
         </div>
-        <textarea className="field" rows={2} value={note} onChange={(e) => setNote(e.target.value)}
-          placeholder={type === "irrigation" ? "e.g. 2 hours drip, Field A" : type === "expense" ? "e.g. Fertilizer, 3 bags" : "What did you do?"} aria-label="Details" />
-        <div className="flex gap-2">
-          <input type="date" className="field" value={date} max={today()} onChange={(e) => setDate(e.target.value)} aria-label="Date" required />
-          <input type="number" inputMode="decimal" min="0" step="any" className="field" value={cost} onChange={(e) => setCost(e.target.value)}
-            placeholder={type === "expense" ? "Cost" : "Cost (optional)"} aria-label="Cost" required={type === "expense"} />
-        </div>
-        <button className="btn w-full">{flash ? "✓ Recorded" : "Record activity"}</button>
-      </form>
 
-      <section>
-        <h2 className="label mb-2">History</h2>
-        <div className="card divide-y divide-line p-0">
-          {activities.length === 0 && <p className="p-4 text-muted">Nothing recorded yet. Records help the Co-Pilot give better advice.</p>}
-          {activities.map((a) => (
-            <div key={a.id} className="flex justify-between gap-3 p-4 text-sm">
-              <div>
-                <p className="font-medium capitalize">{a.type}</p>
-                {a.note && <p className="text-muted">{a.note}</p>}
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-muted">{a.date}</p>
-                {a.cost !== undefined && <p className="font-medium">{a.cost.toLocaleString()}</p>}
-              </div>
-            </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {activityTypes.map((a) => (
+            <button key={a.id} type="button" onClick={() => record(a.id)}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-card py-6 text-lg font-medium active:scale-[.97]">
+              <Icon name={a.icon} className="h-10 w-10 text-leaf" />
+              {t(a.key)}
+            </button>
           ))}
         </div>
+
+        {asking && (
+          <form className="mt-4 rounded-2xl border border-leaf bg-card p-4" onSubmit={(e) => { e.preventDefault(); record("expense", Number(cost)); }}>
+            <label className="block text-lg font-medium" htmlFor="cost">{t("howMuch")}</label>
+            <input id="cost" type="number" inputMode="decimal" min="0" step="any" required autoFocus value={cost}
+              onChange={(e) => setCost(e.target.value)} className="field mt-3 text-center text-3xl" />
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" className="btn-ghost" onClick={() => setAsking(undefined)}>{t("cancel")}</button>
+              <button className="btn">{t("save")}</button>
+            </div>
+          </form>
+        )}
+
+        {last && (
+          <div role="status" className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-leaf-soft px-4 py-3 text-lg text-leaf">
+            <span className="flex items-center gap-2"><Icon name="check" className="h-5 w-5" />{t("recorded", { what: t(label(last.type).key) })}</span>
+            <button type="button" className="font-semibold underline underline-offset-4" onClick={() => { removeActivity(last.id); setLast(undefined); }}>
+              {t("undo")}
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="font-serif text-3xl">{t("history")}</h2>
+        {activities.length === 0 ? (
+          <p className="mt-3 text-lg text-muted">{t("nothingRecorded")}</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-line border-y border-line">
+            {activities.map((a) => (
+              <li key={a.id} className="flex items-center justify-between gap-4 py-3 text-lg">
+                <span className="flex items-center gap-3">
+                  <Icon name={label(a.type).icon} className="h-6 w-6 text-leaf" />
+                  <span>{t(label(a.type).key)}{a.note && <span className="text-muted">, {a.note}</span>}</span>
+                </span>
+                <span className="shrink-0 text-end text-muted">
+                  {new Date(`${a.date}T00:00`).toLocaleDateString(lang, { month: "short", day: "numeric" })}
+                  {a.cost !== undefined && <span className="block font-medium text-ink">{a.cost.toLocaleString(lang)}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

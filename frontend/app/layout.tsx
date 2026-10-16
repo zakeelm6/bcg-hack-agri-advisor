@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Fraunces } from "next/font/google";
+import { Geist, Fraunces, Noto_Sans_Arabic } from "next/font/google";
 import { FarmProvider } from "@/lib/farm";
 import Shell from "./shell";
 import "./globals.css";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] });
+const arabic = Noto_Sans_Arabic({ variable: "--font-arabic", subsets: ["arabic"] });
 
 export const metadata: Metadata = { title: "growmate", description: "Your AI farming co-pilot" };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#f6f4ee" };
@@ -13,7 +14,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geist.variable} ${fraunces.variable} font-sans antialiased`}>
+      <body className={`${geist.variable} ${fraunces.variable} ${arabic.variable} font-sans antialiased`}>
         <FarmProvider>
           <Shell>{children}</Shell>
         </FarmProvider>

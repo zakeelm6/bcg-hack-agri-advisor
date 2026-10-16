@@ -4,7 +4,7 @@
   --color-paper: #f6f4ee;
   --color-card: #ffffff;
   --color-ink: #1d2a1f;
-  --color-muted: #6b7568;
+  --color-muted: #4f584c; /* 6.4:1 on paper: readable outdoors in sunlight */
   --color-line: #e3e0d6;
   --color-leaf: #2f6b3a;
   --color-leaf-soft: #e4efe2;
@@ -19,6 +19,9 @@ body {
 }
 
 input, select, textarea { font-size: 16px; } /* stops iOS zoom on focus */
+
+/* Latin fonts have no Arabic glyphs: switch the whole page, headings included, when Arabic is chosen. */
+:root[lang="ar"] body, :root[lang="ar"] .font-serif { font-family: var(--font-arabic), sans-serif; }
 @layer components {
   .field { @apply w-full rounded-xl border border-line bg-card px-3.5 py-3 outline-none focus:border-leaf; }
   .btn { @apply rounded-xl bg-leaf px-4 py-3 font-medium text-white active:scale-[.98] disabled:opacity-50; }

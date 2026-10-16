@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useFarm } from "@/lib/farm";
+import { useFarm, useT } from "@/lib/farm";
 
 const nav = [
-  { href: "/farm", label: "My Farm", icon: "M3 11l9-7 9 7v9H3zM9 20v-6h6v6" },
-  { href: "/copilot", label: "Co-Pilot", icon: "M4 5h16v11H8l-4 4z" },
-  { href: "/activities", label: "Activities", icon: "M5 4h14v16H5zM9 9h6M9 13h6M9 17h3" },
-];
+  { href: "/farm", key: "navFarm", icon: "M3 11l9-7 9 7v9H3zM9 20v-6h6v6" },
+  { href: "/copilot", key: "navCopilot", icon: "M4 5h16v11H8l-4 4z" },
+  { href: "/activities", key: "navActivities", icon: "M5 4h14v16H5zM9 9h6M9 13h6M9 17h3" },
+] as const;
 
 export default function Shell({ children }: { children: React.ReactNode }) {
-  const { ready, profile } = useFarm();
+  const { ready, profile, lang } = useFarm();
+  const t = useT();
   const path = usePathname();
   const router = useRouter();
   const onboarding = path === "/";
@@ -20,6 +21,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (ready && !profile && !onboarding) router.replace("/");
   }, [ready, profile, onboarding, router]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  }, [lang]);
 
   if (!ready || (!profile && !onboarding)) return null;
 
@@ -35,11 +41,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               const active = path === n.href;
               return (
                 <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined}
-                  className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-xs md:flex-none md:flex-row md:gap-2 md:rounded-xl md:px-3.5 md:py-2 md:text-sm ${active ? "font-semibold text-leaf md:bg-leaf-soft" : "text-muted md:hover:bg-card"}`}>
-                  <svg viewBox="0 0 24 24" className="h-6 w-6 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" aria-hidden>
+                  className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-sm md:flex-none md:flex-row md:gap-2 md:rounded-xl md:px-3.5 md:py-2 ${active ? "font-semibold text-leaf md:bg-leaf-soft" : "text-muted md:hover:bg-card"}`}>
+                  <svg viewBox="0 0 24 24" className="h-7 w-7 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" aria-hidden>
                     <path d={n.icon} />
                   </svg>
-                  {n.label}
+                  {t(n.key)}
                 </Link>
               );
             })}
@@ -47,13 +53,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </nav>
       )}
       </header>
-      <main className={`flex-1 px-5 md:px-8 ${onboarding ? "pb-8" : "pb-36 md:pb-32"}`}>{children}</main>
+      <main className={`flex-1 px-5 md:px-8 ${onboarding ? "pb-8" : "pb-40 md:pb-32"}`}>{children}</main>
       {!onboarding && path !== "/copilot" && (
-        <Link href="/copilot" className="btn fixed right-4 bottom-[84px] z-10 flex items-center gap-2 rounded-full shadow-lg md:right-8 md:bottom-8">
+        <Link href="/copilot" className="btn fixed end-4 bottom-[92px] z-10 flex items-center gap-2 rounded-full shadow-lg md:end-8 md:bottom-8">
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" aria-hidden>
-            <path d="M4 5h16v11H8l-4 4z" />
+            <path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM5 11a7 7 0 0014 0M12 18v3" />
           </svg>
-          Ask Co-Pilot
+          {t("askCopilot")}
         </Link>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { tr, type Key, type Lang } from "./i18n";
 
 export type Challenge = "water" | "crop health" | "costs" | "yield";
 export type Profile = {
@@ -10,17 +11,20 @@ export type Profile = {
   area: string;
   irrigation: string;
   challenge: Challenge | "";
+  lat?: number; // from "Use my location"; weather uses these over the town name
+  lon?: number;
 };
 export type Task = { id: string; title: string; due: string; done: boolean };
 export type ActivityType = "irrigation" | "treatment" | "planting" | "expense" | "other";
 export type Activity = { id: string; type: ActivityType; date: string; note: string; cost?: number };
-export type Advice = { recommendation: string; why: string; steps: string[]; missing: string[] };
+export type Advice = { recommendation: string; why: string; steps: string[]; missing: string[]; icons?: string[] }; // icons[i] pictures steps[i]
 export type Message =
   | { id: string; role: "user"; text: string; photo?: string }
   | { id: string; role: "ai"; text?: string; advice?: Advice };
 
-type State = { profile: Profile | null; tasks: Task[]; activities: Activity[]; messages: Message[] };
-const empty: State = { profile: null, tasks: [], activities: [], messages: [] };
+type State = { lang: Lang; profile: Profile | null; tasks: Task[]; activities: Activity[]; messages: Message[] };
+const empty: State = { lang: "en", profile: null, tasks: [], activities: [], messages: [] };
+const browserLang = (): Lang => (["ar", "fr"] as const).find((l) => navigator.language.startsWith(l)) ?? "en";
 const KEY = "growmate";
 
 export const uid = () => crypto.randomUUID();
@@ -33,7 +37,7 @@ function useFarmState() {
   const [state, setState] = useState<State | null>(null);
   useEffect(() => {
     try {
-      setState({ ...empty, ...JSON.parse(localStorage.getItem(KEY) ?? "{}") });
+      setState({ ...empty, lang: browserLang(), ...JSON.parse(localStorage.getItem(KEY) ?? "{}") });
     } catch {
       setState(empty);
     }
@@ -54,11 +58,16 @@ function useFarmState() {
   return {
     ready: state !== null,
     ...s,
+    setLang: (lang: Lang) => set({ lang }),
     saveProfile: (profile: Profile) => set({ profile }),
     addTask: (title: string, due: string) => set({ tasks: [{ id: uid(), title, due, done: false }, ...s.tasks] }),
     toggleTask: (id: string) => set({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }),
-    logActivity: (a: Omit<Activity, "id">) =>
-      set({ activities: [{ ...a, id: uid() }, ...s.activities].sort((x, y) => y.date.localeCompare(x.date)) }),
+    logActivity: (a: Omit<Activity, "id">) => {
+      const id = uid();
+      set({ activities: [{ ...a, id }, ...s.activities].sort((x, y) => y.date.localeCompare(x.date)) });
+      return id; // lets the UI offer Undo
+    },
+    removeActivity: (id: string) => set({ activities: s.activities.filter((a) => a.id !== id) }),
     addMessages: (...m: Message[]) => setState((prev) => ({ ...(prev ?? empty), messages: [...(prev ?? empty).messages, ...m] })),
     reset: () => setState(empty),
   };
@@ -70,3 +79,7 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
   return <Ctx.Provider value={useFarmState()}>{children}</Ctx.Provider>;
 }
 export const useFarm = () => useContext(Ctx)!;
+export function useT() {
+  const { lang } = useFarm();
+  return (key: Key, vars?: Record<string, string | number>) => tr(lang, key, vars);
+}
