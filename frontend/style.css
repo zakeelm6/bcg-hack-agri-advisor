@@ -162,7 +162,9 @@ input::placeholder { color: var(--tx2); opacity: .55; }
 .landwrap { border-radius: var(--r-md); overflow: hidden; background: var(--soft); line-height: 0; } .landmap { display: block; width: 100%; max-height: 62vh; }
 .legendrow { display: flex; align-items: center; gap: var(--s2); margin: 10px var(--s1) 2px; font-size: var(--fs-xs); color: var(--tx2); flex-wrap: wrap; } .legendrow .legendbar { flex: 1; min-width: 80px; margin: 0; }
 [dir="rtl"] .legendbar { transform: scaleX(-1); }
-.legend-sensor i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #22401F; vertical-align: -2px; margin-inline-end: 5px; }
+.legend-sensor i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #22401F; vertical-align: -2px; margin-inline-end: 5px; font-style: normal; font-size: 9px; line-height: 9px; text-align: center; color: #fff; }
+.legend-sensor.bad i { background: #B5472B; border-color: #B5472B; font-weight: 700; }
+.legend-anom i { display: inline-block; width: 12px; height: 12px; background: rgba(181, 71, 43, .6); border: 1px solid #fff; vertical-align: -2px; margin-inline-end: 5px; }
 .landmap a.pin { cursor: pointer; } .landmap a.pin:focus-visible { outline: none; } .landmap a.pin:focus-visible circle, .landmap a.pin:hover circle { stroke: var(--amber); stroke-width: 3; }
 .legendbar { height: 10px; border-radius: var(--r-full); margin: 10px var(--s1) 2px; } .legendbar.vigor, .legendbar.trust { background: linear-gradient(90deg, #D9A64C, #9CCC6B, #4C8A3A); } .legendbar.moisture { background: linear-gradient(90deg, #D9A64C, #9CCC6B, #3A8F85); }
 .legend { display: flex; gap: var(--s3); font-size: var(--fs-xs); color: var(--tx2); margin: 10px var(--s1) 2px; flex-wrap: wrap; } .legend i { display: inline-block; width: 14px; height: 14px; border-radius: var(--s1); vertical-align: -2px; margin-inline-end: 5px; }

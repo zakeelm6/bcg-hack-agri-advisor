@@ -8,6 +8,7 @@ from ..db import models as m
 from ..schemas import requests as rq
 from .advice import refresh_advice
 from .common import now_iso
+from .sensors import learn_offsets, qc_sensor
 
 
 def set_status(db: Session, task_id: int, status: str):
@@ -40,14 +41,20 @@ def add_soil_test(db: Session, t: rq.SoilTest):
         raise HTTPException(404, "unknown zone")
     db.add(m.SoilTest(field_id=1, zone_code=t.zone_code, ph=t.ph, om_pct=t.om_pct, moisture=t.moisture, ts=now_iso()))
     db.commit()
+    learn_offsets(db)   # one more sample may teach the gap between this zone and the shared sensor
     refresh_advice(db)
 
 
 def add_reading(db: Session, sensor_id: int, r: rq.Reading):
-    if not 0.0 <= r.moisture <= 0.6:
-        raise HTTPException(422, "moisture must be a fraction between 0 and 0.6")
-    if db.get(m.Sensor, sensor_id) is None:
+    """A reading is stored even when it is physically wrong: the quality checks flag it (C01, C02...) and the engine ignores
+    flagged readings. Only values that cannot be a moisture fraction at all are refused."""
+    if not -0.2 <= r.moisture <= 1.5:
+        raise HTTPException(422, "moisture must be a fraction (about 0 to 0.6)")
+    sensor = db.get(m.Sensor, sensor_id)
+    if sensor is None:
         raise HTTPException(404, "unknown sensor")
     db.add(m.Reading(sensor_id=sensor_id, ts=now_iso(), moisture=r.moisture, temp_c=r.temp_c))
+    db.commit()
+    qc_sensor(db, sensor)
     db.commit()
     refresh_advice(db)

@@ -57,13 +57,19 @@ def test_sync_reports_each_action_separately():
         assert [x["ok"] for x in r] == [True, False, False]
 
 
-def test_sensor_reading_validation_and_latest_wins_on_same_second():
+def test_sensor_reading_is_flagged_not_refused_and_latest_good_wins():
+    """Phase 2: an impossible value is stored with a quality flag (never deleted) and does not become the sensor's moisture."""
     with client() as c:
-        assert c.post("/api/sensors/1/readings", json={"moisture": 0.9}).status_code == 422
+        assert c.post("/api/sensors/1/readings", json={"moisture": 3.0}).status_code == 422      # not a fraction at all
+        assert c.post("/api/sensors/1/readings", json={"moisture": 0.9}).status_code == 200      # stored, flagged C02
         c.post("/api/sensors/1/readings", json={"moisture": 0.12})
         c.post("/api/sensors/1/readings", json={"moisture": 0.30})
         a = next(s for s in c.get("/api/state").json()["sensors"] if s["id"] == 1)
         assert a["moisture"] == 0.30
+        assert "C02" in a["flags"]
+        with session_scope() as db:
+            rows = db.query(m.Reading).filter(m.Reading.sensor_id == 1).order_by(m.Reading.id).all()
+            assert any(r.moisture == 0.9 and "C02" in r.flags for r in rows)      # still there, flagged
 
 
 def test_offers_carry_the_harvest_value_computed_on_the_server():

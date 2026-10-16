@@ -70,7 +70,7 @@ def test_a_database_without_migration_history_is_adopted_not_rebuilt():
     run_migrations(url)
     run_migrations(url)                                  # running twice changes nothing
     with eng.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0001"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0002"   # create_all made the current schema
         assert conn.execute(text("SELECT name FROM fields")).scalar() == "Mine"
     assert "tasks" in inspect(eng).get_table_names()
 
@@ -80,4 +80,4 @@ def test_a_new_database_is_created_by_migrations():
     run_migrations(url)
     names = set(inspect(create_engine(url)).get_table_names())
     assert {"fields", "zones", "sensors", "readings", "tasks", "alerts", "observations", "listings", "offers", "ndvi_obs",
-            "soil_tests", "copilot_log", "cache", "alembic_version"} <= names
+            "soil_tests", "copilot_log", "cache", "plot_offsets", "alembic_version"} <= names

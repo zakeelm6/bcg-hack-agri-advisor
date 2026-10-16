@@ -28,6 +28,12 @@ TEXTS = {
         "r_sensor": "A sensor in this zone measures it.", "r_sample": "Measured from the soil sample you entered.",
         "r_none": "No sensor data yet.", "k_sensor": "sensor in zone {z}", "k_sample": "soil sample in zone {z}", "and": " and ",
         "r_est": "Estimated from the {names} and crop vigor seen from space.",
+        "r_offset": "Estimated from the shared sensor in zone {s} plus the gap learned from your {n} soil samples in this zone (about {d} points).",
+        "r_bad": "The sensor in this zone gives unreliable readings ({flags}). No dose is computed until a soil sample or a repair.",
+        "sensor_title": "Sensor in zone {z} unreliable", "sensor_body": "Its readings are flagged: {flags}. A soil sample is recommended; no water dose is given from it.",
+        "anom_title": "Inspect zone {z}", "anom_what": "Walk to the marked spot in zone {z} and check the plants",
+        "anom_why": "Satellite: a patch of about {ha} ha in zone {z} stayed {dev} below the rest of the field on {n} passes (last {date}).",
+        "anom_conf": "The satellite shows where, not why (water, disease, pests, soil). Only a visit or a sample can tell.",
         "rain_next": "Next useful rain: {mm} mm on {day}.", "rain_none": "No useful rain in the 5-day forecast.",
         "irr_title": "Irrigate Zone {z}, {mm} mm", "irr_what": "Irrigate zone {z}, {mm} mm",
         "irr_why": "Topsoil moisture is about {m}% (target {t}%). {rain}",
@@ -65,6 +71,12 @@ TEXTS = {
         "r_sensor": "Un capteur de cette zone la mesure.", "r_sample": "Mesurée d'après l'échantillon de sol que vous avez saisi.",
         "r_none": "Pas encore de données de capteur.", "k_sensor": "du capteur de la zone {z}", "k_sample": "de l'échantillon de sol de la zone {z}", "and": " et ",
         "r_est": "Estimée à partir {names} et de la vigueur de la culture vue depuis l'espace.",
+        "r_offset": "Estimée à partir du capteur partagé de la zone {s} et de l'écart appris sur vos {n} échantillons de sol dans cette zone (environ {d} points).",
+        "r_bad": "Le capteur de cette zone donne des mesures peu fiables ({flags}). Aucune dose n'est calculée avant un échantillon de sol ou une réparation.",
+        "sensor_title": "Capteur de la zone {z} peu fiable", "sensor_body": "Ses mesures sont signalées : {flags}. Un échantillon de sol est recommandé ; aucune dose d'eau n'en est déduite.",
+        "anom_title": "Inspecter la zone {z}", "anom_what": "Allez à l'endroit marqué dans la zone {z} et vérifiez les plantes",
+        "anom_why": "Satellite : une tache d'environ {ha} ha dans la zone {z} est restée {dev} sous le reste du champ sur {n} passages (dernier le {date}).",
+        "anom_conf": "Le satellite montre où, pas pourquoi (eau, maladie, ravageurs, sol). Seule une visite ou un échantillon peut le dire.",
         "rain_next": "Prochaine pluie utile : {mm} mm {day}.", "rain_none": "Aucune pluie utile dans les prévisions à 5 jours.",
         "irr_title": "Irriguer la zone {z}, {mm} mm", "irr_what": "Irriguer la zone {z}, {mm} mm",
         "irr_why": "L'humidité du sol en surface est d'environ {m} % (objectif {t} %). {rain}",
@@ -102,6 +114,12 @@ TEXTS = {
         "r_sensor": "يقيسها مستشعر في هذه المنطقة.", "r_sample": "مقيسة من عيّنة التربة التي أدخلتها.",
         "r_none": "لا توجد بيانات مستشعر بعد.", "k_sensor": "مستشعر المنطقة {z}", "k_sample": "عيّنة تربة المنطقة {z}", "and": " و",
         "r_est": "مقدَّرة انطلاقًا من {names} ومن قوة النبات المرصودة من الفضاء.",
+        "r_offset": "مقدَّرة من المستشعر المشترك في المنطقة {s} مع الفارق المتعلَّم من {n} عيّنات تربة في هذه المنطقة (حوالي {d} نقاط).",
+        "r_bad": "مستشعر هذه المنطقة يعطي قراءات غير موثوقة ({flags}). لا تُحسب أي جرعة قبل عيّنة تربة أو إصلاح.",
+        "sensor_title": "مستشعر المنطقة {z} غير موثوق", "sensor_body": "قراءاته موسومة: {flags}. يُنصح بعيّنة تربة؛ لا تُعطى جرعة ماء منه.",
+        "anom_title": "تفقّد المنطقة {z}", "anom_what": "اذهب إلى الموضع المحدد في المنطقة {z} وافحص النباتات",
+        "anom_why": "القمر الصناعي: بقعة بحوالي {ha} هكتار في المنطقة {z} بقيت أقل بـ {dev} من بقية الحقل خلال {n} مرور (آخرها {date}).",
+        "anom_conf": "القمر الصناعي يُظهر الموضع لا السبب (ماء، مرض، آفات، تربة). الزيارة أو العيّنة وحدها تحسم.",
         "rain_next": "أقرب مطر مفيد: {mm} مم يوم {day}.", "rain_none": "لا مطر مفيد في توقعات 5 أيام.",
         "irr_title": "سقي المنطقة {z}، {mm} مم", "irr_what": "سقي المنطقة {z}، {mm} مم",
         "irr_why": "رطوبة التربة السطحية حوالي {m}% (الهدف {t}%). {rain}",
@@ -154,10 +172,18 @@ def next_rain(days, min_mm=3.0):
     return None
 
 
-def estimate_moisture(zones, sensors, manual=None, lang="en"):
-    """sensors / manual: {zone_code: moisture}. A sensor beats a hand measurement in the same zone.
+OFFSET_MIN_SAMPLES = 3     # soil samples needed before a learned offset replaces the nearest-sensor guess
+OFFSET_GOOD_SDRD = 0.03    # spread of the learned gap under which the offset is considered transferable (sensor layer)
+
+
+def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=None):
+    """sensors / manual: {zone_code: moisture} from reliable readings. A sensor beats a hand measurement in the same zone.
+    bad: {zone_code: [flags]} sensors whose recent readings are flagged: no number, low confidence, no dose.
+    offsets: {zone_code: {sentinel, delta, sdrd, n}} learned gap to a shared sensor, used before the nearest-sensor guess.
     Returns {zone_code: {moisture, source, confidence, reason}}."""
     manual = manual or {}
+    bad = bad or {}
+    offsets = offsets or {}
     points = dict(manual)
     points.update(sensors)
     kind = {c: ("sensor" if c in sensors else "sample") for c in points}
@@ -168,6 +194,17 @@ def estimate_moisture(zones, sensors, manual=None, lang="en"):
         if c in points:
             out[c] = {"moisture": points[c], "source": kind[c], "confidence": "High",
                       "reason": tr(lang, "r_sensor" if kind[c] == "sensor" else "r_sample")}
+            continue
+        if c in bad:   # a flagged sensor never turns into a dose: the farmer is told why instead
+            out[c] = {"moisture": None, "source": "sensor_flagged", "confidence": "Low",
+                      "reason": tr(lang, "r_bad", flags=", ".join(bad[c]))}
+            continue
+        o = offsets.get(c)
+        if o and o.get("sentinel") in sensors and o.get("n", 0) >= OFFSET_MIN_SAMPLES:
+            est = max(0.05, min(0.45, sensors[o["sentinel"]] + o["delta"]))
+            out[c] = {"moisture": round(est, 3), "source": "offset",
+                      "confidence": "High" if o.get("sdrd", 1) < OFFSET_GOOD_SDRD and o["n"] >= 5 else "Medium",
+                      "reason": tr(lang, "r_offset", s=o["sentinel"], n=o["n"], d=round(abs(o["delta"]) * 100))}
             continue
         near, best = [], None   # nearest measured zones (several when tied); their estimates are averaged
         for pc, m in points.items():
@@ -187,16 +224,20 @@ def estimate_moisture(zones, sensors, manual=None, lang="en"):
     return out
 
 
-def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en"):
+def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en", bad_sensors=None, offsets=None, anomalies=None):
     """Returns (zone_estimates, tasks, alerts). Pure function: easy to test.
-    `lang` only changes the wording ("en" or "fr"); every number and decision is identical in both languages."""
+    `lang` only changes the wording; every number and decision is identical in every language.
+    Phase 2 inputs (all optional): bad_sensors {zone: [flags]} from the quality checks, offsets {zone: {...}} learned per plot,
+    anomalies [{zone, severity, persistence, deviation, area_ha, x, y, last_date}] from the satellite detector."""
     now = now or datetime.now()
     soil = soil or {}   # {zone_code: {ph, om_pct, moisture, age_days}} latest soil test per zone
+    bad_sensors = bad_sensors or {}
+    anomalies = anomalies or []
     days = weather["days"]
     today = date.fromisoformat(days[0]["date"])
     manual = {c: t["moisture"] for c, t in soil.items()
               if t.get("moisture") is not None and t["age_days"] <= MANUAL_MOISTURE_MAX_AGE_DAYS}
-    est = estimate_moisture(zones, sensors, manual, lang)
+    est = estimate_moisture(zones, sensors, manual, lang, bad=bad_sensors, offsets=offsets)
     nr = next_rain(days)
     rain3 = sum(d["rain"] for d in days[:3])
     rain2 = sum(d["rain"] for d in days[:2])
@@ -262,9 +303,39 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en")
             "x": (z["col"] + 0.5) / 2, "y": (z["row"] + 0.5) / 2 - 0.04,
         })
 
-    # --- Inspection (vigor drop over 3 satellite passes) ---
+    # --- Unreliable sensors: say so, recommend a sample, never a dose ---
+    for z in zones:
+        if z["code"] in bad_sensors and z["code"] not in manual:
+            alerts.append({"key": f"sensor:{z['code']}", "kind": "data", "title": tr(lang, "sensor_title", z=z["code"]),
+                           "body": tr(lang, "sensor_body", flags=", ".join(bad_sensors[z["code"]]))})
+
+    # --- Inspection from the satellite anomaly detector (persistent patch below its own baseline) ---
+    anomaly_zones = set()
+    for a in anomalies:
+        z = next((zz for zz in zones if zz["code"] == a["zone"]), None)
+        if z is None or a["zone"] in anomaly_zones:
+            continue
+        anomaly_zones.add(a["zone"])
+        tasks.append({
+            "key": f"inspect:{z['code']}", "type": "inspect", "zone": z["code"],
+            "title": tr(lang, "anom_title", z=z["code"]), "what": tr(lang, "anom_what", z=z["code"]),
+            "when_text": morning, "when_date": go_date.isoformat(),
+            "why": tr(lang, "anom_why", z=z["code"], ha=f"{a['area_ha']:.2f}", dev=f"{abs(a['deviation']):.2f}", n=a["persistence"],
+                      date=a.get("last_date") or ""),
+            "cost": tr(lang, "insp_cost"),
+            "confidence": "Medium" if a["persistence"] >= 3 else "Low",
+            "conf_reason": tr(lang, "anom_conf"),
+            "plan_b": tr(lang, "insp_planb"),
+            "x": a["x"], "y": a["y"],
+        })
+        alerts.append({"key": f"stress:{z['code']}", "kind": "crop", "title": tr(lang, "anom_title", z=z["code"]),
+                       "body": tr(lang, "stress_body", z=z["code"])})
+
+    # --- Inspection (vigor drop over 3 satellite passes, zone means) when the detector has nothing for the zone ---
     for z in zones:
         h = z["ndvi_hist"]
+        if z["code"] in anomaly_zones:
+            continue
         if len(h) >= 4 and h[-1] - h[-4] <= -0.08:
             tasks.append({
                 "key": f"inspect:{z['code']}", "type": "inspect", "zone": z["code"],

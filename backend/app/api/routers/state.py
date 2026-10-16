@@ -3,8 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...db import get_db, models as m
-from ...schemas.responses import ForecastOut, NdviSeriesOut, StateOut
-from ...services import advice, field as fld, market
+from ...schemas.responses import AnomaliesOut, ForecastOut, NdviSeriesOut, StateOut
+from ...services import advice, field as fld, market, satellite_layer
 from ...services.common import as_dict
 
 router = APIRouter()
@@ -32,3 +32,9 @@ def ndvi_series(lang: str = "en", db: Session = Depends(get_db)):
 @router.get("/api/forecast", response_model=ForecastOut)
 def forecast(lang: str = "en", db: Session = Depends(get_db)):
     return market.forecast(db, lang)
+
+
+@router.get("/api/zones/anomalies", response_model=AnomaliesOut)
+def zone_anomalies(lang: str = "en"):
+    """Persistent vigor anomalies from the Sentinel-2 pixels (GeoJSON). Empty with available=false until the pixels are downloaded."""
+    return satellite_layer.geojson(lang)

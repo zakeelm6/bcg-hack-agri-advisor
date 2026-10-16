@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from ..db import models as m
 from ..processing import engine, geo
 from . import field as fld
+from .satellite_layer import anomalies_available
 from .common import as_dict, clean_lang, now_iso
 
 TASK_FIELDS = ("type", "title", "what", "when_text", "when_date", "why", "cost", "confidence", "conf_reason", "plan_b", "x", "y")
@@ -15,9 +16,10 @@ TASK_FIELDS = ("type", "title", "what", "when_text", "when_date", "why", "cost",
 def refresh_advice(db: Session, force_weather: bool = False) -> dict:
     """Recompute tasks and alerts from current data. Keeps the status of tasks that still apply."""
     field, zones = fld.get_field(db), fld.get_zones(db)
-    sensors, _ = fld.latest_sensors(db)
+    layers = fld.layer_inputs(db)
     weather = geo.get_weather(db, field["lat"], field["lon"], force=force_weather)
-    _, tasks, alerts = engine.build_advice(field, zones, sensors, weather, soil=fld.latest_soil(db))
+    _, tasks, alerts = engine.build_advice(field, zones, layers["sensors"], weather, soil=fld.latest_soil(db),
+                                           bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"])
     now = now_iso()
     keys = [t["key"] for t in tasks]
     for t in tasks:
@@ -45,15 +47,20 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
     lang = clean_lang(lang)
     weather = refresh_advice(db, force_weather=True) if refresh else None
     field, zones = fld.get_field(db), fld.get_zones(db)
-    sensors, sensor_detail = fld.latest_sensors(db)
+    sensor_detail = []
+    layers = fld.layer_inputs(db, sensor_detail)
+    sensors = layers["sensors"]
     if weather is None:
         weather = geo.get_weather(db, field["lat"], field["lon"])
     soil = fld.latest_soil(db)
-    est, tasks_l, alerts_l = engine.build_advice(field, zones, sensors, weather, soil=soil, lang=lang)
+    est, tasks_l, alerts_l = engine.build_advice(field, zones, sensors, weather, soil=soil, lang=lang,
+                                                 bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"])
+    has_sensor = {d["zone_code"] for d in sensor_detail}
     for z in zones:
         e = est[z["code"]]
         z.update({"moisture": e["moisture"], "moisture_source": e["source"], "confidence": e["confidence"], "conf_reason": e["reason"],
-                  "has_sensor": z["code"] in sensors, "soil_test": soil.get(z["code"])})
+                  "has_sensor": z["code"] in has_sensor, "sensor_quality": next((d["quality"] for d in sensor_detail if d["zone_code"] == z["code"]), None),
+                  "offset": layers["offsets"].get(z["code"]), "soil_test": soil.get(z["code"])})
     tasks = [as_dict(t) for t in db.scalars(select(m.Task).where(m.Task.field_id == 1).order_by(m.Task.when_date, m.Task.id))]
     alerts = [as_dict(a) for a in db.scalars(select(m.Alert).order_by(m.Alert.unread.desc(), m.Alert.id))]
     if lang != "en":   # same tasks, same numbers, wording in the farmer's language (stored rows are English)
@@ -71,4 +78,5 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
     return {"field": field, "zones": zones, "sensors": sensor_detail, "tasks": tasks, "alerts": alerts, "weather": weather,
             "soil_tests": sorted(soil.values(), key=lambda t: t["zone_code"]),
             "generated_at": datetime.utcnow().isoformat(timespec="seconds"),
-            "data_notes": {"vigor": zones[0]["ndvi_source"] if zones else "none", "sensors": "simulated"}}
+            "data_notes": {"vigor": zones[0]["ndvi_source"] if zones else "none", "sensors": "simulated",
+                           "anomalies": "sentinel-2 pixels" if layers["anomalies"] is not None and anomalies_available() else "not available"}}

@@ -99,9 +99,9 @@ Warning from the same chat: the deck already has many features. Pick one differe
 
 | Topic | Today |
 |---|---|
-| Moisture | Two **simulated** sensors. Zones without a sensor get an estimate from the nearest sensor and crop vigor, with lower confidence. No learned offset `delta_j` yet. |
-| Satellite | Real Sentinel-2 NDVI per zone, last clear dates. No persistence-based anomaly detection yet. |
-| Sensor quality control | None yet. |
+| Moisture | Two **simulated** sensors. Zones without a sensor: learned offset `delta_j` from the farmer's soil samples (Phase 2), else the nearest-sensor estimate with lower confidence. |
+| Satellite | Real Sentinel-2 NDVI per zone and per pixel; persistence-based anomaly detection on the pixels (Phase 2). |
+| Sensor quality control | Items 1 to 5 of section 5 run on every reading (Phase 2); flagged readings are kept and shown, never used for a dose. |
 | Water tension, rain gauge, leaf wetness | Not in the data model. |
 | Split-field trial | Not built. |
 | Soil tests | Typed by the user, change warnings, doses and confidence. |

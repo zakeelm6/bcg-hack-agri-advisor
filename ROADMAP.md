@@ -91,13 +91,13 @@ Audit of every screen in three languages at 390 and 1440 px, then fixes: keyboar
 states, honest labels, offline banner, Sell value computed on the server. See [docs/ux/AUDIT-2026-10-16.md](docs/ux/AUDIT-2026-10-16.md)
 and [docs/ux/CHANGELOG.md](docs/ux/CHANGELOG.md). Open: real phone and microphone, Arabic voice (needs Azure).
 
-### Phase 2: connect the sensor and satellite layers (M to L)
-1. Move `sensors/` and `satellite/` into `backend/app/processing/`, keep their tests.
-2. Store sensor readings with quality flags from the checks (never delete a reading, flag it). A flagged reading does not enter a dose calculation.
-3. Replace the "nearest sensor and vigor" estimate in the engine with the learned offset per plot from the sentinel layer, with its confidence.
-4. Feed the real Sentinel-2 series into the anomaly detector. A persistent anomaly creates the "Inspect here" task and a map layer (GeoJSON).
-5. Add tests that cross layers (bad sensor gives low confidence and "soil test recommended", not a dose).
-6. Done when: with a faulty simulated sensor the app says it cannot be sure and shows why, and with an anomaly it points to the zone.
+### Phase 2: connect the sensor and satellite layers (M to L) - done locally, branch `phase2/ux-fixes` (84 tests)
+1. ~~Move `sensors/` and `satellite/` into `backend/app/processing/`, keep their tests.~~ **Done:** pulled from GitHub `main`, their 16 tests run under pytest (`tests/test_sensors_layer.py`, `tests/test_satellite_layer.py`). `docs/SENSORS.md` moved too.
+2. ~~Store sensor readings with quality flags.~~ **Done:** `readings.flags` (migration `0002`), the ISMN checks run on every ingest over the last 200 readings (`services/sensors.py`); a reading is never deleted; a sensor whose last 5 readings are mostly flagged is "low" or "insufficient" and gives no number to the engine. Irrigation reported in a follow-up counts as water arriving for the rain-consistency check.
+3. ~~Replace the nearest-sensor estimate with the learned offset.~~ **Done:** `plot_offsets` learned from the farmer's soil-sample moistures paired with the nearest shared sensor (within 12 h); used after 3 samples, High confidence when the spread is under 0.03 and 5 samples or more; the nearest-sensor guess stays as the fallback and says so.
+4. ~~Feed the real Sentinel-2 series into the anomaly detector.~~ **Done:** `scripts/fetch_satellite.py` now saves the per-pixel NDVI (16 x 16, 18 dates for the demo parcel); `services/satellite_layer.py` runs the detector (baseline from 4 early passes, persistence 3). On the real data it finds one patch in zone D (40 pixels, 0.375 ha, 4 passes, high). The engine turns it into "Inspect zone D" pinned at the centroid; `GET /api/zones/anomalies` serves the GeoJSON; the land view draws the cells.
+5. ~~Cross-layer tests.~~ **Done:** `tests/test_layers.py` (7 tests): flagged sensor -> no dose, Low, "Sensor unreliable" alert; a sample beats the flagged sensor; offsets; anomaly task; the same through the API.
+6. Done when: with a faulty simulated sensor the app says it cannot be sure and shows why (**yes**: moisture "?", Low, reason with the flag codes, red "!" on the map), and with an anomaly it points to the zone (**yes**). Open: the soil texture of the node is assumed loam; the sentinel is the nearest sensor (not `choose_sentinel`, which needs 20 aligned pairs); flag codes are shown raw (C02, D06) next to the explanation.
 
 ### Phase 3: React frontend (L)
 Port in this order; each step ends with the screen working against the real API in three languages.

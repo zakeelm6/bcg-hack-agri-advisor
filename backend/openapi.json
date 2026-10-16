@@ -64,6 +64,56 @@
         "title": "AlertOut",
         "type": "object"
       },
+      "AnomaliesOut": {
+        "additionalProperties": true,
+        "description": "GeoJSON FeatureCollection of persistent satellite anomalies, with honest metadata (Phase 2).",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "dates": {
+            "default": 0,
+            "title": "Dates",
+            "type": "integer"
+          },
+          "features": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "features",
+          "available",
+          "note"
+        ],
+        "title": "AnomaliesOut",
+        "type": "object"
+      },
       "AuditEntry": {
         "additionalProperties": true,
         "properties": {
@@ -707,6 +757,33 @@
             "title": "Field Id",
             "type": "integer"
           },
+          "flag_text": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Flag Text",
+            "type": "array"
+          },
+          "flags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "good_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Good Share"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -718,6 +795,17 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "quality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality"
           },
           "simulated": {
             "title": "Simulated",
@@ -1433,9 +1521,32 @@
             "title": "Ndvi Source",
             "type": "string"
           },
+          "offset": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
           "row": {
             "title": "Row",
             "type": "integer"
+          },
+          "sensor_quality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensor Quality"
           },
           "soil_test": {
             "anyOf": [
@@ -2159,6 +2270,47 @@
           }
         },
         "summary": "Vision"
+      }
+    },
+    "/api/zones/anomalies": {
+      "get": {
+        "description": "Persistent vigor anomalies from the Sentinel-2 pixels (GeoJSON). Empty with available=false until the pixels are downloaded.",
+        "operationId": "zone_anomalies_api_zones_anomalies_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "title": "Lang",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomaliesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Zone Anomalies"
       }
     }
   }

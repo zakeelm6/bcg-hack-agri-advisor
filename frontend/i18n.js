@@ -126,6 +126,7 @@ const T = [
   ["Tap the mic and speak", "Touchez le micro et parlez", "المس الميكروفون وتكلّم"], ["Still listening. Tap the square to send.", "J'écoute toujours. Touchez le carré pour envoyer.", "ما زلت أستمع. المس المربع للإرسال."],
   ["Read aloud: on", "Lecture à voix haute : activée", "القراءة بصوت عالٍ: مفعّلة"], ["Read aloud: off", "Lecture à voix haute : désactivée", "القراءة بصوت عالٍ: متوقفة"],
   ["just now", "à l'instant", "الآن"],
+  ["Sensor unreliable", "Capteur peu fiable", "مستشعر غير موثوق"], ["Satellite alert", "Alerte satellite", "تنبيه القمر الصناعي"],
 ];
 const EXACT = { fr: {}, ar: {} };
 for (const [en, fr, ar] of T) { EXACT.fr[en] = fr; EXACT.ar[en] = ar; }
@@ -152,6 +153,7 @@ const PATTERNS = [
   [/^Advice saved (.+)\. What you do is kept on this phone and sent later\.$/, (m, a) => `Conseils enregistrés ${ago("fr", a)}. Ce que vous faites est gardé sur ce téléphone et envoyé plus tard.`, (m, a) => `نصائح محفوظة ${ago("ar", a)}. ما تفعله يُحفظ على هذا الهاتف ويُرسل لاحقًا.`],
   [/^Picture: Sentinel-2, (.+)$/, (m, d) => `Image : Sentinel-2, ${d}`, (m, d) => `الصورة: Sentinel-2، ${d}`],
   [/^Vigor: Sentinel-2, (.+)$/, (m, d) => `Vigueur : Sentinel-2, ${d}`, (m, d) => `قوة النبات: Sentinel-2، ${d}`],
+  [/^Anomalies: Sentinel-2 pixels, (\d+) dates$/, (m, n) => `Anomalies : pixels Sentinel-2, ${n} dates`, (m, n) => `الشذوذات: بكسلات Sentinel-2، ${n} تاريخًا`],
   [/^Soil test, zone (\w)$/, (m, z) => `Analyse de sol, zone ${z}`, (m, z) => `تحليل التربة، المنطقة ${z}`],
   [/^(\d+) to (\d+)$/, (m, a, b) => `${a} à ${b}`, (m, a, b) => `من ${a} إلى ${b}`],
   [/^e\.g\. (.+)$/, (m, v) => `ex. ${v}`, (m, v) => `مثلًا ${v}`],

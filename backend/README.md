@@ -14,7 +14,7 @@ The mobile screens of the design are in Figma: https://www.figma.com/design/CGzd
 Open it at `http://localhost:8000` (browsers only allow GPS on HTTPS or localhost).
 
 **Exposure:** `./run.sh` listens on this computer only (127.0.0.1). `FA_HOST=0.0.0.0 ./run.sh` opens it to everyone on the same Wi-Fi, for a phone demo. The app has **no login yet**, so anyone who can reach it can read the data, write soil tests and tasks, and (if a model key is configured) spend it, within a 30-calls-per-minute brake. Do not put it on the internet (port forwarding, tunnel, public server) before adding authentication, HTTPS and per-user data.
-Tests (61): `source .venv/bin/activate && python -m pytest -q`
+Tests (84): `source .venv/bin/activate && python -m pytest -q`
 
 ## What is real and what is simulated
 | Part | Status |
@@ -23,7 +23,9 @@ Tests (61): `source .venv/bin/activate && python -m pytest -q`
 | Decision engine (irrigation, fertilizer, inspection, alerts, harvest estimate) | **Real code**, rule based, unit tested (`tests/`). No language model computes any number |
 | Crop vigor (NDVI) per zone | **Real Sentinel-2** after you run `scripts/fetch_satellite.py` (see below). Before that, seeded and **simulated**. 10 m pixels are coarse for a 2.4 ha field (about 55 pixels per zone) |
 | Crop type and harvest date | **Not identified**: a satellite shows vigor, not the species. The harvest forecast is a placeholder until the crop is known |
-| Two soil-moisture sensors | **Simulated** (`scripts/simulate_sensors.py` posts readings to the API) |
+| Two soil-moisture sensors | **Simulated** (`scripts/simulate_sensors.py` posts readings to the API). Every reading goes through the **quality checks** of the sensor layer (bounds, spikes, jumps, plateaus, rain consistency, frozen soil, depth order) and keeps its flags; a flagged sensor gives no dose |
+| Moisture of a zone without a sensor | **Learned offset** to the shared sensor from the farmer's soil samples (3 or more), else the nearest-sensor estimate, each with its confidence and reason |
+| Satellite anomaly detection | **Real Sentinel-2 pixels** through the detector of the satellite layer (baseline, persistence); a persistent patch becomes "Inspect zone X" and a GeoJSON layer |
 | Buyers, offers and prices | **Simulated** |
 | Soil tests | **Typed by the user** (pH, organic matter, moisture). pH warns outside 5.5 to 7.5; organic matter shifts the nitrogen dose by 10 kg/ha and raises the confidence; moisture counts as a measurement for 3 days. No file upload or OCR yet |
 | Harvest forecast | Simple model, **not validated** |
@@ -64,11 +66,12 @@ been run against a real model API yet**, because no key was configured here. Try
 ## Real satellite data (Sentinel-2)
 Free, no account. A second environment keeps the geospatial libraries away from the web server:
 ```bash
-python3 -m venv .venv-sat && .venv-sat/bin/pip install numpy rasterio pystac-client pyproj
+python3 -m venv .venv-sat && .venv-sat/bin/pip install -r requirements.txt numpy rasterio pystac-client pyproj
 .venv-sat/bin/python scripts/fetch_satellite.py --lat 32.6328 --lon -8.4368 [--crop Potato]
 .venv-sat/bin/python scripts/fetch_satellite.py --from-cache      # re-apply the last download with no internet
 ```
 The Field page then shows a **Vigor over time** chart (one line per zone, `GET /api/ndvi-series`), a one-line summary of the weakest zone, and the dashed demo target of 0.70. Gaps are cloudy dates.
+The cache also keeps the **per-pixel NDVI** of every date, which feeds the anomaly detector (`GET /api/zones/anomalies`, the red cells on the land view).
 It downloads only the field's pixels from the Earth Search catalog, drops clouds, shadows, water and very dark pixels, averages NDVI over the 4 zones and keeps the last 4 clear dates per zone. The coordinates in the example are a real irrigated parcel near El Jadida found by scanning Sentinel-2 for homogeneous, vigorous 175 m blocks on 2026-10-12. The sowing date, the crop and the two soil sensors of the demo are still assumptions or simulations.
 The thresholds of the rules (vigor target 0.70, fertilizer band 0.45 to 0.62, moisture trigger 23%) are demo values: they need calibrating on real fields before any real use.
 
@@ -79,7 +82,7 @@ Phone (PWA, localStorage cache + queue)  <->  FastAPI  <->  SQLite
                        engine.py (rules + water balance), geo.py (Open-Meteo)
 ```
 - `GET /api/state` returns field, zones (moisture estimate and confidence), sensors, tasks, alerts, weather.
-- Moisture of a zone without a sensor is **estimated** from the nearest sensor and crop vigor, and its confidence is lower.
+- Moisture of a zone without a sensor comes from the **learned offset** to the shared sensor (after 3 soil samples), else is **estimated** from the nearest sensor and crop vigor, with a lower confidence. A sensor whose recent readings are flagged gives **no** moisture: the zone says "?" and asks for a soil sample.
 - Irrigation needs moisture under 23% and no useful rain; depth is capped at 30 mm. Fertilizer is skipped before heavy rain and dose is capped at 60 kg N/ha.
 - Every task carries what, when, why, cost, confidence (with the reason) and a plan B.
 - `POST /api/sensors/{id}/readings` accepts a new reading and the advice is recomputed.
@@ -107,7 +110,7 @@ app/
   schemas/         requests.py and responses.py: the API contract (typed in openapi.json)
   services/        the use cases: advice and state, tasks, soil tests, market, sync, Copilot, chat adapter
   api/routers/     one file per area: health, state, tasks, market, copilot, voice, sync, pages
-  processing/      engine (decisions), copilot, llm, speech, geo (weather)
+  processing/      engine (decisions), copilot, llm, speech, geo (weather), sensors/ (quality, offset, simulator), satellite/ (indices, anomalies, zones)
 migrations/        Alembic: 0001 is the baseline; a database made before migrations existed is adopted on start-up
 openapi.json       the frozen contract, regenerate with  python scripts/export_openapi.py
 ```

@@ -48,6 +48,21 @@ class Reading(Base):
     ts: Mapped[str] = mapped_column(Text)
     moisture: Mapped[float] = mapped_column(Float)
     temp_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    flags: Mapped[str] = mapped_column(Text, default="[]", server_default="[]")   # JSON list of quality flags (ISMN codes); never deleted, only flagged
+
+
+class PlotOffset(Base):
+    """Learned gap between a plot (zone) and the shared sentinel sensor: moisture_zone = moisture_sentinel + delta."""
+    __tablename__ = "plot_offsets"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    field_id: Mapped[int] = mapped_column(Integer)
+    zone_code: Mapped[str] = mapped_column(Text)
+    sentinel_zone: Mapped[str] = mapped_column(Text)
+    delta: Mapped[float] = mapped_column(Float)
+    sdrd: Mapped[float] = mapped_column(Float)              # spread of the difference: low means the offset transfers well
+    n_samples: Mapped[int] = mapped_column(Integer)
+    learned_at: Mapped[str] = mapped_column(Text)
+    __table_args__ = (UniqueConstraint("field_id", "zone_code"),)
 
 
 class Task(Base):

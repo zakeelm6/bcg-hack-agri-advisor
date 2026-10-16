@@ -24,7 +24,7 @@ Where each part lives in the code:
 |---|---|---|
 | Frontend | [frontend/](frontend/) | `app.js`, `i18n.js`, `style.css`, `sw.js` |
 | Backend | [backend/](backend/) | `app/api/routers/` (routes), `app/services/`, `app/db/` (models, migrations in `migrations/`), `app/schemas/`, `scripts/`, `tests/` |
-| Processing | [backend/app/processing/](backend/app/processing/) and [processing/](processing/) | `engine.py` (decisions), `copilot.py`, `llm.py`, `speech.py`, `geo.py` (weather); the notes are in `processing/` |
+| Processing | [backend/app/processing/](backend/app/processing/) and [processing/](processing/) | `engine.py` (decisions), `copilot.py`, `llm.py`, `speech.py`, `geo.py` (weather), `sensors/` (quality flags, learned offset), `satellite/` (anomaly detection, zones); the notes are in `processing/` and [docs/SENSORS.md](docs/SENSORS.md) |
 
 ![Architecture](processing/architecture-diagram.png)
 
@@ -33,7 +33,7 @@ Where each part lives in the code:
 ```bash
 cd backend
 ./run.sh                 # creates .venv, installs dependencies, serves http://127.0.0.1:8000
-python -m pytest -q      # 61 tests (activate .venv first)
+python -m pytest -q      # 84 tests (activate .venv first)
 ```
 Optional: copy `backend/.env.example` to `backend/.env` for a language model and for the Azure voice.
 
@@ -54,8 +54,8 @@ Optional: copy `backend/.env.example` to `backend/.env` for a language model and
 
 ## Honest status
 
-Real: Sentinel-2 vigor per zone for one parcel, Open-Meteo weather, the rule engine and its 50 tests, offline queue, GPS.
-Simulated: the two soil-moisture sensors, buyers and prices. Not validated: harvest forecast, rule thresholds (demo values).
+Real: Sentinel-2 vigor per zone and per pixel for one parcel (18 dates), the anomaly detector on those pixels, Open-Meteo weather, the rule engine, the sensor quality checks, offline queue, GPS. 84 tests.
+Simulated: the two soil-moisture sensors (their readings still go through the real quality checks), buyers and prices. Not validated: harvest forecast, rule thresholds (demo values), the detector's thresholds on other fields.
 Not tested for real yet: a real language model, the Azure voice with a real key, a real microphone, a phone.
 Tested for real on 17 Oct 2026: browser read-aloud in Google Chrome on Linux (English and French voices; no Arabic voice without Azure).
 It is a hackathon prototype, not agronomic advice for real fields.

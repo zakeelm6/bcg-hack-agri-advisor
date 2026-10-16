@@ -36,6 +36,8 @@ class ZoneOut(Loose):
     confidence: str
     conf_reason: str
     has_sensor: bool
+    sensor_quality: str | None = None       # high / medium / low / insufficient, from the quality checks (Phase 2)
+    offset: dict | None = None              # learned gap to the shared sensor: {sentinel, delta, sdrd, n, transferable}
     soil_test: dict | None = None
 
 
@@ -47,6 +49,10 @@ class SensorOut(Loose):
     simulated: bool
     moisture: float
     updated_at: str
+    quality: str | None = None              # high / medium / low / insufficient
+    flags: list[str] = []                   # quality flags on the recent readings (ISMN codes, see docs/SENSORS.md)
+    flag_text: list[str] = []
+    good_share: float | None = None
 
 
 class TaskOut(Loose):
@@ -222,3 +228,13 @@ class ChatOut(Loose):
     why: str
     steps: list[str]
     missing: list[str]
+
+
+class AnomaliesOut(Loose):
+    """GeoJSON FeatureCollection of persistent satellite anomalies, with honest metadata (Phase 2)."""
+    type: str
+    features: list[dict]
+    available: bool
+    source: str | None = None
+    dates: int = 0
+    note: str

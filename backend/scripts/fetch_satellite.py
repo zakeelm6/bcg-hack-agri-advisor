@@ -9,7 +9,8 @@ What it does:
   2. for each scene reads only the field's pixels (a ~155 m square = 2.4 ha, about 15 x 15 pixels at 10 m);
   3. drops clouds, shadows, water and very dark pixels (scene classification band), computes NDVI;
   4. averages NDVI over the 2 x 2 zones (A B / C D); a zone with under half clear pixels is skipped for that date;
-  5. keeps the last 4 clear dates per zone and writes them to the database, plus a JSON cache in data/.
+  5. keeps the last 4 clear dates per zone and writes them to the database, plus a JSON cache in data/ that also holds the
+     per-pixel NDVI of every date (used by the anomaly detector, see app/processing/satellite).
 Limits (shown in the app): 10 m pixels are coarse for a 2.4 ha field, so each zone has only about 55 pixels.
 """
 import argparse
@@ -53,8 +54,10 @@ def download(lat, lon, days, max_cloud):
             continue
         zm = sat.zone_means(nd, good)
         valid_share = round(float(good.mean()), 2)
+        # the per-pixel NDVI (None where cloudy or unusable) feeds the anomaly detector in app/processing/satellite
+        pixels = [[round(float(v), 3) if np.isfinite(v) else None for v in row] for row in nd]
         rows.append({"date": d, "scene": info["id"], "scene_cloud_pct": round(info["cloud"], 1) if info["cloud"] is not None else None,
-                     "clear_pixel_share": valid_share, "zones": zm})
+                     "clear_pixel_share": valid_share, "zones": zm, "pixels": pixels})
         print(f"  {d}  scene cloud {info['cloud']:.0f}%  clear pixels {valid_share:.0%}  zones {zm}")
     return {"lat": lat, "lon": lon, "side_m": SIDE_M, "fetched_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
             "source": "Sentinel-2 L2A via Earth Search", "rows": rows}

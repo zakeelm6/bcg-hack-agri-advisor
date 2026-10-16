@@ -36,6 +36,7 @@ Language parameter: `lang` is `en`, `fr` or `ar` (default `en`). Errors are JSON
 | `POST /api/tts` | `{text, lang}` | audio (MP3) | voice out |
 | `POST /api/sync` | `{actions: [{type, payload}]}` where `type` is `task_status`, `observation`, `soil_test`, `listing` or `offer_accept` | `results[]` | offline replay |
 | `GET /api/audit` | none | `entries[]` | audit view |
+| `GET /api/zones/anomalies?lang` | none | GeoJSON `FeatureCollection` + `available`, `source`, `dates`, `grid`, `note`; each feature has `zone_code`, `severity`, `persistence`, `cells[]`, `x`, `y`, `why` | land view (Phase 2) |
 
 `GET /` serves the legacy web app and `GET /sw.js` its service worker. They are not in `openapi.json` and disappear when the React app replaces it.
 
@@ -47,5 +48,9 @@ Added in Phase 1: `POST /api/chat` with `{question (max 400), photo?, context, l
 - There is one field and one farmer (`field_id = 1`). Multi-user needs a farmer id and authentication.
 - There is no login, so every endpoint is open. Do not expose the API publicly before Phase 6.
 
+Added in Phase 2 (additive): `GET /api/zones/anomalies`; in `GET /api/state`, `sensors[].quality / flags / flag_text / good_share`,
+`zones[].sensor_quality / offset`, `data_notes.anomalies`; in `GET /api/offers`, `offers[].est_value_mad` and `harvest_mid_t`.
+`POST /api/sensors/{id}/readings` now accepts any plausible fraction (about -0.2 to 1.5) and **flags** impossible values instead of refusing them (422 only beyond that range).
+
 ## Planned additions (not frozen yet)
-`GET/POST /api/farmer` (profile), `GET /api/zones/anomalies` (GeoJSON), authentication routes.
+`GET/POST /api/farmer` (profile), authentication routes.

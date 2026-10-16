@@ -144,6 +144,7 @@ async function loadState(refresh = false) {
 }
 async function loadLand() {         // the satellite picture of the land, if it was downloaded
   try { ui.land = await fetchJson("/static/land.json"); } catch { ui.land = null; }
+  ui.anom = await getCached("/api/zones/anomalies");            // persistent satellite anomalies (GeoJSON), cached for offline
 }
 
 /* ---------- helpers ---------- */
@@ -225,9 +226,19 @@ function landSvg(tight, margin = 20) {
     // the value sits in the top-end corner, pins go in a row below it, the sensor dot in the bottom-start corner: nothing overlaps
     const val = t => `<text x="${x + w - 4}" y="${y + fs * 1.3 + 2}" text-anchor="end" font-size="${fs * 1.3}" font-weight="700" fill="#fff" stroke="#1D2B1A" stroke-width=".6" paint-order="stroke">${t}</text>`;
     if (Ly === "vigor") s += val(zn.ndvi.toFixed(2));
-    if (Ly === "moisture" && zn.moisture != null) s += val(`${Math.round(zn.moisture * 100)}%`);
+    if (Ly === "moisture") s += val(zn.moisture != null ? `${Math.round(zn.moisture * 100)}%` : "?");
     if (Ly === "soil") s += st && st.ph != null ? val("pH " + st.ph) : "";
-    if (zn.has_sensor) s += `<g><title>${esc(tt("Sensor"))}</title><circle cx="${x + r + 1}" cy="${y + w - r - 1}" r="${r * .62}" fill="#fff" stroke="#22401F" stroke-width="1.2"/><circle cx="${x + r + 1}" cy="${y + w - r - 1}" r="${r * .26}" fill="#22401F"/></g>`;
+    if (zn.has_sensor) {
+      const bad = zn.sensor_quality === "low" || zn.sensor_quality === "insufficient";   // flagged readings: shown, never used for a dose
+      const cx = x + r + 1, cy = y + w - r - 1;
+      s += `<g><title>${esc(tt(bad ? "Sensor unreliable" : "Sensor"))}</title><circle cx="${cx}" cy="${cy}" r="${r * .62}" fill="${bad ? "#B5472B" : "#fff"}" stroke="${bad ? "#fff" : "#22401F"}" stroke-width="1.2"/>${bad ? `<text x="${cx}" y="${cy + r * .3}" text-anchor="middle" font-size="${r * .9}" font-weight="700" fill="#fff">!</text>` : `<circle cx="${cx}" cy="${cy}" r="${r * .26}" fill="#22401F"/>`}</g>`;
+    }
+  });
+  // satellite anomaly layer: the pixels that stayed below their own normal on several passes (where, not why)
+  const g = ui.anom && ui.anom.available ? ui.anom : null;
+  if (g) g.features.forEach(f => {
+    const cw = F / g.grid.cols, ch = F / g.grid.rows;
+    s += `<g opacity=".8"><title>${esc(f.properties.zone_code)}: ${esc(f.properties.why || "")}</title>${(f.properties.cells || []).map(([rr, cc]) => `<rect x="${(fx + cc * cw).toFixed(1)}" y="${(fy + rr * ch).toFixed(1)}" width="${cw.toFixed(1)}" height="${ch.toFixed(1)}" fill="#B5472B" fill-opacity=".5" stroke="#fff" stroke-opacity=".5" stroke-width=".4"/>`).join("")}</g>`;
   });
   s += `<rect x="${fx}" y="${fy}" width="${F}" height="${F}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>`;
   const byZone = {};
@@ -245,14 +256,17 @@ function landSvg(tight, margin = 20) {
 const legendBar = () => ui.layer === "soil"
   ? `<div class="legend"><span><i style="background:${ND.high}"></i>pH 5.5 to 7.5</span><span><i style="background:${ND.low}"></i>pH outside</span><span><i style="background:#CDB88E"></i>No test</span>${sensorLegend()}</div>`
   : `<div class="legendrow"><span>Low</span><div class="legendbar ${ui.layer}" role="img" aria-label="low to high"></div><span>High</span>${sensorLegend()}</div>`;
-const sensorLegend = () => (S?.sensors || []).length ? `<span class="legend-sensor"><i></i>Sensor</span>` : "";
+const sensorLegend = () => ((S?.sensors || []).length ? `<span class="legend-sensor"><i></i>Sensor</span>` : "")
+  + ((S?.sensors || []).some(x => x.quality === "low" || x.quality === "insufficient") ? `<span class="legend-sensor bad"><i>!</i>Sensor unreliable</span>` : "")
+  + (ui.anom && ui.anom.available && ui.anom.features.length ? `<span class="legend-anom"><i></i>Satellite alert</span>` : "");
 const LAYERS = [["vigor", "leaf", "Vigor"], ["moisture", "drop", "Moisture"], ["soil", "flask", "Soil"], ["trust", "shield", "Trust"]];
 const layerChips = () => `<div class="layers">${LAYERS.map(l => `<button class="lchip ${ui.layer === l[0] ? "on" : ""}" data-layer="${l[0]}" aria-label="${l[2]}" title="${l[2]}">${ic(l[1], 20)}<span>${l[2]}</span></button>`).join("")}</div>`;
 /* honest labels under the land: where the picture comes from, where the vigor comes from, and that the sensors are simulated */
 function landNote() {
   const vd = vigorDate(), sim = S?.data_notes?.sensors === "simulated";
   const tag = (txt, warn) => `<span class="tag ${warn ? "warn" : ""}">${txt}</span>`;
-  return `<div class="credit">${ui.land ? tag(`Picture: Sentinel-2, ${esc(fmtDate(ui.land.date))}`) : ""}${vd ? tag(`Vigor: Sentinel-2, ${esc(fmtDate(vd))}`) : tag("Vigor: simulated", true)}${sim ? tag("Sensors: simulated", true) : ""}</div>`;
+  const an = ui.anom && ui.anom.available ? tag(`Anomalies: Sentinel-2 pixels, ${ui.anom.dates} dates`) : "";
+  return `<div class="credit">${ui.land ? tag(`Picture: Sentinel-2, ${esc(fmtDate(ui.land.date))}`) : ""}${vd ? tag(`Vigor: Sentinel-2, ${esc(fmtDate(vd))}`) : tag("Vigor: simulated", true)}${an}${sim ? tag("Sensors: simulated", true) : ""}</div>`;
 }
 
 /* ---------- home: do this now, the land and the Copilot ---------- */
@@ -875,7 +889,7 @@ $app.addEventListener("click", async e => {
   if (act === "accept") { ui.confirmOffer = null; enqueue("offer_accept", { offer_id: +d.id }); toast("Offer accepted (buyers are simulated)"); return render(); }
   if (act === "listing") { enqueue("listing", {}); toast("Sale offer published (buyers are simulated)"); return render(); }
   if (act === "sync") return flush(true);
-  if (act === "refresh") { await loadState(true); ui.forecast = null; ui.series = null; ui.seriesLoading = false; toast(offline ? "Offline: showing saved advice" : "Advice refreshed"); return render(); }
+  if (act === "refresh") { await loadState(true); await loadLand(); ui.forecast = null; ui.series = null; ui.seriesLoading = false; toast(offline ? "Offline: showing saved advice" : "Advice refreshed"); return render(); }
   if (act === "locate") return locate();
   if (act === "walk-start") return walkStart();
   if (act === "walk-stop") return walkStop();
