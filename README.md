@@ -33,7 +33,7 @@ Where each part lives in the code:
 ```bash
 cd backend
 ./run.sh                 # creates .venv, installs dependencies, serves http://127.0.0.1:8000
-python -m pytest -q      # 60 tests (activate .venv first)
+python -m pytest -q      # 61 tests (activate .venv first)
 ```
 Optional: copy `backend/.env.example` to `backend/.env` for a language model and for the Azure voice.
 
@@ -48,7 +48,7 @@ Optional: copy `backend/.env.example` to `backend/.env` for a language model and
 | [processing/VOICE.md](processing/VOICE.md) | How the Copilot talks and listens, setup, tests, limits |
 | [processing/sensors-and-differentiators.md](processing/sensors-and-differentiators.md) | Which sensors, how to detect errors, ideas that differentiate the project |
 | [backend/README.md](backend/README.md) | API, what is real and what is simulated, satellite data, Copilot |
-| [docs/ux/CHANGELOG.md](docs/ux/CHANGELOG.md) | UX redesign with before and after screenshots |
+| [docs/ux/CHANGELOG.md](docs/ux/CHANGELOG.md) | UX redesign and the October 2026 audit fixes, with before and after screenshots ([audit table](docs/ux/AUDIT-2026-10-16.md)) |
 | [docs/prompts/](docs/prompts/) | Prompts used for the UX work in Cursor |
 | [docs/reference/](docs/reference/) | The hackathon brief and a reference handoff note from another project |
 
@@ -57,6 +57,7 @@ Optional: copy `backend/.env.example` to `backend/.env` for a language model and
 Real: Sentinel-2 vigor per zone for one parcel, Open-Meteo weather, the rule engine and its 50 tests, offline queue, GPS.
 Simulated: the two soil-moisture sensors, buyers and prices. Not validated: harvest forecast, rule thresholds (demo values).
 Not tested for real yet: a real language model, the Azure voice with a real key, a real microphone, a phone.
+Tested for real on 17 Oct 2026: browser read-aloud in Google Chrome on Linux (English and French voices; no Arabic voice without Azure).
 It is a hackathon prototype, not agronomic advice for real fields.
 
 `_archive/` holds files that are not part of the project (loose images, an earlier copy of the README). Nothing in it is needed to run.

@@ -1,0 +1,518 @@
+{
+ "phone-en-home": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-field": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-tasks": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-task": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-follow": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-soil": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-alerts": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "New",
+    "w": 52,
+    "h": 28
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "New",
+    "w": 52,
+    "h": 28
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-en-sell": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-me": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-about": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-en-console": [],
+ "desktop-en-home": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-field": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-tasks": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-task": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-follow": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-soil": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-alerts": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "New",
+    "w": 52,
+    "h": 28
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "New",
+    "w": 52,
+    "h": 28
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-en-sell": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-me": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-about": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-en-console": [],
+ "phone-fr-home": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-field": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-tasks": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-task": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-follow": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-soil": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-alerts": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "Nouveau",
+    "w": 86,
+    "h": 28
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "Nouveau",
+    "w": 86,
+    "h": 28
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-fr-sell": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-me": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-about": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-fr-console": [],
+ "desktop-fr-home": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-field": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-tasks": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-task": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-follow": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-soil": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-alerts": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "Nouveau",
+    "w": 86,
+    "h": 28
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "Nouveau",
+    "w": 86,
+    "h": 28
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-fr-sell": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-me": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-about": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-fr-console": [],
+ "phone-ar-home": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-field": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-tasks": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-task": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-follow": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-soil": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-alerts": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "جديد",
+    "w": 50,
+    "h": 28
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "جديد",
+    "w": 50,
+    "h": 28
+   }
+  ],
+  "unlabeled": []
+ },
+ "phone-ar-sell": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-me": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-about": {
+  "overflow": false,
+  "scrollWidth": 390,
+  "innerWidth": 390,
+  "small": [],
+  "unlabeled": []
+ },
+ "phone-ar-console": [],
+ "desktop-ar-home": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-field": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-tasks": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-task": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-follow": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-soil": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-alerts": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "جديد",
+    "w": 50,
+    "h": 28
+   },
+   {
+    "tag": "BUTTON",
+    "cls": "pill",
+    "txt": "جديد",
+    "w": 50,
+    "h": 28
+   }
+  ],
+  "unlabeled": []
+ },
+ "desktop-ar-sell": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-me": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-about": {
+  "overflow": false,
+  "scrollWidth": 1440,
+  "innerWidth": 1440,
+  "small": [],
+  "unlabeled": []
+ },
+ "desktop-ar-console": []
+}

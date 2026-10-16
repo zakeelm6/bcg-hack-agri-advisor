@@ -99,6 +99,33 @@ const T = [
   ["Listening...", "J'écoute...", "أستمع..."], ["Voice needs Chrome or Edge", "La voix nécessite Chrome ou Edge", "الصوت يحتاج Chrome أو Edge"], ["Voice needs internet", "La voix nécessite internet", "الصوت يحتاج اتصالًا بالإنترنت"],
   ["Microphone is blocked", "Le microphone est bloqué", "الميكروفون محظور"], ["I heard nothing", "Je n'ai rien entendu", "لم أسمع شيئًا"], ["Voice did not work", "La voix n'a pas fonctionné", "لم يعمل الصوت"],
   ["I need a connection for that question. Offline I can answer: Why? Plan B? When? How much? How sure are you? My plan for today.", "J'ai besoin d'une connexion pour cette question. Hors ligne, je peux répondre à : Pourquoi ? Plan B ? Quand ? Combien ? Quelle est votre certitude ? Mon plan pour aujourd'hui.", "أحتاج إلى اتصال للإجابة عن هذا السؤال. دون اتصال أستطيع الإجابة عن: لماذا؟ الخطة البديلة؟ متى؟ كم؟ ما درجة التأكد؟ خطتي لهذا اليوم."],
+  // audit fixes, October 2026
+  ["Back", "Retour", "رجوع"], ["Sensor", "Capteur", "مستشعر"], ["Vigor: simulated", "Vigueur : simulée", "قوة النبات: محاكاة"], ["Sensors: simulated", "Capteurs : simulés", "المستشعرات: محاكاة"],
+  ["No task today. We check again tomorrow morning.", "Aucune tâche aujourd'hui. Nous revérifions demain matin.", "لا مهام اليوم. سنتحقق مجددًا صباح الغد."],
+  ["Today", "Aujourd'hui", "اليوم"], ["Why not?", "Pourquoi pas ?", "لماذا لا؟"], ["No water or product", "Pas d'eau ou de produit", "لا ماء أو منتج"], ["No time", "Pas le temps", "لا وقت"], ["Not needed", "Pas nécessaire", "غير ضروري"],
+  ["How does the field look?", "Comment est le champ ?", "كيف يبدو الحقل؟"], ["Saved without a result.", "Enregistré sans résultat.", "حُفظ دون نتيجة."],
+  ["New", "Nouveau", "جديد"], ["Mark as read", "Marquer comme lu", "وضع علامة مقروء"],
+  ["The other offers will be declined.", "Les autres offres seront refusées.", "ستُرفض العروض الأخرى."], ["Yes, accept", "Oui, accepter", "نعم، أقبل"], ["No", "Non", "لا"],
+  ["Offers", "Offres", "العروض"], ["Buyers simulated", "Acheteurs simulés", "مشترون محاكون"], ["Estimate, not validated", "Estimation, non validée", "تقدير غير مؤكد"], ["Crop: not identified.", "Culture : non identifiée.", "المحصول: غير محدد."],
+  ["Offer accepted (buyers are simulated)", "Offre acceptée (les acheteurs sont simulés)", "تم قبول العرض (المشترون محاكون)"], ["MAD/kg", "MAD/kg", "درهم/كغ"],
+  ["Answers come from tested rules, no AI model", "Les réponses viennent de règles testées, sans modèle d'IA", "الأجوبة من قواعد مُختبَرة، دون نموذج ذكاء اصطناعي"],
+  ["Server voice (Azure), any browser, Arabic included", "Voix serveur (Azure), tout navigateur, arabe compris", "صوت الخادم (Azure)، أي متصفح، بما فيه العربية"],
+  ["Voice from the browser (Chrome or Edge), needs internet", "Voix du navigateur (Chrome ou Edge), internet nécessaire", "صوت المتصفح (Chrome أو Edge)، يحتاج إنترنت"],
+  ["No voice in this browser: type your questions", "Pas de voix dans ce navigateur : écrivez vos questions", "لا صوت في هذا المتصفح: اكتب أسئلتك"],
+  ["Voice:", "Voix :", "الصوت:"], ["the harvest forecast.", "la prévision de récolte.", "توقع الحصاد."],
+  ["server voice (Azure), not yet tested with a real key.", "voix serveur (Azure), pas encore testée avec une vraie clé.", "صوت الخادم (Azure)، لم يُختبر بعد بمفتاح حقيقي."],
+  ["the browser's speech service (Chrome or Edge).", "le service vocal du navigateur (Chrome ou Edge).", "خدمة الكلام في المتصفح (Chrome أو Edge)."],
+  ["Farm Advisor  -  Team 2  -  BCG Platinion Hackathon 2026", "Farm Advisor  -  Équipe 2  -  Hackathon BCG Platinion 2026", "Farm Advisor  -  الفريق 2  -  هاكاثون BCG Platinion 2026"],
+  ["Demo data, not agronomic advice for real fields.", "Données de démonstration, pas un conseil agronomique pour de vrais champs.", "بيانات تجريبية، وليست نصيحة زراعية لحقول حقيقية."],
+  ["From your saved advice", "D'après vos conseils enregistrés", "من نصائحك المحفوظة"], ["Type your question about your field.", "Écrivez votre question sur votre champ.", "اكتب سؤالك عن حقلك."],
+  ["Thinking...", "Je réfléchis...", "أفكر..."], ["Speaking... tap the square to stop", "Je parle... touchez le carré pour arrêter", "أتحدث... المس المربع للإيقاف"],
+  ["Offline: type your question, saved answers only", "Hors ligne : écrivez votre question, réponses enregistrées seulement", "دون اتصال: اكتب سؤالك، الأجوبة المحفوظة فقط"],
+  ["Microphone is blocked. Allow it, or type your question", "Le microphone est bloqué. Autorisez-le, ou écrivez votre question", "الميكروفون محظور. اسمح به أو اكتب سؤالك"],
+  ["No voice in this browser: type your question", "Pas de voix dans ce navigateur : écrivez votre question", "لا صوت في هذا المتصفح: اكتب سؤالك"],
+  ["Talk mode on: I listen after each answer. Say \"stop\" to end", "Mode conversation : j'écoute après chaque réponse. Dites « stop » pour finir", "وضع المحادثة: أستمع بعد كل جواب. قل «توقف» للإنهاء"],
+  ["Tap the mic and speak", "Touchez le micro et parlez", "المس الميكروفون وتكلّم"], ["Still listening. Tap the square to send.", "J'écoute toujours. Touchez le carré pour envoyer.", "ما زلت أستمع. المس المربع للإرسال."],
+  ["Read aloud: on", "Lecture à voix haute : activée", "القراءة بصوت عالٍ: مفعّلة"], ["Read aloud: off", "Lecture à voix haute : désactivée", "القراءة بصوت عالٍ: متوقفة"],
+  ["just now", "à l'instant", "الآن"],
 ];
 const EXACT = { fr: {}, ar: {} };
 for (const [en, fr, ar] of T) { EXACT.fr[en] = fr; EXACT.ar[en] = ar; }
@@ -114,8 +141,23 @@ const soilLine = (l, line) => l === "fr"
   ? line.replace(/organic/g, "matière organique").replace(/moisture/g, "humidité").replace(/(\d)%/g, "$1 %")
   : line.replace(/organic/g, "مادة عضوية").replace(/moisture/g, "رطوبة");
 
+const ago = (l, a) => { let m;
+  if (a === "just now") return l === "fr" ? "à l'instant" : "الآن";
+  if ((m = /^(\d+) min ago$/.exec(a))) return l === "fr" ? `il y a ${m[1]} min` : `قبل ${m[1]} دقيقة`;
+  if ((m = /^(\d+) h ago$/.exec(a))) return l === "fr" ? `il y a ${m[1]} h` : `قبل ${m[1]} ساعة`;
+  if ((m = /^(\d+) days ago$/.exec(a))) return l === "fr" ? `il y a ${m[1]} jours` : `قبل ${m[1]} يوم`;
+  return a; };
 // [regex, french function, arabic function]
 const PATTERNS = [
+  [/^Advice saved (.+)\. What you do is kept on this phone and sent later\.$/, (m, a) => `Conseils enregistrés ${ago("fr", a)}. Ce que vous faites est gardé sur ce téléphone et envoyé plus tard.`, (m, a) => `نصائح محفوظة ${ago("ar", a)}. ما تفعله يُحفظ على هذا الهاتف ويُرسل لاحقًا.`],
+  [/^Picture: Sentinel-2, (.+)$/, (m, d) => `Image : Sentinel-2, ${d}`, (m, d) => `الصورة: Sentinel-2، ${d}`],
+  [/^Vigor: Sentinel-2, (.+)$/, (m, d) => `Vigueur : Sentinel-2, ${d}`, (m, d) => `قوة النبات: Sentinel-2، ${d}`],
+  [/^Soil test, zone (\w)$/, (m, z) => `Analyse de sol, zone ${z}`, (m, z) => `تحليل التربة، المنطقة ${z}`],
+  [/^(\d+) to (\d+)$/, (m, a, b) => `${a} à ${b}`, (m, a, b) => `من ${a} إلى ${b}`],
+  [/^e\.g\. (.+)$/, (m, v) => `ex. ${v}`, (m, v) => `مثلًا ${v}`],
+  [/^([\d.,]+) ha$/, (m, n) => `${n} ha`, (m, n) => `${n} هكتار`],
+  [/^Accept ([\d.,]+) MAD\/kg\?$/, (m, p) => `Accepter ${p} MAD/kg ?`, (m, p) => `قبول ${p} درهم/كغ؟`],
+  [/^MAD\/kg\s+-\s+([\d\s,.\u202f\u00a0]+) MAD$/, (m, x) => `MAD/kg  -  ${x} MAD`, (m, x) => `درهم/كغ  -  ${x} درهم`],
   [/^(\d+) updates? will sync (when you are online|now)\.$/, (m, n, w) => `${n} ${plural(n, "mise à jour sera envoyée", "mises à jour seront envoyées")} ${w === "now" ? "maintenant" : "une fois en ligne"}.`,
     (m, n, w) => `ستُرسل ${n} ${+n > 2 ? "تحديثات" : "تحديث"} ${w === "now" ? "الآن" : "عند الاتصال"}.`],
   [/^(\d+) updates sent, (\d+) refused by the server$/, (m, a, b) => `${a} mises à jour envoyées, ${b} refusées par le serveur`, (m, a, b) => `أُرسل ${a} وتم رفض ${b} من الخادم`],
@@ -123,7 +165,6 @@ const PATTERNS = [
   [/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/, (m, d) => DAYS.fr[d], (m, d) => DAYS.ar[d]],
   [/^(\d+) mm$/, (m, n) => `${n} mm`, (m, n) => `${n} مم`],
   [/^(.+) to (.+) t$/, (m, a, b) => `${a} à ${b} t`, (m, a, b) => `${a} إلى ${b} طن`],
-  [/^MAD\/kg\s+-\s+([\d,]+) MAD$/, (m, x) => `MAD/kg  -  ${x} MAD`, (m, x) => `درهم/كغ  -  ${x} درهم`],
   [/^Model: (.+)$/, (m, p) => `Modèle : ${p}`, (m, p) => `النموذج: ${p}`],
   [/^Step (\d)$/, (m, n) => `Étape ${n}`, (m, n) => `الخطوة ${n}`],
   [/^Zone (\w): (.+) \((today|yesterday|\d+ days ago)\)( - waiting to sync)?$/, (m, z, line, a, w) => `Zone ${z} : ${soilLine("fr", line)} (${ageFr(a)})${w ? " - en attente de synchronisation" : ""}`,

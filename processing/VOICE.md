@@ -95,6 +95,11 @@ the mic, chips, speaker and send button did nothing. Clicks are now handled at t
 
 ## 7. Not verified yet
 
+Verified on 17 October 2026 in Google Chrome on Linux (with `speech-dispatcher` and `espeak-ng` installed): the browser read-aloud
+path speaks English and French for real; Chrome lists no Arabic voice. The voice states (idle, listening, thinking, speaking, error,
+offline) are shown under the mic and were checked state by state. The Electron pane of OpenCode has no speech service: the app now
+says "Microphone is blocked. Allow it, or type your question" and disables the mic instead of going quiet.
+
 - A real Azure key: real recognition quality, the real names of the voices, and the quality of `ar-MA`.
 - A real person speaking into a real microphone, in a noisy field.
 - Arabic and French end to end, and a phone (Android with Chrome, HTTPS).
@@ -102,7 +107,7 @@ the mic, chips, speaker and send button did nothing. Clicks are now handled at t
 
 ## 8. Known limits and ideas
 
-- The loudness threshold for "the farmer is talking" is fixed. In a very noisy place it may never stop, or stop too early. A calibration step would help.
+- The loudness threshold adapts to the place: the first 0.3 s measure the noise floor, speech must rise to 3 times it (clamped between 0.015 and 0.08 RMS), silence is 1.5 times it. A level bar shows what the mic hears. Not yet tested with a real microphone in noise.
 - The recorder uses an audio API that is deprecated (`ScriptProcessorNode`). It works today; the replacement is `AudioWorklet`.
 - Azure short-audio recognition returns only the final text, up to about 60 s. No live words on screen and no streaming.
 - The farmer cannot interrupt the Copilot by speaking; interrupting needs a press on the mic.

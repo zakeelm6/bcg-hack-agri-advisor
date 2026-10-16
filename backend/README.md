@@ -14,7 +14,7 @@ The mobile screens of the design are in Figma: https://www.figma.com/design/CGzd
 Open it at `http://localhost:8000` (browsers only allow GPS on HTTPS or localhost).
 
 **Exposure:** `./run.sh` listens on this computer only (127.0.0.1). `FA_HOST=0.0.0.0 ./run.sh` opens it to everyone on the same Wi-Fi, for a phone demo. The app has **no login yet**, so anyone who can reach it can read the data, write soil tests and tasks, and (if a model key is configured) spend it, within a 30-calls-per-minute brake. Do not put it on the internet (port forwarding, tunnel, public server) before adding authentication, HTTPS and per-user data.
-Tests (60): `source .venv/bin/activate && python -m pytest -q`
+Tests (61): `source .venv/bin/activate && python -m pytest -q`
 
 ## What is real and what is simulated
 | Part | Status |

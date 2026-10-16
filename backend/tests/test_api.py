@@ -64,3 +64,16 @@ def test_sensor_reading_validation_and_latest_wins_on_same_second():
         c.post("/api/sensors/1/readings", json={"moisture": 0.30})
         a = next(s for s in c.get("/api/state").json()["sensors"] if s["id"] == 1)
         assert a["moisture"] == 0.30
+
+
+def test_offers_carry_the_harvest_value_computed_on_the_server():
+    """The app displays the value of the harvest at each price; it never multiplies numbers itself."""
+    with client() as c:
+        f = c.get("/api/forecast").json()
+        j = c.get("/api/offers").json()
+        assert j["simulated"] is True
+        mid_kg = (f["qty_min_t"] + f["qty_max_t"]) / 2 * 1000
+        assert j["harvest_mid_t"] == round(mid_kg / 1000, 1)
+        for o in j["offers"]:
+            assert o["est_value_mad"] % 1000 == 0
+            assert abs(o["est_value_mad"] - mid_kg * o["price_mad_kg"]) <= 500

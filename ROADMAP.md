@@ -79,12 +79,17 @@ The current vanilla app stays in `frontend-legacy/` until the React app reaches 
 2. Choose owners (proposal in section 6). Create a branch per phase and merge by pull request.
 3. Decide the open questions in section 7.
 
-### Phase 1: backend foundation (M) - done and tested locally (60 tests)
+### Phase 1: backend foundation (M) - done and tested locally (61 tests)
 1. Split `main.py` into routers, services and settings. Keep every test green. **Done:** `app/api/routers/`, `app/services/`, `app/core/config.py` (settings), `app/schemas/`, `app/processing/`.
 2. Add SQLAlchemy models and Alembic migrations. Keep SQLite in development. **Done:** models, baseline migration `0001`, an old database is adopted on start-up, `FA_DATABASE_URL` for another database (only SQLite is tested).
 3. Export `openapi.json` in CI; add CORS for the Next.js dev server. **Done:** `.github/workflows/backend.yml` runs the tests and fails if `openapi.json` is stale; CORS for `localhost:3000`; every response is now typed in the contract.
 4. **Bridge for the existing React app (S), built, not used by our frontend:** add `POST /api/chat` that accepts `{question, photo, context}` and returns `{recommendation, why, steps, missing}` built from the engine and the Copilot. This connects the Next.js app to real advice without waiting for the rewrite.
 5. Done when: the backend is layered, migrated, typed and tested. The legacy frontend was checked against it in a browser (screens, Copilot, tasks, soil test, offline replay, no console errors). The Next.js app was **not** wired to it: the frontend that matters here is ours.
+
+### Phase 1b: UX audit and fixes on the legacy app (S) - done, branch `phase2/ux-fixes`
+Audit of every screen in three languages at 390 and 1440 px, then fixes: keyboard access, 48 px targets, land pins, voice
+states, honest labels, offline banner, Sell value computed on the server. See [docs/ux/AUDIT-2026-10-16.md](docs/ux/AUDIT-2026-10-16.md)
+and [docs/ux/CHANGELOG.md](docs/ux/CHANGELOG.md). Open: real phone and microphone, Arabic voice (needs Azure).
 
 ### Phase 2: connect the sensor and satellite layers (M to L)
 1. Move `sensors/` and `satellite/` into `backend/app/processing/`, keep their tests.

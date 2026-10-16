@@ -586,6 +586,17 @@
             "title": "Buyer",
             "type": "string"
           },
+          "est_value_mad": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Est Value Mad"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -621,6 +632,17 @@
       "OffersOut": {
         "additionalProperties": true,
         "properties": {
+          "harvest_mid_t": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harvest Mid T"
+          },
           "offers": {
             "items": {
               "$ref": "#/components/schemas/OfferOut"

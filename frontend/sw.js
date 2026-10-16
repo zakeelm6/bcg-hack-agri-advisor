@@ -1,6 +1,6 @@
 // Service worker: caches the app shell so the app opens without a connection.
 // API data is cached by the app itself (see app.js), which also queues writes while offline.
-const CACHE = "farm-advisor-shell-v4";
+const CACHE = "farm-advisor-shell-v5";
 const SHELL = ["/", "/static/style.css", "/static/app.js", "/static/i18n.js", "/static/manifest.json", "/static/icon.svg"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

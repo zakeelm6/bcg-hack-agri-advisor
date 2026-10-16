@@ -18,8 +18,15 @@ def forecast(db: Session, lang: str = "en") -> dict:
 
 
 def offers(db: Session) -> dict:
-    rows = [as_dict(o) for o in db.scalars(select(m.Offer).order_by(m.Offer.price_mad_kg.desc()))]
-    return {"simulated": True, "offers": rows}
+    """Buyer offers with the value of the expected harvest at each price (computed here, never in the app)."""
+    f = engine.harvest_forecast(fld.get_field(db), fld.get_zones(db))
+    mid_kg = (f["qty_min_t"] + f["qty_max_t"]) / 2 * 1000
+    rows = []
+    for o in db.scalars(select(m.Offer).order_by(m.Offer.price_mad_kg.desc())):
+        d = as_dict(o)
+        d["est_value_mad"] = int(round(mid_kg * o.price_mad_kg / 1000) * 1000)   # rounded to the thousand: it is an estimate
+        rows.append(d)
+    return {"simulated": True, "offers": rows, "harvest_mid_t": round(mid_kg / 1000, 1)}
 
 
 def create_listing(db: Session):

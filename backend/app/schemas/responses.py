@@ -147,11 +147,13 @@ class OfferOut(Loose):
     price_mad_kg: float
     pickup: str
     status: str
+    est_value_mad: int | None = None      # value of the expected harvest at this price, from the server's forecast
 
 
 class OffersOut(Loose):
     simulated: bool
     offers: list[OfferOut]
+    harvest_mid_t: float | None = None
 
 
 class CopilotOut(Loose):

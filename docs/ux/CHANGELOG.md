@@ -70,3 +70,72 @@ Untouched, as required: `app/engine.py`, `app/copilot.py`, `tests/`.
 - Vigor-over-time chart has no real series yet (honest empty state shown); revisit once data exists.
 - The RTL desktop *screenshots* in `before/` taken without the iframe harness show a capture-tool artifact;
   DOM measurements confirmed no real overflow. After-captures use the harness and are faithful.
+
+---
+
+# Audit fixes, 16 and 17 October 2026 (legacy app, branch `phase2/ux-fixes`)
+
+Audit: [AUDIT-2026-10-16.md](AUDIT-2026-10-16.md) (36 findings). Screenshots: `2026-10-16-before/` and `2026-10-16-after/`
+(phone 390 px and desktop 1440 px, EN / FR / AR, every route, Copilot states, offline home; `measurements.json` holds the
+DOM checks). Verification after the changes: `python -m pytest -q` → **61 passed** (one new test for the Sell value),
+`node --check` clean on the three scripts, **no console error, no horizontal overflow, no touch target under 44 px** on any
+page in any language. Untouched: `engine.py`, `copilot.py`.
+
+## What changed, by audit item
+
+**Severity 3**
+- **G1 keyboard**: task cards, alert actions and the About options are real `<button>`s; the land pins are SVG `<a href>` links
+  with a title and an amber focus ring. Everything on every page can be reached and activated with a keyboard.
+- **H1 land pins**: pins are drawn at a fifth of a zone (44 px or more on a phone), laid out in a row at 60 % of the zone height;
+  the value moved to the top-end corner, the letter stays top-start, the sensor dot bottom-start. Nothing overlaps any more,
+  even with three tasks in one zone (seeded state checked).
+- **V1 voice states**: a permanent status line under the mic with icon + words for every state: "Tap the mic and speak",
+  "Listening...", "Thinking...", "Speaking... tap the square to stop", "Offline: type your question, saved answers only",
+  "No voice in this browser: type your question", "Microphone is blocked. Allow it, or type your question". The mic becomes a
+  Stop square while listening or speaking. A passing error message never hides a live state. Checked for real in Google Chrome
+  (idle → read-aloud on → speaking → stop → offline → online) and in the OpenCode pane (blocked microphone).
+- **SE1 numbers**: the harvest value per offer is now computed by the server (`est_value_mad`, `harvest_mid_t` in `GET /api/offers`,
+  additive, tested). The app only formats it.
+
+**Severity 2**
+- **G2 targets**: language buttons, day strip, zone chips, `<summary>` rows, brand link, "New" pills: 48 px (44 minimum).
+- **G3 languages**: the About footer, "ha", "MAD/kg", the harvest tonnes and the offer values follow the page language
+  (Latin digits in Arabic). No English-only text remains in FR or AR.
+- **G4 offline banner**: "You are offline. Advice saved 12 min ago. What you do is kept on this phone and sent later."
+- **G5 back**: a back arrow (mirrored in RTL) on Task, Follow up and Soil test.
+- **G6 / T3 floating Copilot**: hidden on pages that already have a Copilot button (Task). On phones it now **shows on Home**
+  and scrolls to the docked Copilot, so the mic is one tap away (H4).
+- **H2 honest labels**: under the land, "Picture: Sentinel-2, 12 Sept", "Vigor: Sentinel-2, 12 Oct" or an amber
+  "Vigor: simulated", and "Sensors: simulated" from `data_notes`.
+- **V2 noise**: the recorder measures the noise floor for 0.3 s, then speech = 3 × floor (clamped 0.015 to 0.08) and
+  silence = 1.5 × floor; a level bar shows that it hears; after 12 s it says "Still listening. Tap the square to send."
+  **Design only, not tested with a real microphone** (no Azure key, no mic in this session).
+- **V3 toggles**: read-aloud and talk-mode toggles show "Read aloud: on/off" in the status line and carry a title.
+- **TL1 tasks list**: confidence meter + word on every open card; done cards keep readable text and show a "Done" pill.
+- **T1 task**: "Why" open by default, the confidence reason inline under the meter; Cost and Plan B collapsed.
+- **T2 cannot do it**: asks "Why not?" (No water or product / No time / Not needed), stores the reason as an observation
+  (`note: reason:...`, no API change), undo toast like Done.
+- **S1 soil form**: placeholders "e.g. 6.4" in lighter text, the accepted range next to each label, title "Soil test, zone D".
+- **SE2 / SE3 / SE4 sell**: Accept is secondary and asks "Accept 3.20 MAD/kg? The other offers will be declined."; a visible
+  "Estimate, not validated" and "Crop: not identified."; "Buyers simulated" on the offers.
+
+**Severity 1**
+- H3 sensor legend; H6 "No task today. We check again tomorrow morning."; H8 "Low" / "High" words on the colour bar, mirrored in RTL;
+  V4 the empty-state mic disc is a real button (or a keyboard icon when voice is unavailable); V5 "From your saved advice";
+  V6 chips fade at the edge; F2 "Add a soil test" is the primary button when a zone is not High confidence; F3 "Today" marked
+  in the weather strip; TL2 two-letter day names; FU1 "How does the field look?"; FU2 "Saved without a result."; A1 "Add a soil
+  test" button inside the alert; A2 "New" pill with text; M1 "Answers come from tested rules, no AI model" and which voice path
+  is used; AB2 the About page says which voice path is used.
+- Dropped: **H7** (Arabic comma after a Latin zone letter) is correct right-to-left rendering, not a bug.
+
+## Voice, tested for real on this machine (17 October)
+- Google Chrome on Linux with `speech-dispatcher` and `espeak-ng` installed: **19 voices** (en-US, en-GB, fr-FR, ...), **no Arabic**.
+  A test sentence and a "Why?" answer were spoken end to end (utterance start and end events, 3.9 s).
+- Speech **input** was not tested: it needs a person speaking into a microphone.
+- The OpenCode pane (Electron): recognition fails with `not-allowed`, 0 voices. The app now says so instead of going quiet.
+- Azure server voice: still **not configured, not tested**.
+
+## Still open
+- Real phone, real microphone, noisy place (V2), screen reader run, Arabic voice (needs Azure).
+- A native Arabic review of the new strings.
+- The 10 m Sentinel-2 picture is blurry at this zoom: a vector field outline would look better than the upscaled bitmap.

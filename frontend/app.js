@@ -67,6 +67,8 @@ const ICONS = {
   refresh: '<path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/>',
   chat: '<path d="M4 5h16v11H9l-5 4z"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+  keyboard: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>',
   chev: '<path d="M9 5l7 7-7 7"/>',
 };
 const ic = (n, size = 24, w = 2) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ""}</svg>`;
@@ -171,12 +173,23 @@ function areaHa(pts) {            // shoelace formula on a local flat projection
 }
 const testLine = t => [t.ph != null ? "pH " + t.ph : "", t.om_pct != null ? "organic " + t.om_pct + "%" : "", t.moisture != null ? "moisture " + Math.round(t.moisture * 100) + "%" : ""].filter(Boolean).join(", ");
 const vigorReal = () => (S?.zones || []).length > 0 && S.zones.every(z => String(z.ndvi_source).startsWith("sentinel-2"));
+const vigorDate = () => { const m = /sentinel-2 (\d{4}-\d{2}-\d{2})/.exec(S?.zones?.[0]?.ndvi_source || ""); return m ? m[1] : null; };
+const fmtNum = (n, d = 0) => Number(n).toLocaleString(LANGS[lang].locale, { minimumFractionDigits: d, maximumFractionDigits: d });
+function agoWords(iso) {           // how old the saved advice is, in words a farmer reads at a glance
+  if (!iso) return "";
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso + (iso.endsWith("Z") ? "" : "Z")).getTime()) / 60000));
+  if (min < 2) return "just now";
+  if (min < 60) return `${min} min ago`;
+  if (min < 36 * 60) return `${Math.round(min / 60)} h ago`;
+  return `${Math.round(min / 1440)} days ago`;
+}
 
 /* ---------- layout ---------- */
 function banner() {
   const q = getQ().length;
   if (!offline && !q) return "";
-  return `<div class="banner">${ic("cloudoff", 26)}<div><b>${offline ? "You are offline" : "Sending updates"}</b>${q ? `<span>${q} update${q > 1 ? "s" : ""} will sync ${offline ? "when you are online" : "now"}.</span>` : ""}</div></div>`;
+  const age = offline && S?.generated_at ? `<span>Advice saved ${agoWords(S.generated_at)}. What you do is kept on this phone and sent later.</span>` : "";
+  return `<div class="banner" role="status">${ic("cloudoff", 26)}<div><b>${offline ? "You are offline" : "Sending updates"}</b>${age}${q ? `<span>${q} update${q > 1 ? "s" : ""} will sync ${offline ? "when you are online" : "now"}.</span>` : ""}</div></div>`;
 }
 const NAV = [["#/field", "home", "Field"], ["#/tasks", "tasks", "Tasks"], ["#/sell", "sell", "Sell"], ["#/alerts", "bell", "Alerts"], ["#/me", "user", "Me"]];
 const dotFor = n => n[1] === "bell" && unread() ? '<i class="dot"></i>' : "";
@@ -186,8 +199,9 @@ function topbar(nav) {
     <span class="topright">${langSwitch()}<button class="iconbtn" data-go="#/about" aria-label="About">${ic("info", 22)}</button></span></header>`;
 }
 const bottomNav = nav => `<nav class="nav" aria-label="Main">${NAV.map(n => `<button data-go="${n[0]}" class="${nav === n[0] ? "on" : ""}">${ic(n[1], 26)}<span>${n[2]}</span>${dotFor(n)}</button>`).join("")}</nav>`;
-function shell({ title, nav, body }) {
-  return `<div class="screen">${topbar(nav)}<main class="panel"><h1 class="pagetitle">${esc(title)}</h1>${banner()}${body}</main>${bottomNav(nav)}</div>`;
+function shell({ title, nav, body, back }) {
+  const h = back ? `<div class="titlerow"><button class="back" data-go="${back}" aria-label="Back">${ic("chev", 26)}</button><h1 class="pagetitle">${esc(title)}</h1></div>` : `<h1 class="pagetitle">${esc(title)}</h1>`;
+  return `<div class="screen">${topbar(nav)}<main class="panel">${h}${banner()}${body}</main>${bottomNav(nav)}</div>`;
 }
 
 /* ---------- the land: Sentinel-2 picture of the surroundings with the four zones on top ---------- */
@@ -203,48 +217,61 @@ function landSvg(tight, margin = 20) {
   };
   let s = `<svg viewBox="${vb}" width="100%" role="img" aria-label="Field map" class="landmap" style="direction:ltr">`;
   s += ui.land ? `<image href="/static/land.png?v=${esc(ui.land.date)}" x="0" y="0" width="480" height="480" preserveAspectRatio="none"/>` : `<rect x="0" y="0" width="480" height="480" fill="#B9D9BF"/>`;
+  const w = F / 2, pr = w * 0.21;   // pin radius: a fifth of a zone, so a pin is 44 px or more on a phone; 3 pins in a row spill a little into the neighbours, never over a number
   z.forEach(zn => {
-    const x = fx + zn.col * F / 2, y = fy + zn.row * F / 2, w = F / 2, st = zn.soil_test;
+    const x = fx + zn.col * w, y = fy + zn.row * w, st = zn.soil_test;
     s += `<rect x="${x}" y="${y}" width="${w}" height="${w}" fill="${col(zn)}" fill-opacity=".62" stroke="#fff" stroke-width="1.4"/>`;
     s += `<text x="${x + 4}" y="${y + fs + 2}" font-size="${fs}" font-weight="700" fill="#fff" stroke="#1D2B1A" stroke-width=".5" paint-order="stroke">${zn.code}</text>`;
-    const mid = (t, dy = 0, size = fs * 1.3) => `<text x="${x + w / 2}" y="${y + w / 2 + dy}" text-anchor="middle" font-size="${size}" font-weight="700" fill="#fff" stroke="#1D2B1A" stroke-width=".6" paint-order="stroke">${t}</text>`;
-    if (Ly === "vigor") s += mid(zn.ndvi.toFixed(2), fs * 2.4 - w / 2);
-    if (Ly === "moisture" && zn.moisture != null) s += mid(`${Math.round(zn.moisture * 100)}%`, fs * 2.4 - w / 2);
-    if (Ly === "soil") s += st && st.ph != null ? mid("pH " + st.ph, fs * 2.4 - w / 2) : "";
-    if (zn.has_sensor) s += `<circle cx="${x + w - r - 1}" cy="${y + w - r - 1}" r="${r * .62}" fill="#fff" stroke="#22401F" stroke-width="1.2"/><circle cx="${x + w - r - 1}" cy="${y + w - r - 1}" r="${r * .26}" fill="#22401F"/>`;
+    // the value sits in the top-end corner, pins go in a row below it, the sensor dot in the bottom-start corner: nothing overlaps
+    const val = t => `<text x="${x + w - 4}" y="${y + fs * 1.3 + 2}" text-anchor="end" font-size="${fs * 1.3}" font-weight="700" fill="#fff" stroke="#1D2B1A" stroke-width=".6" paint-order="stroke">${t}</text>`;
+    if (Ly === "vigor") s += val(zn.ndvi.toFixed(2));
+    if (Ly === "moisture" && zn.moisture != null) s += val(`${Math.round(zn.moisture * 100)}%`);
+    if (Ly === "soil") s += st && st.ph != null ? val("pH " + st.ph) : "";
+    if (zn.has_sensor) s += `<g><title>${esc(tt("Sensor"))}</title><circle cx="${x + r + 1}" cy="${y + w - r - 1}" r="${r * .62}" fill="#fff" stroke="#22401F" stroke-width="1.2"/><circle cx="${x + r + 1}" cy="${y + w - r - 1}" r="${r * .26}" fill="#22401F"/></g>`;
   });
   s += `<rect x="${fx}" y="${fy}" width="${F}" height="${F}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>`;
-  openTasks().forEach(t => {
-    const cx = fx + t.x * F, cy = fy + t.y * F, k = r * 1.5 / 24;
-    s += `<g data-go="#/task/${t.id}" style="cursor:pointer"><title>${esc(t.title)}</title><circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="#31572C" stroke-width="1.6"/><g transform="translate(${cx - r * .75} ${cy - r * .75}) scale(${k})" fill="none" stroke="#31572C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[taskIcon(t.type)]}</g></g>`;
+  const byZone = {};
+  openTasks().forEach(t => { (byZone[t.zone_code] = byZone[t.zone_code] || []).push(t); });
+  z.forEach(zn => {
+    const list = byZone[zn.code] || [];
+    const x = fx + zn.col * w, y = fy + zn.row * w, step = pr * 2.15, x0 = x + w / 2 - (list.length - 1) * step / 2, cy = y + w * 0.6;
+    list.slice(0, 3).forEach((t, i) => {
+      const cx = x0 + i * step, k = pr * 1.2 / 24;
+      s += `<a href="#/task/${t.id}" class="pin" aria-label="${esc(t.title)}"><title>${esc(t.title)}</title><circle cx="${cx}" cy="${cy}" r="${pr}" fill="#fff" stroke="#31572C" stroke-width="1.6"/><g transform="translate(${cx - pr * .6} ${cy - pr * .6}) scale(${k})" fill="none" stroke="#31572C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[taskIcon(t.type)]}</g></a>`;
+    });
   });
   return s + "</svg>";
 }
 const legendBar = () => ui.layer === "soil"
-  ? `<div class="legend"><span><i style="background:${ND.high}"></i>pH 5.5 to 7.5</span><span><i style="background:${ND.low}"></i>pH outside</span><span><i style="background:#CDB88E"></i>No test</span></div>`
-  : `<div class="legendbar ${ui.layer}" role="img" aria-label="low to high"></div>`;
+  ? `<div class="legend"><span><i style="background:${ND.high}"></i>pH 5.5 to 7.5</span><span><i style="background:${ND.low}"></i>pH outside</span><span><i style="background:#CDB88E"></i>No test</span>${sensorLegend()}</div>`
+  : `<div class="legendrow"><span>Low</span><div class="legendbar ${ui.layer}" role="img" aria-label="low to high"></div><span>High</span>${sensorLegend()}</div>`;
+const sensorLegend = () => (S?.sensors || []).length ? `<span class="legend-sensor"><i></i>Sensor</span>` : "";
 const LAYERS = [["vigor", "leaf", "Vigor"], ["moisture", "drop", "Moisture"], ["soil", "flask", "Soil"], ["trust", "shield", "Trust"]];
 const layerChips = () => `<div class="layers">${LAYERS.map(l => `<button class="lchip ${ui.layer === l[0] ? "on" : ""}" data-layer="${l[0]}" aria-label="${l[2]}" title="${l[2]}">${ic(l[1], 20)}<span>${l[2]}</span></button>`).join("")}</div>`;
-const landNote = () => ui.land ? `<div class="credit">Sentinel-2, ${esc(fmtDate(ui.land.date))}</div>` : "";
+/* honest labels under the land: where the picture comes from, where the vigor comes from, and that the sensors are simulated */
+function landNote() {
+  const vd = vigorDate(), sim = S?.data_notes?.sensors === "simulated";
+  const tag = (txt, warn) => `<span class="tag ${warn ? "warn" : ""}">${txt}</span>`;
+  return `<div class="credit">${ui.land ? tag(`Picture: Sentinel-2, ${esc(fmtDate(ui.land.date))}`) : ""}${vd ? tag(`Vigor: Sentinel-2, ${esc(fmtDate(vd))}`) : tag("Vigor: simulated", true)}${sim ? tag("Sensors: simulated", true) : ""}</div>`;
+}
 
 /* ---------- home: do this now, the land and the Copilot ---------- */
 function homeScreen() {
   const f = S.field, open = openTasks(), first = open[0];
-  const lvl = first ? ({ High: 3, Medium: 2, Low: 1 }[first.confidence] || 1) : 0;
   const hero = first
     ? `<button class="hero" data-go="#/task/${first.id}">
         <span class="circle">${ic(taskIcon(first.type), 32)}</span>
         <span class="hero-t"><span class="lbl">Do this now</span>
           <span class="hero-title">${esc(first.title)}</span>
           <span class="hero-when">${ic("clock", 16)} ${esc(first.when_text)}</span>
-          <span class="hero-meta"><span class="meter sm" role="img" aria-label="How sure">${[1, 2, 3].map(i => `<i class="${i <= lvl ? "" : "off"}"></i>`).join("")}</span><span>${first.confidence}</span>${open.length > 1 ? `<span class="pill soft">+${open.length - 1} more today</span>` : ""}</span>
+          <span class="hero-meta">${meter(first.confidence, true)}${open.length > 1 ? `<span class="pill soft">+${open.length - 1} more today</span>` : ""}</span>
         </span><span class="hero-chev">${ic("chev", 28)}</span></button>`
-    : `<div class="hero ok"><span class="circle">${ic("check", 30)}</span><span class="hero-t"><span class="hero-title">All good</span></span></div>`;
+    : `<div class="hero ok"><span class="circle">${ic("check", 30)}</span><span class="hero-t"><span class="hero-title">All good</span><span class="hero-when">No task today. We check again tomorrow morning.</span></span></div>`;
   return `<div class="screen home">${topbar("#/")}<main class="panel">${banner()}
     <div class="home-grid">
       <section>${hero}
-        <div class="card landcard"><div class="landhead"><b>${esc(f.name)}</b><span>${f.area_ha} ha</span></div>${layerChips()}
-        <div class="landwrap">${landSvg(true, 45)}</div>${legendBar()}${landNote()}</div></section>
+        <div class="card landcard"><div class="landhead"><b>${esc(f.name)}</b><span>${fmtNum(f.area_ha, 1)} ha</span></div>${layerChips()}
+        <div class="landwrap">${landSvg(true, 32)}</div>${legendBar()}${landNote()}</div></section>
       <section id="cp-slot" class="cp-slot" aria-label="Copilot"></section>
     </div></main>${bottomNav("#/")}</div>`;
 }
@@ -252,15 +279,16 @@ function homeScreen() {
 /* ---------- field ---------- */
 function fieldScreen() {
   const f = S.field, wx = S.weather, ts = openTasks(), tests = S.soil_tests || [];
+  const unsure = S.zones.some(z => z.confidence !== "High");   // a soil test is the one thing that raises the confidence
   return shell({ title: `${f.name}`, nav: "#/field", body: `
     <div class="grid2"><div>
       <div class="card" style="padding:12px">${layerChips()}<div class="landwrap">${landSvg(true)}</div>${legendBar()}${landNote()}</div>
       ${chartCard()}</div>
     <div>
-      <div class="card big-n"><div><div class="n">${ts.length}</div><div class="sub">tasks today</div></div><button class="btn sm" data-go="#/tasks">See tasks</button></div>
+      <div class="card big-n"><div><div class="n">${ts.length}</div><div class="sub">tasks today</div></div><button class="btn sec sm" data-go="#/tasks">See tasks</button></div>
       <div class="card"><div class="lbl">Soil tests</div><div class="sub" style="margin:6px 0 10px">${tests.length ? tests.map(t => `Zone ${esc(t.zone_code)}: ${testLine(t)} (${ageWords(t.age_days)})`).join("<br>") : "None yet."}</div>
-        <button class="btn sec sm" data-go="#/soil/${ui.soil.zone}">${ic("flask", 18)} Add a soil test</button></div>
-      <div class="card"><div class="lbl">Weather</div><div class="wx">${wx.days.map(d => `<div>${wd(d.date)}<b>${d.rain ? d.rain.toFixed(0) + " mm" : ic("sun", 16)}</b>${Math.round(d.tmax)}&deg;</div>`).join("")}</div></div>
+        <button class="btn ${unsure ? "" : "sec"} sm" data-go="#/soil/${ui.soil.zone}">${ic("flask", 18)} Add a soil test</button></div>
+      <div class="card"><div class="lbl">Weather</div><div class="wx">${wx.days.map((d, i) => `<div class="${i === 0 ? "now" : ""}">${i === 0 ? "Today" : wd(d.date)}<b>${d.rain ? d.rain.toFixed(0) + " mm" : ic("sun", 16)}</b>${Math.round(d.tmax)}&deg;</div>`).join("")}</div></div>
     </div></div>` });
 }
 
@@ -311,53 +339,59 @@ function tasksScreen() {
   const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const all = S.tasks.slice().sort((a, b) => (a.status === "open" ? 0 : 1) - (b.status === "open" ? 0 : 1) || a.when_date.localeCompare(b.when_date));
   const list = ui.day ? all.filter(t => t.when_date === ui.day) : all;
-  const letters = lang === "fr" ? ["D", "L", "M", "M", "J", "V", "S"] : lang === "ar" ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["S", "M", "T", "W", "T", "F", "S"];
-  const strip = days.map((d, i) => `<button class="day ${i === 0 ? "today" : ""} ${ui.day === iso(d) ? "sel" : ""}" data-day="${iso(d)}">${letters[d.getDay()]}<b>${d.getDate()}</b>${S.tasks.some(t => t.when_date === iso(d) && t.status === "open") ? '<i class="tick"></i>' : ""}</button>`).join("");
-  const cards = list.map(t => `<div class="card clickable task ${t.status !== "open" ? "off" : ""}" data-go="#/task/${t.id}">
+  const letters = lang === "fr" ? ["di", "lu", "ma", "me", "je", "ve", "sa"] : lang === "ar" ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const strip = days.map((d, i) => `<button class="day ${i === 0 ? "today" : ""} ${ui.day === iso(d) ? "sel" : ""}" data-day="${iso(d)}" aria-pressed="${ui.day === iso(d)}">${letters[d.getDay()]}<b>${d.getDate()}</b>${S.tasks.some(t => t.when_date === iso(d) && t.status === "open") ? '<i class="tick"></i>' : ""}</button>`).join("");
+  const cards = list.map(t => `<button class="card clickable task ${t.status !== "open" ? "off" : ""}" data-go="#/task/${t.id}">
       <span class="circle ${t.type === "irrigate" ? "amber" : ""}">${ic(taskIcon(t.type), 28)}</span>
-      <div class="tt"><div class="ttl">${esc(t.title)}</div><div class="sub">${ic("clock", 14)} ${esc(t.when_text)}</div></div>
-      ${t.status === "done" ? `<span class="pill dk">${ic("check", 16, 3)}</span>` : t.status === "skipped" ? '<span class="pill ol">&ndash;</span>' : ""}</div>`).join("");
+      <div class="tt"><div class="ttl">${esc(t.title)}</div><div class="sub">${ic("clock", 14)} ${esc(t.when_text)}</div>${t.status === "open" ? meter(t.confidence, true) : ""}</div>
+      ${t.status === "done" ? `<span class="pill dk">${ic("check", 16, 3)} Done</span>` : t.status === "skipped" ? '<span class="pill ol">Skipped</span>' : ""}</button>`).join("");
   return shell({ title: "Tasks", nav: "#/tasks", body: `<div class="days">${strip}</div><div class="cards2">${cards || `<div class="card"><div class="sub">${ic("check", 18)} No task</div></div>`}</div>` });
 }
+/* confidence as shape plus word, never colour alone */
+function meter(conf, small) {
+  const lvl = { High: 3, Medium: 2, Low: 1 }[conf] || 1;
+  return `<span class="row conf ${small ? "sm" : ""}"><span class="meter ${small ? "sm" : ""}" role="img" aria-label="How sure">${[1, 2, 3].map(i => `<i class="${i <= lvl ? "" : "off"}"></i>`).join("")}</span><b>${conf}</b></span>`;
+}
 
+const SKIP_REASONS = [["no_means", "No water or product"], ["no_time", "No time"], ["not_needed", "Not needed"]];
 function taskScreen(id) {
   const t = S.tasks.find(x => x.id === +id);
-  if (!t) return shell({ title: "Task", nav: "#/tasks", body: '<div class="card">This task is no longer needed.</div>' });
-  const lvl = { High: 3, Medium: 2, Low: 1 }[t.confidence] || 1;
-  const det = (label, text) => `<details><summary>${label}</summary><div class="sub">${esc(text)}</div></details>`;
-  return shell({ title: "Task", nav: "#/tasks", body: `
+  if (!t) return shell({ title: "Task", nav: "#/tasks", back: "#/tasks", body: '<div class="card">This task is no longer needed.</div>' });
+  const det = (label, text, open) => `<details ${open ? "open" : ""}><summary>${label}</summary><div class="sub">${esc(text)}</div></details>`;
+  const actions = ui.skipping === t.id
+    ? `<div class="skipbox"><div class="lbl">Why not?</div><div class="chips" style="margin:8px 0 10px">${SKIP_REASONS.map(([k, l]) => `<button class="chip big" data-skip-reason="${k}" data-id="${t.id}">${l}</button>`).join("")}</div><button class="btn sec sm" data-act="skip-cancel">Back</button></div>`
+    : `<div class="btns" style="margin:14px 0 4px"><button class="btn" data-act="done" data-id="${t.id}">${ic("check", 24, 3)} Done</button><button class="btn sec" data-act="skip" data-id="${t.id}">Cannot do it</button></div>`;
+  return shell({ title: "Task", nav: "#/tasks", back: "#/tasks", body: `
     <div class="grid2"><div><div class="card bigtask">
       <div class="row"><span class="circle ${t.type === "irrigate" ? "amber" : ""}" style="width:64px;height:64px">${ic(taskIcon(t.type), 34)}</span><div><div class="h">${esc(t.title)}</div><div class="sub">${ic("clock", 15)} ${esc(t.when_text)}</div></div></div>
-      ${t.status === "open"
-        ? `<div class="btns" style="margin:14px 0 4px"><button class="btn" data-act="done" data-id="${t.id}">${ic("check", 24, 3)} Done</button><button class="btn sec" data-act="skip" data-id="${t.id}">Cannot do it</button></div>`
-        : `<div style="margin:14px 0 4px"><span class="pill ${t.status === "done" ? "dk" : "ol"}">${t.status === "done" ? "Done" : "Skipped"}</span></div>`}
-      <div class="row" style="margin:10px 0 6px"><div class="meter">${[1, 2, 3].map(i => `<i class="${i <= lvl ? "" : "off"}"></i>`).join("")}</div><b style="font-size:14px">${t.confidence}</b></div>
-      ${det("Why", t.why)}${det("Cost", t.cost)}${det("Plan B", t.plan_b)}${det("How sure", t.conf_reason)}</div></div>
+      ${t.status === "open" ? actions : `<div style="margin:14px 0 4px"><span class="pill ${t.status === "done" ? "dk" : "ol"}">${t.status === "done" ? "Done" : "Skipped"}</span></div>`}
+      <div style="margin:12px 0 2px">${meter(t.confidence)}</div><div class="sub">${esc(t.conf_reason)}</div>
+      ${det("Why", t.why, true)}${det("Cost", t.cost)}${det("Plan B", t.plan_b)}</div></div>
     <div><div class="btns"><button class="btn sec" data-say="${t.id}">${ic("speaker", 22)} Listen</button><button class="btn sec" data-cp-open="1">${ic("mic", 22)} Copilot</button>${t.confidence !== "High" ? `<button class="btn sec" data-go="#/soil/${esc(t.zone_code)}">${ic("flask", 22)} Soil test</button>` : ""}</div></div></div>` });
 }
 
 function followScreen(id) {
   const t = S.tasks.find(x => x.id === +id);
-  const chip = (r, e) => `<button class="chip big ${ui.result === r ? "on" : ""}" data-result="${r}">${e} ${r}</button>`;
-  return shell({ title: "Follow up", nav: "#/tasks", body: `
+  const chip = (r, e) => `<button class="chip big ${ui.result === r ? "on" : ""}" data-result="${r}" aria-pressed="${ui.result === r}">${e} ${r}</button>`;
+  return shell({ title: "Follow up", nav: "#/tasks", back: "#/tasks", body: `
     <div class="grid2"><div>
     <div class="card row"><span class="circle green">${ic("check", 26, 2.5)}</span><div><div style="font-weight:700;font-size:18px">Done</div><div class="sub">${t ? esc(t.title) : ""}</div></div></div>
     <label class="dropzone" for="ph">${ui.photo ? `<img src="${ui.photo}" alt="Photo of the field">` : `${ic("camera", 44)}<div style="font-weight:700;margin-top:6px">Photo</div>`}</label>
     <input id="ph" type="file" accept="image/*" capture="environment" hidden>${photoNotesCard()}</div>
-    <div><div class="chips">${chip("Better", "+")}${chip("Same", "=")}${chip("Worse", "&minus;")}</div>
-    <input type="text" id="note" placeholder="Note or yield (optional)">
+    <div><div class="lbl" style="margin:0 0 8px">How does the field look?</div><div class="chips">${chip("Better", "+")}${chip("Same", "=")}${chip("Worse", "&minus;")}</div>
+    <input type="text" id="note" placeholder="Note or yield (optional)" aria-label="Note or yield (optional)">
     <button class="btn" data-act="save-follow" data-id="${id}">${ic("check", 24, 3)} Save</button></div></div>` });
 }
 
 function soilScreen(zoneParam) {
   if (zoneParam && S.zones.some(z => z.code === zoneParam)) ui.soil.zone = zoneParam;
   const sz = ui.soil.zone, tests = S.soil_tests || [];
-  const zchips = S.zones.map(z => `<button class="chip big ${z.code === sz ? "on" : ""}" data-soilzone="${z.code}">${z.code}</button>`).join("");
-  const field = (id, label, hint, val, step) => `<label class="fld"><span>${label}</span><input type="number" inputmode="decimal" step="${step}" id="${id}" value="${esc(val)}" placeholder="${hint}"></label>`;
-  return shell({ title: "Soil test", nav: "#/field", body: `
+  const zchips = S.zones.map(z => `<button class="chip big ${z.code === sz ? "on" : ""}" data-soilzone="${z.code}" aria-pressed="${z.code === sz}">${z.code}</button>`).join("");
+  const field = (id, label, range, hint, val, step) => `<label class="fld"><span>${label} <small>${range}</small></span><input type="number" inputmode="decimal" step="${step}" id="${id}" value="${esc(val)}" placeholder="${hint}"></label>`;
+  return shell({ title: `Soil test, zone ${sz}`, nav: "#/field", back: "#/field", body: `
     <div class="grid2"><div><div class="card"><div class="chips" style="margin:0 0 12px">${zchips}</div>
-      ${field("soil-ph", "pH", "6.4", ui.soil.ph, "0.1")}${field("soil-om", "Organic matter (%)", "2.1", ui.soil.om, "0.1")}${field("soil-m", "Moisture (%)", "24", ui.soil.moisture, "1")}
-      ${ui.soilMsg ? `<div class="sub" style="color:var(--danger);margin:0 0 10px">${esc(ui.soilMsg)}</div>` : ""}
+      ${field("soil-ph", "pH", "3 to 10", "e.g. 6.4", ui.soil.ph, "0.1")}${field("soil-om", "Organic matter (%)", "0 to 15", "e.g. 2.1", ui.soil.om, "0.1")}${field("soil-m", "Moisture (%)", "3 to 60", "e.g. 24", ui.soil.moisture, "1")}
+      ${ui.soilMsg ? `<div class="sub" role="alert" style="color:var(--danger);margin:0 0 10px">${esc(ui.soilMsg)}</div>` : ""}
       <button class="btn" data-act="save-soil">${ic("check", 24, 3)} Save</button></div></div>
     <div><div class="card"><div class="lbl">Saved tests</div><div class="sub" style="margin-top:6px">${tests.length ? tests.map(t => `Zone ${esc(t.zone_code)}: ${testLine(t)} (${ageWords(t.age_days)})${t.pending ? " - waiting to sync" : ""}`).join("<br>") : "None yet."}</div></div></div></div>` });
 }
@@ -367,32 +401,40 @@ function alertsScreen() {
   const list = S.alerts.filter(a => f === "all" || a.kind === f);
   const icn = { weather: "cloud", crop: "search", data: "flask" };
   const target = a => a.key.startsWith("sample:") || a.key.startsWith("ph:") ? `#/soil/${a.key.split(":")[1]}` : null;
+  const card = a => `<div class="card task alert ${a.unread ? "" : "off"}"><span class="circle ${a.kind === "crop" ? "amber" : ""}">${ic(icn[a.kind] || "bell", 26)}</span>
+      <div class="tt"><div class="ttl">${esc(a.title)}</div><div class="sub">${esc(a.body)}</div>
+        ${target(a) ? `<button class="btn sec sm" style="margin-top:10px" data-read="${a.id}" data-go="${target(a)}">${ic("flask", 18)} Add a soil test</button>` : ""}</div>
+      ${a.unread ? `<button class="pill" data-read="${a.id}" aria-label="Mark as read">New</button>` : ""}</div>`;
   return shell({ title: "Alerts", nav: "#/alerts", body: `
-    <div class="chips">${Object.entries(Lb).map(([k, n]) => `<button class="chip ${f === k ? "on" : ""}" data-filter="${k}">${n}</button>`).join("")}</div>
-    <div class="cards2">${list.map(a => `<div class="card clickable task" data-read="${a.id}" ${target(a) ? `data-go="${target(a)}"` : ""} style="${a.unread ? "" : "opacity:.7"}"><span class="circle ${a.kind === "crop" ? "amber" : ""}">${ic(icn[a.kind] || "bell", 26)}</span><div class="tt"><div class="ttl">${esc(a.title)}</div><div class="sub">${esc(a.body)}</div></div>${a.unread ? '<i class="alert-dot"></i>' : ""}</div>`).join("") || `<div class="card sub">${ic("check", 18)} No alerts.</div>`}</div>` });
+    <div class="chips">${Object.entries(Lb).map(([k, n]) => `<button class="chip ${f === k ? "on" : ""}" data-filter="${k}" aria-pressed="${f === k}">${n}</button>`).join("")}</div>
+    <div class="cards2">${list.map(card).join("") || `<div class="card sub">${ic("check", 18)} No alerts.</div>`}</div>` });
 }
 
 function sellScreen() {
   const F = ui.forecast, O = ui.offers;
   if (!F || !O) return shell({ title: "Sell", nav: "#/sell", body: '<div role="status" aria-label="Loading..."><div class="skel sk-card"></div><div class="skel sk-card"></div><div class="skel sk-card"></div></div>' });
   const listed = F.listing || ui.listingLocal;
-  const mid = (F.qty_min_t + F.qty_max_t) / 2;
-  const off = O.offers.map(o => `<div class="card task offer"><span class="circle">${ic(o.kind === "institution" ? "school" : o.kind === "trader" ? "truck" : "coop", 26)}</span><div class="tt"><div class="ttl">${esc(o.buyer)}</div><div class="sub"><b style="font-size:18px;color:var(--ink)">${o.price_mad_kg.toFixed(2)}</b> MAD/kg  -  ${(Math.round(mid * o.price_mad_kg) * 1000).toLocaleString("en-GB")} MAD</div></div>
-      ${o.status === "open" ? `<button class="btn sm" data-act="accept" data-id="${o.id}">Accept</button>` : `<span class="pill ${o.status === "accepted" ? "dk" : "ol"}">${o.status === "accepted" ? "Accepted" : "Declined"}</span>`}</div>`).join("");
+  const value = o => o.est_value_mad != null ? `  -  ${fmtNum(o.est_value_mad)} MAD` : "";   // computed by the server from the forecast
+  const off = O.offers.map(o => `<div class="card task offer"><span class="circle">${ic(o.kind === "institution" ? "school" : o.kind === "trader" ? "truck" : "coop", 26)}</span><div class="tt"><div class="ttl">${esc(o.buyer)}</div><div class="sub"><b style="font-size:18px;color:var(--ink)">${fmtNum(o.price_mad_kg, 2)}</b> MAD/kg${value(o)}</div>
+      ${ui.confirmOffer === o.id ? `<div class="confirm"><div class="sub"><b>Accept ${fmtNum(o.price_mad_kg, 2)} MAD/kg?</b> The other offers will be declined.</div><div class="btns" style="margin-top:8px"><button class="btn sm" data-act="accept" data-id="${o.id}">${ic("check", 20, 3)} Yes, accept</button><button class="btn sec sm" data-act="accept-cancel">No</button></div></div>` : ""}</div>
+      ${o.status === "open" ? (ui.confirmOffer === o.id ? "" : `<button class="btn sec sm" data-act="accept-ask" data-id="${o.id}">Accept</button>`) : `<span class="pill ${o.status === "accepted" ? "dk" : "ol"}">${o.status === "accepted" ? "Accepted" : "Declined"}</span>`}</div>`).join("");
+  const crop = F.crop === "Not identified" ? "Crop: not identified." : "";
   return shell({ title: "Sell", nav: "#/sell", body: `
-    <div class="grid2"><div><div class="card"><div class="lbl">Harvest <span class="pill ol" style="margin-inline-start:6px">Demo</span></div><div class="h" style="font-size:30px">${F.qty_min_t} to ${F.qty_max_t} t</div>
+    <div class="grid2"><div><div class="card"><div class="lbl">Harvest <span class="pill ol" style="margin-inline-start:6px">Demo</span></div><div class="h" style="font-size:30px">${fmtNum(F.qty_min_t, 1)} to ${fmtNum(F.qty_max_t, 1)} t</div>
       <div class="sub">${ic("clock", 15)} ${fmtDate(F.window_start)} - ${fmtDate(F.window_end)}</div>
+      <div class="sub" style="margin-top:6px"><span class="tag warn">Estimate, not validated</span> ${crop}</div>
       <details style="margin-top:8px"><summary>Notes</summary><div class="sub">${esc(F.advice)} ${esc(F.note)}</div></details></div>
       <button class="btn" data-act="listing" ${listed ? "disabled" : ""}>${ic(listed ? "check" : "sell", 24, listed ? 3 : 2)} ${listed ? "Sale offer published" : "Create sale offer"}</button></div>
-    <div>${off}</div></div>` });
+    <div><div class="lbl" style="margin:4px 0 8px">Offers <span class="tag warn">Buyers simulated</span></div>${off}</div></div>` });
 }
 
 function meScreen() {
   const q = getQ().length, f = S.field;
+  const voice = cp.server ? "Server voice (Azure), any browser, Arabic included" : speechCtor() ? "Voice from the browser (Chrome or Edge), needs internet" : "No voice in this browser: type your questions";
   return shell({ title: "Me", nav: "#/me", body: `
-    <div class="grid2"><div><div class="card row"><span class="circle green">${ic("user", 28)}</span><div><div style="font-weight:700;font-size:17px">${esc(f.name)}</div><div class="sub">${f.area_ha} ha</div></div></div>
+    <div class="grid2"><div><div class="card row"><span class="circle green">${ic("user", 28)}</span><div><div style="font-weight:700;font-size:17px">${esc(f.name)}</div><div class="sub">${fmtNum(f.area_ha, 1)} ha</div></div></div>
       <div class="card"><div class="lbl">Language</div><div style="margin-top:8px">${langSwitch()}</div></div>
-      <div class="card"><div class="lbl">Copilot</div><div class="sub" style="margin-top:6px">${cp.status ? (cp.status.mode === "model" ? `Model: ${esc(cp.status.provider)}` : "Rule engine") : "?"}${cp.status && cp.status.vision ? " + photos" : ""}</div></div></div>
+      <div class="card"><div class="lbl">Copilot</div><div class="sub" style="margin-top:6px">${cp.status ? (cp.status.mode === "model" ? `Model: ${esc(cp.status.provider)}` : "Answers come from tested rules, no AI model") : "?"}${cp.status && cp.status.vision ? " + photos" : ""}</div><div class="sub" style="margin-top:4px">${voice}</div></div></div>
     <div><div class="card"><div class="lbl">Waiting to sync</div><div class="row" style="margin-top:8px"><b style="font-size:28px">${q}</b>${q ? '<button class="btn sm" data-act="sync">Sync now</button>' : `<span class="sub">${ic("check", 18)}</span>`}</div></div>
       <button class="btn sec" data-act="refresh">${ic("refresh", 22)} Refresh advice</button>
       <button class="btn sec" style="margin-top:10px" data-go="#/about">${ic("info", 22)} About</button></div></div>` });
@@ -413,7 +455,7 @@ function aboutScreen() {
   } else {
     detail = `<input type="text" id="vq" placeholder="Village name" value="${esc(ui.search)}"><div class="sub">${esc(ui.searchMsg) || "Needs a connection."}</div><button class="btn sec sm" style="margin-top:10px" data-act="search">Search</button>`;
   }
-  const opt = (id, ico, t) => `<div class="option ${sel === id ? "on" : ""}" data-opt="${id}"><div class="row"><span class="circle ${sel === id ? "green" : ""}">${ic(ico, 26)}</span><div class="t">${t}</div></div>${sel === id ? `<div style="margin-top:12px">${detail}</div>` : ""}</div>`;
+  const opt = (id, ico, t) => `<div class="option ${sel === id ? "on" : ""}"><button class="opthead" data-opt="${id}" aria-expanded="${sel === id}"><span class="circle ${sel === id ? "green" : ""}">${ic(ico, 26)}</span><span class="t">${t}</span></button>${sel === id ? `<div style="margin-top:12px">${detail}</div>` : ""}</div>`;
   const step = (n, ico, t, s) => `<div class="step"><span class="circle green">${ic(ico, 26)}</span><div class="n">Step ${n}</div><h3>${t}</h3><p>${s}</p></div>`;
   return shell({ title: "About", nav: "", body: `
     <div class="card"><h2 class="abouth">An AI that reads your land and tells you what to do, when, and why.</h2></div>
@@ -432,12 +474,13 @@ function aboutScreen() {
       <div class="card limits"><div class="lbl">What is real in this demo</div>
         <p class="sub"><b>Real:</b> weather (Open-Meteo), ${vigorReal() ? "Sentinel-2 images, " : ""}the decision rules, GPS, soil tests, the offline queue.</p>
         <p class="sub"><b>Simulated:</b> ${vigorReal() ? "" : "crop vigor, "}the two soil sensors, buyers and prices.</p>
-        <p class="sub"><b>Not validated:</b> the harvest forecast. Voice input uses the browser's speech service.</p></div></div>
-    <p class="site-foot">Farm Advisor  -  Team 2  -  BCG Platinion Hackathon 2026  -  Demo data, not agronomic advice for real fields.</p>` });
+        <p class="sub"><b>Not validated:</b> the harvest forecast.</p>
+        <p class="sub"><b>Voice:</b> ${cp.server ? "server voice (Azure), not yet tested with a real key." : "the browser's speech service (Chrome or Edge)."}</p></div></div>
+    <p class="site-foot">Farm Advisor  -  Team 2  -  BCG Platinion Hackathon 2026</p><p class="site-foot">Demo data, not agronomic advice for real fields.</p>` });
 }
 
 /* ---------- Copilot: chat, voice in, voice out ---------- */
-const cp = { open: false, msgs: [], busy: false, status: null, listening: false, speaking: false, speak: lsGet("fa_speak", false), rec: null, voiceTurn: false, hintFixed: false, speakId: 0, convo: false, silent: 0, server: false, audio: null, stopRec: null };
+const cp = { open: false, msgs: [], busy: false, status: null, listening: false, speaking: false, speak: lsGet("fa_speak", false), rec: null, voiceTurn: false, hintFixed: false, speakId: 0, convo: false, silent: 0, server: false, audio: null, stopRec: null, srBlocked: false, thinking: false };
 const cpTaskId = () => { const m = /^#\/(?:task|follow)\/(\d+)/.exec(location.hash); return m ? +m[1] : null; };
 const speechCtor = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 async function loadCopilotStatus() {
@@ -463,12 +506,13 @@ function localAnswer(q, taskId) {            // offline Copilot: fixed questions
 }
 function cpMeta(m) {
   if (m.role !== "bot") return "";
-  const src = { engine: "Rule engine", model: "Model, checked", saved: "Saved on this device" }[m.source] || "";
+  const src = { engine: "Rule engine", model: "Model, checked", saved: "From your saved advice" }[m.source] || "";
   return `<div class="cp-meta">${src}${m.note ? `<br><span class="cp-warn">${esc(m.note)}</span>` : ""}</div>`;
 }
 function cpRenderMsgs() {
   const box = document.getElementById("cp-msgs"); if (!box) return;
-  const welcome = (cp.msgs.length || cp.busy) ? "" : `<div class="cp-empty"><span class="circle">${ic("mic", 34)}</span><p>Ask me about your field.</p></div>`;
+  const canTalk = (cp.server || (speechCtor() && !cp.srBlocked)) && !offline;
+  const welcome = (cp.msgs.length || cp.busy) ? "" : `<div class="cp-empty">${canTalk ? `<button class="circle" data-cp-start="1" aria-label="Speak">${ic("mic", 34)}</button>` : `<span class="circle">${ic("keyboard", 34)}</span>`}<p>${canTalk ? "Ask me about your field." : "Type your question about your field."}</p></div>`;
   box.innerHTML = welcome + cp.msgs.map((m, i) => `<div class="cp-msg ${m.role}"><div>${esc(m.text)}</div>${cpMeta(m)}${m.role === "bot" ? `<div class="cp-actions"><button class="cp-play" data-cp-play="${i}" aria-label="Read aloud">${ic("speaker", 16)}</button>${(m.actions || []).map(a => `<button data-cp-go="${esc(a.go)}">${esc(a.label)}</button>`).join("")}</div>` : ""}</div>`).join("") + (cp.busy ? '<div class="cp-msg bot"><div class="cp-typing">...</div></div>' : "");
   box.scrollTop = box.scrollHeight;
   translateTree(box);
@@ -483,18 +527,33 @@ function cpRenderHead() {
   if (chips) { chips.innerHTML = CHIPS.map(([i, q]) => `<button data-cp-q="${esc(q)}">${ic(i, 16)}<span>${esc(q)}</span></button>`).join(""); translateTree(chips); }
   cpUpdateMic();
 }
-function cpUpdateMic() {
-  const mic = document.getElementById("cp-mic"), sp = document.getElementById("cp-speak"), hint = document.getElementById("cp-hint");
-  if (mic) {
-    const ok = (cp.server || !!speechCtor()) && !offline;
-    mic.classList.toggle("listening", cp.listening); mic.disabled = !ok && !cp.listening;
-    mic.setAttribute("aria-label", tt(cp.listening ? "Stop" : "Speak")); mic.title = !(cp.server || speechCtor()) ? tt("Voice needs Chrome or Edge") : offline ? tt("Voice needs internet") : tt("Speak");
-  }
-  const tk = document.getElementById("cp-talk"); if (tk) { tk.classList.toggle("on", cp.convo); tk.setAttribute("aria-pressed", String(cp.convo)); }
-  if (sp) { sp.classList.toggle("on", cp.speak); sp.innerHTML = ic(cp.speak ? "speaker" : "mute", 20); sp.setAttribute("aria-pressed", String(cp.speak)); sp.setAttribute("aria-label", tt("Read answers aloud")); }
-  if (hint && !cp.hintFixed) hint.textContent = cp.listening ? tt("Listening...") : cp.convo ? tt("Talk mode on") : "";
+/* the voice state, always visible under the mic: one icon and a few words, never a colour alone */
+function cpState() {
+  const voiceIn = cp.server || (!!speechCtor() && !cp.srBlocked);
+  if (cp.listening) return { key: "listening", icon: "mic", text: "Listening..." };
+  if (cp.busy) return { key: "thinking", icon: "clock", text: "Thinking..." };
+  if (cp.speaking) return { key: "speaking", icon: "speaker", text: "Speaking... tap the square to stop" };
+  if (offline) return { key: "offline", icon: "cloudoff", text: "Offline: type your question, saved answers only" };
+  if (!voiceIn) return { key: "novoice", icon: "keyboard", text: cp.srBlocked ? "Microphone is blocked. Allow it, or type your question" : "No voice in this browser: type your question" };
+  if (cp.convo) return { key: "talk", icon: "chat", text: "Talk mode on: I listen after each answer. Say \"stop\" to end" };
+  return { key: "idle", icon: "mic", text: "Tap the mic and speak" };
 }
-function cpHint(msg) { const h = document.getElementById("cp-hint"); if (h) { h.textContent = tt(msg); cp.hintFixed = true; setTimeout(() => { cp.hintFixed = false; cpUpdateMic(); }, 3500); } }
+function cpUpdateMic() {
+  const mic = document.getElementById("cp-mic"), sp = document.getElementById("cp-speak"), hint = document.getElementById("cp-hint"), st = cpState();
+  if (mic) {
+    mic.className = "mic " + st.key;
+    mic.disabled = st.key === "offline" || st.key === "novoice" || st.key === "thinking";
+    mic.innerHTML = ic(st.key === "speaking" ? "stop" : st.key === "listening" ? "stop" : "mic", 30);
+    mic.setAttribute("aria-label", tt(st.key === "speaking" || st.key === "listening" ? "Stop" : "Speak"));
+  }
+  const lv = document.getElementById("cp-levelbox"); if (lv) lv.hidden = !cp.listening;
+  const tk = document.getElementById("cp-talk"); if (tk) { tk.classList.toggle("on", cp.convo); tk.setAttribute("aria-pressed", String(cp.convo)); tk.title = tt(cp.convo ? "Talk mode on" : "Talk mode"); }
+  if (sp) { sp.classList.toggle("on", cp.speak); sp.innerHTML = ic(cp.speak ? "speaker" : "mute", 20); sp.setAttribute("aria-pressed", String(cp.speak)); sp.setAttribute("aria-label", tt("Read answers aloud")); sp.title = tt(cp.speak ? "Read aloud: on" : "Read aloud: off"); }
+  if (cp.hintFixed && /listening|thinking|speaking/.test(st.key)) cp.hintFixed = false;   // a live state always beats a passing message
+  if (hint && !cp.hintFixed) { hint.className = "cp-hint " + st.key; hint.innerHTML = `${ic(st.icon, 16)}<span>${esc(tt(st.text))}</span>`; }
+}
+function cpHint(msg) { const h = document.getElementById("cp-hint"); if (h) { h.className = "cp-hint error"; h.innerHTML = `${ic("info", 16)}<span>${esc(tt(msg))}</span>`; cp.hintFixed = true; setTimeout(() => { cp.hintFixed = false; cpUpdateMic(); }, 3500); } }
+function cpLevel(rms, floor) { const i = document.getElementById("cp-level"); if (i) i.style.width = Math.min(100, Math.round(rms / Math.max(0.08, floor * 6) * 100)) + "%"; }
 let voices = [];
 const loadVoices = () => { try { voices = speechSynthesis.getVoices() || []; } catch { voices = []; } };
 if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
@@ -504,7 +563,8 @@ function pickVoice(code) {                           // exact language code firs
   return same.find(v => norm(v) === c) || same[0] || null;
 }
 function stopSpeaking() {
-  cp.speakId++; cp.speaking = false;
+  cp.speakId++; const was = cp.speaking; cp.speaking = false;
+  if (was) cpUpdateMic();
   try { if (cp.audio) { cp.audio.pause(); cp.audio.src = ""; cp.audio = null; } } catch { /* nothing playing */ }
   try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch { /* no speech output */ }
 }
@@ -522,7 +582,7 @@ async function fetchTts(text) {
 async function serverSpeak(text, done) {
   stopSpeaking();
   const id = ++cp.speakId, chunks = speechChunks(text);
-  cp.speaking = true;
+  cp.speaking = true; cpUpdateMic();
   let next = fetchTts(chunks[0]);
   for (let i = 0; i < chunks.length; i++) {
     let url;
@@ -538,7 +598,7 @@ async function serverSpeak(text, done) {
     if (id !== cp.speakId) return;
     if (!ok) { cp.speaking = false; return browserSpeak(chunks.slice(i + 1).join(" "), done); }
   }
-  cp.speaking = false; done && done();
+  cp.speaking = false; cpUpdateMic(); done && done();
 }
 function speakText(text, done) { if (cp.server && !offline && text) serverSpeak(text, done); else browserSpeak(text, done); }
 function browserSpeak(text, done) {                  // reads sentence by sentence (long texts get cut by some browsers); done() runs after the last one
@@ -547,14 +607,14 @@ function browserSpeak(text, done) {                  // reads sentence by senten
   const id = ++cp.speakId, code = LANGS[lang].speech, v = pickVoice(code);
   const parts = text.replace(/[«»"*_]/g, "").split(/(?<=[.!?؟:])\s+/).filter(p => p.trim());
   if (voices.length && !v) cpHint("No voice for this language on this device");
-  cp.speaking = true;
+  cp.speaking = true; cpUpdateMic();
   const next = i => {
     if (id !== cp.speakId) return;
-    if (i >= parts.length) { cp.speaking = false; done && done(); return; }
+    if (i >= parts.length) { cp.speaking = false; cpUpdateMic(); done && done(); return; }
     const u = new SpeechSynthesisUtterance(parts[i]);
     u.lang = code; u.rate = 0.95; if (v) u.voice = v;
     u.onend = () => next(i + 1);
-    u.onerror = () => { if (id === cp.speakId) cp.speaking = false; };
+    u.onerror = () => { if (id === cp.speakId) { cp.speaking = false; cpUpdateMic(); } };
     speechSynthesis.speak(u);
   };
   next(0);
@@ -591,7 +651,7 @@ function recordWav() {
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return reject(e); }
     ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.resume && ctx.resume();
     const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1), chunks = [];
-    let heard = false, quiet = 0, total = 0, done = false;
+    let heard = false, quiet = 0, total = 0, done = false, floor = 0.01, floorN = 0, warned = false;
     const finish = () => {
       if (done) return; done = true; cp.stopRec = null;
       try { proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop()); ctx.close(); } catch { /* already closed */ }
@@ -602,7 +662,12 @@ function recordWav() {
       const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d)); total += d.length / ctx.sampleRate;
       let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
       const rms = Math.sqrt(sum / d.length);
-      if (rms > 0.02) { heard = true; quiet = 0; } else quiet += d.length / ctx.sampleRate;
+      // the first 0.3 s measure the noise of the place; speech must rise clearly above it, silence is close to it
+      if (total < 0.3) { floor = (floor * floorN + rms) / (floorN + 1); floorN++; }
+      const speech = Math.min(0.08, Math.max(0.015, floor * 3)), silence = Math.max(0.01, floor * 1.5);
+      if (rms > speech) { heard = true; quiet = 0; } else if (rms < silence || !heard) quiet += d.length / ctx.sampleRate;
+      cpLevel(rms, floor);
+      if (total > 12 && !warned) { warned = true; cpHint("Still listening. Tap the square to send."); }
       if ((heard && quiet > 1.4) || (!heard && total > 6) || total > 20) finish();
     };
     src.connect(proc); proc.connect(ctx.destination);
@@ -636,6 +701,7 @@ async function serverListen() {                      // record, send to /api/stt
   cpHeard(text);
 }
 function cpMic() {                                   // browser speech recognition (Chrome and Edge send the audio to their speech service)
+  if (cp.speaking) { stopSpeaking(); cp.convo = false; cpUpdateMic(); return; }
   if (cp.listening) { cp.convo = false; cp.stopRec ? cp.stopRec() : cp.rec && cp.rec.stop(); cpUpdateMic(); return; }
   if (cp.server && !offline) return serverListen();
   const SR = speechCtor();
@@ -646,7 +712,7 @@ function cpMic() {                                   // browser speech recogniti
   rec.lang = LANGS[lang].speech; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
   rec.onstart = () => { cp.listening = true; cpUpdateMic(); };
   rec.onresult = e => { let t = ""; for (let i = e.resultIndex; i < e.results.length; i++) { t += e.results[i][0].transcript; if (e.results[i].isFinal) finalText = t; } input.value = t; };
-  rec.onerror = e => { if (e.error !== "no-speech" && e.error !== "aborted") cp.convo = false; cpHint(e.error === "not-allowed" || e.error === "service-not-allowed" ? "Microphone is blocked" : e.error === "no-speech" ? "I heard nothing" : e.error === "network" ? "Voice needs internet" : "Voice did not work"); };
+  rec.onerror = e => { if (e.error !== "no-speech" && e.error !== "aborted") cp.convo = false; if (e.error === "not-allowed" || e.error === "service-not-allowed") { cp.srBlocked = true; cpRenderMsgs(); } cpHint(e.error === "not-allowed" || e.error === "service-not-allowed" ? "Microphone is blocked" : e.error === "no-speech" ? "I heard nothing" : e.error === "network" ? "Voice needs internet" : "Voice did not work"); };
   rec.onend = () => { cp.listening = false; cpUpdateMic(); const q = (finalText || input.value).trim(); input.value = "";
     cpHeard(q); };
   cp.rec = rec;
@@ -656,7 +722,7 @@ async function cpSend(text) {
   const q = (text || "").trim(); if (!q || cp.busy) return;
   const voice = cp.voiceTurn; cp.voiceTurn = false;
   if (cpCommand(q, tt(q))) return;
-  cp.msgs.push({ role: "user", text: tt(q) }); cp.busy = true; cpRenderMsgs();
+  cp.msgs.push({ role: "user", text: tt(q) }); cp.busy = true; cpRenderMsgs(); cpUpdateMic();
   let res;
   try {
     res = await fetchJson("/api/copilot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q, task_id: cpTaskId(), lang }) }, 30000);
@@ -668,17 +734,17 @@ async function cpSend(text) {
 }
 function cpToggle(open) {
   const panel = document.getElementById("cp-panel"), fab = document.getElementById("cp-fab");
-  if (panel.classList.contains("docked")) return;
+  if (panel.classList.contains("docked")) { if (open !== false) { panel.scrollIntoView({ behavior: "smooth", block: "start" }); setTimeout(() => document.getElementById("cp-mic")?.focus({ preventScroll: true }), 400); } return; }
   cp.open = open ?? !cp.open;
   panel.hidden = !cp.open; fab.hidden = cp.open;
-  if (cp.open) { cpRenderHead(); cpRenderMsgs(); if (!cp.status) loadCopilotStatus(); document.getElementById("cp-input").focus(); }
+  if (cp.open) { cpRenderHead(); cpRenderMsgs(); if (!cp.status) loadCopilotStatus(); if (!cpState().key.match(/novoice|offline/)) document.getElementById("cp-mic").focus(); else document.getElementById("cp-input").focus(); }
   else stopSpeaking();
 }
 function cpPlace() {                                 // dock the panel on the home page, float it everywhere else
   const root = document.getElementById("cp-root"), panel = document.getElementById("cp-panel"), fab = document.getElementById("cp-fab"), slot = document.getElementById("cp-slot");
   if (!root || !panel) return;
-  if (slot) { panel.classList.add("docked"); slot.appendChild(panel); panel.hidden = false; fab.hidden = true; }
-  else { if (panel.parentElement !== root) root.appendChild(panel); panel.classList.remove("docked"); panel.hidden = !cp.open; fab.hidden = cp.open; }
+  if (slot) { panel.classList.add("docked"); slot.appendChild(panel); panel.hidden = false; fab.hidden = window.innerWidth >= 900; }
+  else { if (panel.parentElement !== root) root.appendChild(panel); panel.classList.remove("docked"); panel.hidden = !cp.open; fab.hidden = cp.open || !!document.querySelector("[data-cp-open]"); }   // no floating button where the page has its own Copilot button
   cpRenderHead(); cpRenderMsgs();
 }
 const cpMarkup = () => `<button id="cp-fab" aria-label="Open the Copilot">${ic("mic", 24)}<span>Copilot</span></button>
@@ -686,7 +752,8 @@ const cpMarkup = () => `<button id="cp-fab" aria-label="Open the Copilot">${ic("
     <header><div><b>${ic("bulb", 18)} Copilot</b><small id="cp-badge"></small></div><span class="cp-tools"><button id="cp-talk" aria-label="Talk mode" aria-pressed="false">${ic("chat", 20)}</button><button id="cp-speak" aria-label="Read answers aloud" aria-pressed="false"></button><button id="cp-close" aria-label="Close the Copilot">${ic("x", 20)}</button></span></header>
     <div id="cp-ctx" hidden></div><div id="cp-msgs" aria-live="polite"></div><div id="cp-chips"></div>
     <div class="cp-bar"><button id="cp-mic" class="mic" aria-label="Speak">${ic("mic", 30)}</button>
-      <form id="cp-form" autocomplete="off"><input id="cp-input" maxlength="400" placeholder="Ask"><button type="submit" aria-label="Send">${ic("send", 22)}</button></form></div>
+      <form id="cp-form" autocomplete="off"><input id="cp-input" maxlength="400" placeholder="Ask" aria-label="Ask"><button type="submit" aria-label="Send">${ic("send", 22)}</button></form></div>
+    <div id="cp-levelbox" class="cp-levelbox" hidden aria-hidden="true"><i id="cp-level"></i></div>
     <p id="cp-hint" class="cp-hint" aria-live="polite"></p></section>`;
 function cpRetext() {                                // rebuild the static texts when the language changes
   const root = document.getElementById("cp-root"), val = document.getElementById("cp-input")?.value || "";
@@ -701,9 +768,9 @@ function cpInit() {
     const el = e.target.closest("#cp-panel button, #cp-fab"); if (!el) return;
     if (el.id === "cp-fab") return cpToggle(true);
     if (el.id === "cp-close") return cpToggle(false);
-    if (el.id === "cp-mic") return cpMic();
+    if (el.id === "cp-mic" || el.dataset.cpStart) return cpMic();
     if (el.id === "cp-talk") return cpTalk();
-    if (el.id === "cp-speak") { cp.speak = !cp.speak; lsSet("fa_speak", cp.speak); if (!cp.speak) stopSpeaking(); return cpUpdateMic(); }
+    if (el.id === "cp-speak") { cp.speak = !cp.speak; lsSet("fa_speak", cp.speak); if (!cp.speak) stopSpeaking(); cpUpdateMic(); return cpHint(cp.speak ? "Read aloud: on" : "Read aloud: off"); }
     if (el.dataset.cpPlay !== undefined) { const m = cp.msgs[+el.dataset.cpPlay]; return m && speakText(m.text); }
     if (el.dataset.cpQ) return cpSend(el.dataset.cpQ);
     if (el.dataset.cpGo) { if (window.innerWidth < 900 && !document.getElementById("cp-panel").classList.contains("docked")) cpToggle(false); return go(el.dataset.cpGo); }
@@ -762,10 +829,11 @@ function go(h) { if (location.hash === h) { route = h; render(); } else location
 window.addEventListener("hashchange", () => { route = location.hash; window.scrollTo(0, 0); render(); });
 window.addEventListener("online", () => { offline = false; flush(); loadState().then(render); });
 window.addEventListener("offline", () => { offline = true; render(); });
+window.addEventListener("resize", () => { const fab = document.getElementById("cp-fab"); if (fab && document.getElementById("cp-slot")) fab.hidden = window.innerWidth >= 900; });
 
 /* ---------- events ---------- */
 $app.addEventListener("click", async e => {
-  const el = e.target.closest("[data-go],[data-layer],[data-day],[data-filter],[data-read],[data-result],[data-opt],[data-act],[data-soilzone],[data-ztoggle],[data-cp-open],[data-say],[data-lang]");
+  const el = e.target.closest("[data-go],[data-layer],[data-day],[data-filter],[data-read],[data-result],[data-opt],[data-act],[data-soilzone],[data-ztoggle],[data-cp-open],[data-say],[data-lang],[data-skip-reason]");
   if (!el) return;
   const d = el.dataset;
   if (d.read) { const a = S.alerts.find(x => x.id === +d.read); if (a) a.unread = 0; lsSet(SKEY(), { t: Date.now(), j: S }); if (!d.go) return render(); }
@@ -787,13 +855,24 @@ $app.addEventListener("click", async e => {
     go("#/follow/" + id);
     return toast("Done", { label: "Undo", fn: () => { enqueue("task_status", { task_id: id, status: "open" }); go("#/task/" + id); } });
   }
-  if (act === "skip") { enqueue("task_status", { task_id: +d.id, status: "skipped" }); toast("Skipped. We will adjust the plan."); return go("#/tasks"); }
+  if (act === "skip") { ui.skipping = +d.id; return render(); }
+  if (act === "skip-cancel") { ui.skipping = null; return render(); }
+  if (d.skipReason) {                 // the reason is kept with the task so the next advice can learn the constraint
+    const id = +d.id; ui.skipping = null;
+    enqueue("task_status", { task_id: id, status: "skipped" });
+    enqueue("observation", { task_id: id, result: "skipped", note: "reason:" + d.skipReason });
+    go("#/tasks");
+    return toast("Skipped. We will adjust the plan.", { label: "Undo", fn: () => { enqueue("task_status", { task_id: id, status: "open" }); go("#/task/" + id); } });
+  }
+  if (act === "accept-ask") { ui.confirmOffer = +d.id; return render(); }
+  if (act === "accept-cancel") { ui.confirmOffer = null; return render(); }
   if (act === "save-follow") {
     enqueue("observation", { task_id: +d.id, result: ui.result, note: document.getElementById("note")?.value || null, photo: ui.photo });
-    ui.photo = null; ui.photoNotes = null; ui.result = null; toast(offline ? "Saved on this device. It will send when you are online." : "Saved. Thank you."); return go("#/tasks");
+    const empty = !ui.result && !ui.photo && !document.getElementById("note")?.value;
+    ui.photo = null; ui.photoNotes = null; ui.result = null; toast(offline ? "Saved on this device. It will send when you are online." : empty ? "Saved without a result." : "Saved. Thank you."); return go("#/tasks");
   }
   if (act === "save-soil") return saveSoil();
-  if (act === "accept") { enqueue("offer_accept", { offer_id: +d.id }); return render(); }
+  if (act === "accept") { ui.confirmOffer = null; enqueue("offer_accept", { offer_id: +d.id }); toast("Offer accepted (buyers are simulated)"); return render(); }
   if (act === "listing") { enqueue("listing", {}); toast("Sale offer published (buyers are simulated)"); return render(); }
   if (act === "sync") return flush(true);
   if (act === "refresh") { await loadState(true); ui.forecast = null; ui.series = null; ui.seriesLoading = false; toast(offline ? "Offline: showing saved advice" : "Advice refreshed"); return render(); }
