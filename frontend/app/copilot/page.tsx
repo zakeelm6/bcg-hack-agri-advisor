@@ -65,13 +65,13 @@ export default function CoPilot() {
   const canListen = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   return (
-    <div className="pb-16">
+    <div className="mx-auto max-w-3xl pb-16">
       {farm.messages.length === 0 ? (
-        <section className="pt-6">
+        <section className="pt-6 md:pt-12">
           <p className="label">Your farming assistant</p>
-          <h1 className="mt-2 font-serif text-[2rem] leading-tight">What does your farm need today?</h1>
+          <h1 className="mt-2 font-serif text-[2rem] leading-tight md:text-5xl">What does your farm need today?</h1>
           <p className="mt-3 text-muted">Ask, describe a problem, or share a photo.</p>
-          <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {starters.map((s) => (
               <button key={s.title} onClick={() => send(s.q)} className="card text-left active:scale-[.98]">
                 <div className="font-medium">{s.title}</div>
@@ -84,7 +84,7 @@ export default function CoPilot() {
         <div className="space-y-4 pt-2">
           {farm.messages.map((m) =>
             m.role === "user" ? (
-              <div key={m.id} className="ml-10 rounded-2xl rounded-br-sm bg-leaf px-4 py-3 text-white">
+              <div key={m.id} className="ml-auto w-fit max-w-[85%] rounded-2xl md:max-w-[75%] rounded-br-sm bg-leaf px-4 py-3 text-white">
                 {m.photo && <img src={m.photo} alt="Crop photo you shared" className="mb-2 max-h-48 rounded-lg" />}
                 {m.text}
               </div>
@@ -101,7 +101,7 @@ export default function CoPilot() {
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); send(); }}
-        className="fixed inset-x-0 bottom-[68px] mx-auto max-w-md px-4 pb-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+        className="fixed inset-x-0 bottom-[68px] mx-auto max-w-md px-4 pb-2 md:bottom-0 md:max-w-3xl md:px-8 md:pb-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
         {photo && (
           <div className="mb-2 flex items-center gap-2 rounded-xl border border-line bg-card p-2">
             <img src={photo} alt="Selected crop photo" className="h-12 w-12 rounded-lg object-cover" />

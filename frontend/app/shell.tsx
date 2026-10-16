@@ -24,18 +24,19 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   if (!ready || (!profile && !onboarding)) return null;
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col">
-      <header className="px-5 pt-5 pb-2 font-serif text-xl font-semibold text-leaf">growmate</header>
-      <main className={`flex-1 px-5 ${onboarding ? "pb-8" : "pb-28"}`}>{children}</main>
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-3xl lg:max-w-5xl">
+      <header className="flex items-center justify-between px-5 pt-5 pb-2 md:px-8 md:pt-6">
+        <span className="font-serif text-xl font-semibold text-leaf">growmate</span>
       {!onboarding && (
-        <nav className="fixed inset-x-0 bottom-0 border-t border-line bg-paper/95 backdrop-blur">
-          <div className="mx-auto flex max-w-md justify-around pb-[env(safe-area-inset-bottom)]">
+        // Phones: fixed bottom tab bar. Tablet/desktop (md+): inline in the header.
+        <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-paper/95 backdrop-blur md:static md:border-0 md:bg-transparent md:backdrop-blur-none">
+          <div className="mx-auto flex max-w-md justify-around pb-[env(safe-area-inset-bottom)] md:max-w-none md:gap-1 md:pb-0">
             {nav.map((n) => {
               const active = path === n.href;
               return (
                 <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined}
-                  className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-xs ${active ? "font-semibold text-leaf" : "text-muted"}`}>
-                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" aria-hidden>
+                  className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-xs md:flex-none md:flex-row md:gap-2 md:rounded-xl md:px-3.5 md:py-2 md:text-sm ${active ? "font-semibold text-leaf md:bg-leaf-soft" : "text-muted md:hover:bg-card"}`}>
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" aria-hidden>
                     <path d={n.icon} />
                   </svg>
                   {n.label}
@@ -45,6 +46,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
       )}
+      </header>
+      <main className={`flex-1 px-5 md:px-8 ${onboarding ? "pb-8" : "pb-28 md:pb-32"}`}>{children}</main>
     </div>
   );
 }

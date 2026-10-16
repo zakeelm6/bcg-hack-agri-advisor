@@ -35,8 +35,8 @@ export default function MyFarm() {
   const recentlyDone = tasks.filter((t) => t.done).slice(0, 3);
 
   return (
-    <div className="space-y-5 pt-2">
-      <h1 className="font-serif text-3xl">My Farm</h1>
+    <div className="grid gap-5 pt-2 lg:grid-cols-2 lg:items-start">
+      <h1 className="font-serif text-3xl lg:col-span-2">My Farm</h1>
 
       <section className="card">
         <div className="flex items-start justify-between">

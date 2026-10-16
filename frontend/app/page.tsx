@@ -47,7 +47,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-[75dvh] flex-col">
+    <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-10">
       <div className="mt-2 flex gap-1.5" aria-label={`Step ${step + 1} of ${steps.length}`}>
         {steps.map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-leaf" : "bg-line"}`} />)}
       </div>

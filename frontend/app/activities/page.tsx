@@ -24,8 +24,8 @@ function Activities() {
   }
 
   return (
-    <div className="space-y-5 pt-2">
-      <h1 className="font-serif text-3xl">Activities</h1>
+    <div className="grid gap-5 pt-2 lg:grid-cols-2 lg:items-start">
+      <h1 className="font-serif text-3xl lg:col-span-2">Activities</h1>
 
       <form onSubmit={submit} className="card space-y-3">
         <p className="label">Record what you did</p>
