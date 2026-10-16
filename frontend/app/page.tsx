@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFarm, type Profile } from "@/lib/farm";
@@ -10,7 +11,7 @@ export default function Onboarding() {
   const { profile, saveProfile } = useFarm();
   const router = useRouter();
   const [p, setP] = useState<Profile>(profile ?? blank);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(-1); // -1 = welcome screen
   const set = (k: keyof Profile) => (e: { target: { value: string } }) => setP({ ...p, [k]: e.target.value });
   const choice = (k: keyof Profile, options: string[]) => (
     <div className="grid grid-cols-2 gap-2">
@@ -46,6 +47,23 @@ export default function Onboarding() {
     router.replace("/copilot");
   };
 
+  if (step < 0) return (
+    <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-16">
+      <p className="label mt-6">Your AI farming co-pilot</p>
+      <h1 className="mt-3 font-serif text-4xl leading-tight md:text-5xl">Better decisions for your farm, every day.</h1>
+      <ul className="mt-6 space-y-2 text-muted">
+        <li>✓ Ask by text, voice or photo</li>
+        <li>✓ Advice based on your crop, field and weather</li>
+        <li>✓ Turn advice into tasks and track what you did</li>
+      </ul>
+      <p className="mt-6 text-sm text-muted">5 quick questions · about a minute</p>
+      <div className="mt-auto flex flex-col gap-3 pt-10 md:mt-10 md:flex-row">
+        <button className="btn flex-1" onClick={() => setStep(0)}>{profile ? "Update my farm" : "Get started"}</button>
+        {profile && <Link href="/copilot" className="btn-ghost flex-1 text-center">Go to Co-Pilot</Link>}
+      </div>
+    </div>
+  );
+
   return (
     <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-10">
       <div className="mt-2 flex gap-1.5" aria-label={`Step ${step + 1} of ${steps.length}`}>
@@ -56,7 +74,7 @@ export default function Onboarding() {
         {steps[step].hint && <p className="mt-2 text-muted">{steps[step].hint}</p>}
         <div className="mt-6">{steps[step].body}</div>
         <div className="mt-auto flex gap-3 pt-10">
-          {step > 0 && <button type="button" className="btn-ghost" onClick={() => setStep(step - 1)}>Back</button>}
+          <button type="button" className="btn-ghost" onClick={() => setStep(step - 1)}>Back</button>
           <button type="button" className="btn-ghost flex-1 text-muted" onClick={next}>Skip</button>
           <button className="btn flex-1">{last ? "Start" : "Next"}</button>
         </div>
