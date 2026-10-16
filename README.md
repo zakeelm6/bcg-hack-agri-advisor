@@ -54,6 +54,10 @@ Then the farmer marks the task done, adds a photo and the result, and the next a
  questions from the Copilot ---> Orchestrator                       +---------> Escalation, audit log
 ```
 
+![Farm Advisor architecture: inputs, the sandbox with its agents, and outputs including the in-app Copilot](docs/architecture-diagram.png)
+
+*Inputs on the left, the sandbox with its agents in the middle, outputs on the right. The Copilot is both an output (it receives the approved advice and reasons) and the source of the farmer's questions, which go back to the orchestrator.*
+
 Design rules:
 
 1. **Code decides the numbers, a language model only explains.** Doses, dates and quantities come from a tested
