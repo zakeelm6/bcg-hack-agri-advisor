@@ -44,7 +44,7 @@ export default function MyFarm() {
             <p className="label">Main crop</p>
             <p className="mt-1 font-serif text-2xl capitalize">{p?.crop || "Not set"}</p>
           </div>
-          <Link href="/" className="text-sm font-medium text-leaf">Edit</Link>
+          <Link href="/?edit" className="text-sm font-medium text-leaf">Edit</Link>
         </div>
         <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <Info k="Planted" v={p?.plantedOn ? `${p.plantedOn} · ${Math.floor(daysSince(p.plantedOn) / 7)} wks ago` : ""} />

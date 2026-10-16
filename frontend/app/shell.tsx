@@ -26,7 +26,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-3xl lg:max-w-5xl">
       <header className="flex items-center justify-between px-5 pt-5 pb-2 md:px-8 md:pt-6">
-        <span className="font-serif text-xl font-semibold text-leaf">growmate</span>
+        <Link href="/" className="font-serif text-xl font-semibold text-leaf">growmate</Link>
       {!onboarding && (
         // Phones: fixed bottom tab bar. Tablet/desktop (md+): inline in the header.
         <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-paper/95 backdrop-blur md:static md:border-0 md:bg-transparent md:backdrop-blur-none">

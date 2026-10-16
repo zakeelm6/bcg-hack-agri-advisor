@@ -1,17 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { useFarm, type Profile } from "@/lib/farm";
 
 const blank: Profile = { location: "", crop: "", plantedOn: "", area: "", irrigation: "", challenge: "" };
 
-export default function Onboarding() {
+function Onboarding() {
   const { profile, saveProfile } = useFarm();
   const router = useRouter();
   const [p, setP] = useState<Profile>(profile ?? blank);
-  const [step, setStep] = useState(-1); // -1 = welcome screen
+  const edit = useSearchParams().has("edit");
+  const [step, setStep] = useState(edit ? 0 : -1); // -1 = welcome screen
+  // Returning farmers land on My Farm; the welcome + questions are for new users or ?edit.
+  useEffect(() => { if (profile && !edit) router.replace("/farm"); }, [profile, edit, router]);
+  if (profile && !edit) return null;
   const set = (k: keyof Profile) => (e: { target: { value: string } }) => setP({ ...p, [k]: e.target.value });
   const choice = (k: keyof Profile, options: string[]) => (
     <div className="grid grid-cols-2 gap-2">
@@ -44,7 +47,7 @@ export default function Onboarding() {
   const next = () => {
     if (!last) return setStep(step + 1);
     saveProfile(p);
-    router.replace("/copilot");
+    router.replace("/farm");
   };
 
   if (step < 0) return (
@@ -58,8 +61,7 @@ export default function Onboarding() {
       </ul>
       <p className="mt-6 text-sm text-muted">5 quick questions · about a minute</p>
       <div className="mt-auto flex flex-col gap-3 pt-10 md:mt-10 md:flex-row">
-        <button className="btn flex-1" onClick={() => setStep(0)}>{profile ? "Update my farm" : "Get started"}</button>
-        {profile && <Link href="/copilot" className="btn-ghost flex-1 text-center">Go to Co-Pilot</Link>}
+        <button className="btn flex-1" onClick={() => setStep(0)}>Get started</button>
       </div>
     </div>
   );
@@ -81,4 +83,8 @@ export default function Onboarding() {
       </form>
     </div>
   );
+}
+
+export default function Page() {
+  return <Suspense><Onboarding /></Suspense>;
 }
