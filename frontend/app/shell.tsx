@@ -6,8 +6,8 @@ import { useEffect } from "react";
 import { useFarm } from "@/lib/farm";
 
 const nav = [
-  { href: "/copilot", label: "Co-Pilot", icon: "M4 5h16v11H8l-4 4z" },
   { href: "/farm", label: "My Farm", icon: "M3 11l9-7 9 7v9H3zM9 20v-6h6v6" },
+  { href: "/copilot", label: "Co-Pilot", icon: "M4 5h16v11H8l-4 4z" },
   { href: "/activities", label: "Activities", icon: "M5 4h14v16H5zM9 9h6M9 13h6M9 17h3" },
 ];
 
@@ -47,7 +47,15 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </nav>
       )}
       </header>
-      <main className={`flex-1 px-5 md:px-8 ${onboarding ? "pb-8" : "pb-28 md:pb-32"}`}>{children}</main>
+      <main className={`flex-1 px-5 md:px-8 ${onboarding ? "pb-8" : "pb-36 md:pb-32"}`}>{children}</main>
+      {!onboarding && path !== "/copilot" && (
+        <Link href="/copilot" className="btn fixed right-4 bottom-[84px] z-10 flex items-center gap-2 rounded-full shadow-lg md:right-8 md:bottom-8">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" aria-hidden>
+            <path d="M4 5h16v11H8l-4 4z" />
+          </svg>
+          Ask Co-Pilot
+        </Link>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { askCopilot } from "@/lib/copilot";
 import { today, uid, useFarm, type Advice } from "@/lib/farm";
 
@@ -11,9 +12,13 @@ const starters = [
   { title: "Today's tasks", sub: "Plan your farm work", q: "What should I do on the farm today?" },
 ];
 
-export default function CoPilot() {
+export default function Page() {
+  return <Suspense><CoPilot /></Suspense>;
+}
+
+function CoPilot() {
   const farm = useFarm();
-  const [text, setText] = useState("");
+  const [text, setText] = useState(useSearchParams().get("q") ?? ""); // prefilled from shortcuts on other pages
   const [photo, setPhoto] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
