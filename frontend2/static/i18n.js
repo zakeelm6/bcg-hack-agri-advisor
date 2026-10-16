@@ -9,7 +9,7 @@ const T = [
   ["Field", "Champ", "الحقل"], ["Tasks", "Tâches", "المهام"], ["Sell", "Vente", "البيع"], ["Alerts", "Alertes", "التنبيهات"], ["Me", "Moi", "أنا"],
   ["About", "À propos", "حول"], ["Home", "Accueil", "الرئيسية"], ["Main", "Principal", "الرئيسية"], ["Language", "Langue", "اللغة"],
   ["Loading...", "Chargement...", "جارٍ التحميل..."], ["Field A", "Champ A", "الحقل A"], ["Done", "Fait", "تم"], ["Skipped", "Ignorée", "تم التخطي"],
-  ["Save", "Enregistrer", "حفظ"], ["High", "Élevée", "عالية"], ["Medium", "Moyenne", "متوسطة"], ["Low", "Faible", "ضعيفة"], ["Search", "Rechercher", "بحث"],
+  ["Save", "Enregistrer", "حفظ"], ["Undo", "Annuler", "تراجع"], ["High", "Élevée", "عالية"], ["Medium", "Moyenne", "متوسطة"], ["Low", "Faible", "ضعيفة"], ["Search", "Rechercher", "بحث"],
   ["Demo", "Démo", "تجريبي"], ["Notes", "Notes", "ملاحظات"],
   // map and layers
   ["Vigor", "Vigueur", "قوة النبات"], ["Moisture", "Humidité", "الرطوبة"], ["Soil", "Sol", "التربة"], ["Trust", "Confiance", "الثقة"],

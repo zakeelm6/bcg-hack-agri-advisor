@@ -101,9 +101,10 @@ async function getCached(path) {
 const getQ = () => lsGet("fa_queue", []);
 const setQ = q => lsSet("fa_queue", q);
 let flushing = false;
-async function flush() {
+async function flush(manual = false) {
   const q = getQ();
   if (!q.length || flushing) return;
+  const wasOffline = offline;
   flushing = true;
   try {
     const j = await fetchJson("/api/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions: q }) }, 15000);
@@ -111,7 +112,8 @@ async function flush() {
     setQ([]);
     offline = false;
     await loadState();
-    toast(failed ? `${q.length - failed} updates sent, ${failed} refused by the server` : "Everything is synced");
+    if (failed) toast(`${q.length - failed} updates sent, ${failed} refused by the server`);
+    else if (manual || wasOffline) toast("Everything is synced");   // silent when already online: nothing to announce
   } catch { offline = true; }
   flushing = false;
   render();
@@ -151,7 +153,14 @@ const taskIcon = t => ({ irrigate: "drop", fertilize: "sack", inspect: "search" 
 const openTasks = () => (S?.tasks || []).filter(t => t.status === "open");
 const unread = () => (S?.alerts || []).filter(a => a.unread).length;
 const ageWords = d => d === 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`;
-function toast(msg) { document.querySelector(".toast")?.remove(); const d = document.createElement("div"); d.className = "toast"; d.textContent = tt(msg); document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
+function toast(msg, action) {
+  const cur = document.querySelector(".toast");
+  if (cur && cur.querySelector("button") && !action) return;   // never replace an undo toast with a plain note
+  cur?.remove();
+  const d = document.createElement("div"); d.className = "toast"; d.textContent = tt(msg);
+  if (action) { const b = document.createElement("button"); b.textContent = tt(action.label); b.onclick = () => { d.remove(); action.fn(); }; d.appendChild(b); }
+  document.body.appendChild(d); setTimeout(() => d.remove(), action ? 6000 : 3200);
+}
 function km(a, b) { const R = 6371, r = x => x * Math.PI / 180; const dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon); const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
 function areaHa(pts) {            // shoelace formula on a local flat projection, result in hectares
   if (pts.length < 3) return 0;
@@ -172,7 +181,7 @@ function banner() {
 const NAV = [["#/field", "home", "Field"], ["#/tasks", "tasks", "Tasks"], ["#/sell", "sell", "Sell"], ["#/alerts", "bell", "Alerts"], ["#/me", "user", "Me"]];
 const dotFor = n => n[1] === "bell" && unread() ? '<i class="dot"></i>' : "";
 function topbar(nav) {
-  return `<header class="topbar"><a class="brand" href="#/" aria-label="Home">${ic("leaf", 26)}<span>Farm Advisor</span></a>
+  return `<header class="topbar"><a class="brand" href="#/">${ic("leaf", 26)}<span>Farm Advisor</span></a>
     <nav class="topnav" aria-label="Main">${NAV.map(n => `<button data-go="${n[0]}" class="${nav === n[0] ? "on" : ""}">${n[2]}${dotFor(n)}</button>`).join("")}</nav>
     <span class="topright">${langSwitch()}<button class="iconbtn" data-go="#/about" aria-label="About">${ic("info", 22)}</button></span></header>`;
 }
@@ -256,7 +265,7 @@ function fieldScreen() {
 }
 
 /* ---------- vigor over time ---------- */
-const ZCOL = { A: "#31572C", B: "#E9A23B", C: "#3A8F85", D: "#B5472B" };
+const ZCOL = { A: "var(--z-a)", B: "var(--z-b)", C: "var(--z-c)", D: "var(--z-d)" };
 async function loadSeries() {
   const j = await getCached(L("/api/ndvi-series"));
   ui.series = j || { points: [], real: false, missing: true };
@@ -276,11 +285,11 @@ function chartCard() {
   const Y = v => T + (1 - (v - ymin) / (ymax - ymin)) * (H - T - B);
   const step = (ymax - ymin) > 0.55 ? 0.2 : 0.1;
   let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="NDVI of each zone over time" style="direction:ltr">`;
-  for (let v = Math.ceil(ymin / step) * step; v <= ymax + 1e-9; v += step) g += `<line x1="${Lm}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#1D2B1A" stroke-opacity=".1"/><text x="${Lm - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="#5E6F59">${v.toFixed(1)}</text>`;
+  for (let v = Math.ceil(ymin / step) * step; v <= ymax + 1e-9; v += step) g += `<line x1="${Lm}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--tx)" stroke-opacity=".12"/><text x="${Lm - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--tx2)">${v.toFixed(1)}</text>`;
   if (0.7 > ymin && 0.7 < ymax) g += `<line x1="${Lm}" x2="${W - R}" y1="${Y(0.7)}" y2="${Y(0.7)}" stroke="#E9A23B" stroke-dasharray="5 4"/>`;
   const dates = [...new Set(pts.map(p => p.date))].sort();
   let lastX = -999;
-  dates.forEach((d, i) => { const x = X(tm(d)); if (x - lastX >= 62 && (i === 0 || W - R - x >= 20 || i === dates.length - 1)) { g += `<text x="${x}" y="${H - 14}" text-anchor="middle" font-size="11" fill="#5E6F59">${fmtDate(d)}</text>`; lastX = x; } });
+  dates.forEach((d, i) => { const x = X(tm(d)); if (x - lastX >= 62 && (i === 0 || W - R - x >= 20 || i === dates.length - 1)) { g += `<text x="${x}" y="${H - 14}" text-anchor="middle" font-size="11" fill="var(--tx2)">${fmtDate(d)}</text>`; lastX = x; } });
   zones.filter(z => !ui.hideZones[z]).forEach(z => {
     const zp = pts.filter(p => p.zone_code === z).sort((a, b) => a.date.localeCompare(b.date));
     g += `<polyline fill="none" stroke="${ZCOL[z]}" stroke-width="2.5" stroke-linejoin="round" points="${zp.map(p => `${X(tm(p.date)).toFixed(1)},${Y(p.ndvi).toFixed(1)}`).join(" ")}"/>`;
@@ -304,7 +313,7 @@ function tasksScreen() {
   const list = ui.day ? all.filter(t => t.when_date === ui.day) : all;
   const letters = lang === "fr" ? ["D", "L", "M", "M", "J", "V", "S"] : lang === "ar" ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["S", "M", "T", "W", "T", "F", "S"];
   const strip = days.map((d, i) => `<button class="day ${i === 0 ? "today" : ""} ${ui.day === iso(d) ? "sel" : ""}" data-day="${iso(d)}">${letters[d.getDay()]}<b>${d.getDate()}</b>${S.tasks.some(t => t.when_date === iso(d) && t.status === "open") ? '<i class="tick"></i>' : ""}</button>`).join("");
-  const cards = list.map(t => `<div class="card clickable task" data-go="#/task/${t.id}" style="${t.status !== "open" ? "opacity:.55" : ""}">
+  const cards = list.map(t => `<div class="card clickable task ${t.status !== "open" ? "off" : ""}" data-go="#/task/${t.id}">
       <span class="circle ${t.type === "irrigate" ? "amber" : ""}">${ic(taskIcon(t.type), 28)}</span>
       <div class="tt"><div class="ttl">${esc(t.title)}</div><div class="sub">${ic("clock", 14)} ${esc(t.when_text)}</div></div>
       ${t.status === "done" ? `<span class="pill dk">${ic("check", 16, 3)}</span>` : t.status === "skipped" ? '<span class="pill ol">&ndash;</span>' : ""}</div>`).join("");
@@ -319,10 +328,12 @@ function taskScreen(id) {
   return shell({ title: "Task", nav: "#/tasks", body: `
     <div class="grid2"><div><div class="card bigtask">
       <div class="row"><span class="circle ${t.type === "irrigate" ? "amber" : ""}" style="width:64px;height:64px">${ic(taskIcon(t.type), 34)}</span><div><div class="h">${esc(t.title)}</div><div class="sub">${ic("clock", 15)} ${esc(t.when_text)}</div></div></div>
-      <div class="row" style="margin:14px 0 6px"><div class="meter">${[1, 2, 3].map(i => `<i class="${i <= lvl ? "" : "off"}"></i>`).join("")}</div><b style="font-size:14px">${t.confidence}</b></div>
+      ${t.status === "open"
+        ? `<div class="btns" style="margin:14px 0 4px"><button class="btn" data-act="done" data-id="${t.id}">${ic("check", 24, 3)} Done</button><button class="btn sec" data-act="skip" data-id="${t.id}">Cannot do it</button></div>`
+        : `<div style="margin:14px 0 4px"><span class="pill ${t.status === "done" ? "dk" : "ol"}">${t.status === "done" ? "Done" : "Skipped"}</span></div>`}
+      <div class="row" style="margin:10px 0 6px"><div class="meter">${[1, 2, 3].map(i => `<i class="${i <= lvl ? "" : "off"}"></i>`).join("")}</div><b style="font-size:14px">${t.confidence}</b></div>
       ${det("Why", t.why)}${det("Cost", t.cost)}${det("Plan B", t.plan_b)}${det("How sure", t.conf_reason)}</div></div>
-    <div>${t.status === "open" ? `<div class="btns"><button class="btn" data-act="done" data-id="${t.id}">${ic("check", 24, 3)} Done</button><button class="btn sec" data-act="skip" data-id="${t.id}">Cannot do it</button></div>` : `<div class="card"><span class="pill ${t.status === "done" ? "dk" : "ol"}">${t.status === "done" ? "Done" : "Skipped"}</span></div>`}
-      <div class="btns" style="margin-top:12px"><button class="btn sec" data-cp-open="1">${ic("mic", 22)} Copilot</button>${t.confidence !== "High" ? `<button class="btn sec" data-go="#/soil/${esc(t.zone_code)}">${ic("flask", 22)} Soil test</button>` : ""}</div></div></div>` });
+    <div><div class="btns"><button class="btn sec" data-cp-open="1">${ic("mic", 22)} Copilot</button>${t.confidence !== "High" ? `<button class="btn sec" data-go="#/soil/${esc(t.zone_code)}">${ic("flask", 22)} Soil test</button>` : ""}</div></div></div>` });
 }
 
 function followScreen(id) {
@@ -346,7 +357,7 @@ function soilScreen(zoneParam) {
   return shell({ title: "Soil test", nav: "#/field", body: `
     <div class="grid2"><div><div class="card"><div class="chips" style="margin:0 0 12px">${zchips}</div>
       ${field("soil-ph", "pH", "6.4", ui.soil.ph, "0.1")}${field("soil-om", "Organic matter (%)", "2.1", ui.soil.om, "0.1")}${field("soil-m", "Moisture (%)", "24", ui.soil.moisture, "1")}
-      ${ui.soilMsg ? `<div class="sub" style="color:#9a3b1f;margin:0 0 10px">${esc(ui.soilMsg)}</div>` : ""}
+      ${ui.soilMsg ? `<div class="sub" style="color:var(--danger);margin:0 0 10px">${esc(ui.soilMsg)}</div>` : ""}
       <button class="btn" data-act="save-soil">${ic("check", 24, 3)} Save</button></div></div>
     <div><div class="card"><div class="lbl">Saved tests</div><div class="sub" style="margin-top:6px">${tests.length ? tests.map(t => `Zone ${esc(t.zone_code)}: ${testLine(t)} (${ageWords(t.age_days)})${t.pending ? " - waiting to sync" : ""}`).join("<br>") : "None yet."}</div></div></div></div>` });
 }
@@ -632,7 +643,12 @@ $app.addEventListener("click", async e => {
   if (d.result) { ui.result = d.result; return render(); }
   if (d.opt) { ui.welcomeOpt = d.opt; return render(); }
   const act = d.act;
-  if (act === "done") { enqueue("task_status", { task_id: +d.id, status: "done" }); ui.result = null; ui.photo = null; return go("#/follow/" + d.id); }
+  if (act === "done") {
+    const id = +d.id;
+    enqueue("task_status", { task_id: id, status: "done" }); ui.result = null; ui.photo = null;
+    go("#/follow/" + id);
+    return toast("Done", { label: "Undo", fn: () => { enqueue("task_status", { task_id: id, status: "open" }); go("#/task/" + id); } });
+  }
   if (act === "skip") { enqueue("task_status", { task_id: +d.id, status: "skipped" }); toast("Skipped. We will adjust the plan."); return go("#/tasks"); }
   if (act === "save-follow") {
     enqueue("observation", { task_id: +d.id, result: ui.result, note: document.getElementById("note")?.value || null, photo: ui.photo });
@@ -641,7 +657,7 @@ $app.addEventListener("click", async e => {
   if (act === "save-soil") return saveSoil();
   if (act === "accept") { enqueue("offer_accept", { offer_id: +d.id }); return render(); }
   if (act === "listing") { enqueue("listing", {}); toast("Sale offer published (buyers are simulated)"); return render(); }
-  if (act === "sync") return flush();
+  if (act === "sync") return flush(true);
   if (act === "refresh") { await loadState(true); ui.forecast = null; ui.series = null; ui.seriesLoading = false; toast(offline ? "Offline: showing saved advice" : "Advice refreshed"); return render(); }
   if (act === "locate") return locate();
   if (act === "walk-start") return walkStart();
