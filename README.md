@@ -4,8 +4,15 @@
 
 BCG Platinion Hackathon 2026 - Fighting World Hunger - Team 2
 
-> This repository currently holds the project description. The working prototype (website, rule engine, tests,
-> satellite pipeline) is described below with its exact status.
+## Repository layout
+
+| Folder | What it is |
+|---|---|
+| `frontend/` | Next.js 15 / React 19 / Tailwind mobile interface ("growmate"): onboarding, Co-Pilot chat, My Farm, Activities. Runs with a local stand-in Co-Pilot unless `NEXT_PUBLIC_API_URL` points to a backend. Docker ready. |
+| `frontend2/` | Farm Advisor website with its own FastAPI back end: rule engine, real Sentinel-2 land view, voice Copilot, English / French / Arabic, offline queue, 42 tests. Run with `./run.sh` (see `frontend2/README.md`). |
+| `docs/` | Architecture diagram. |
+
+The status table below describes `frontend2/`.
 
 ---
 
@@ -92,7 +99,7 @@ a task or state a number that is not in the facts.
 
 | Part | Status |
 |---|---|
-| Rule engine (irrigation, fertilizer, inspection, alerts, soil-test effects) | **Built**, rule based, 22 automated tests |
+| Rule engine (irrigation, fertilizer, inspection, alerts, soil-test effects) | **Built**, rule based, 42 automated tests |
 | Responsive website (landing page, field map, tasks, task detail, follow-up, alerts, sell, profile) | **Built** |
 | Weather and 5-day forecast | **Real** (Open-Meteo, cached, with a labelled fallback) |
 | Crop vigor (NDVI) per zone | **Real Sentinel-2 data** for one irrigated parcel near El Jadida (Morocco), downloaded with a script; about 55 pixels of 10 m per zone, so values are coarse |
@@ -104,8 +111,9 @@ a task or state a number that is not in the facts.
 | Buyers, offers and prices | **Simulated** |
 | Crop type and harvest forecast | **Placeholder**: a satellite shows vigor, not the species; the forecast is not validated |
 | Rule thresholds (vigor target, fertilizer band, moisture trigger) | **Demo values**, to be calibrated on real fields |
-| Orchestrator, vision agent, explainer agent, Copilot, sandbox isolation | **Designed, not built** |
-| French and darija interface, voice | Planned |
+| Copilot (text and voice, answers from the engine, optional model with number check) | **Built**; the real-model path is tested only with a fake model |
+| Orchestrator, full multi-agent sandbox, vision agent on a real model | **Designed, not built** |
+| English, French and Arabic interface (right to left), voice in and out | **Built** (voice needs Chrome or Edge and internet); darija planned |
 
 ## Technology
 
