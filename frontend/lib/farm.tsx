@@ -13,6 +13,7 @@ export type Profile = {
   challenge: Challenge | "";
   lat?: number; // from "Use my location"; weather uses these over the town name
   lon?: number;
+  boundary?: [number, number][]; // field corners [lat, lng], drawn on the Measure map
 };
 export type Task = { id: string; title: Text; due: string; done: boolean };
 export type ActivityType = "irrigation" | "treatment" | "planting" | "expense" | "other";

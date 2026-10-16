@@ -69,6 +69,18 @@ const S = {
 
   // My Farm
   myField: ["My field", "Mon champ", "حقلي"],
+  myLand: ["My land", "Ma parcelle", "أرضي"],
+  viewPhoto: ["Photo", "Photo", "صورة"],
+  viewMeasure: ["Measure", "Mesurer", "قياس"],
+  view3d: ["3D", "3D", "ثلاثي الأبعاد"],
+  drawField: ["Draw my field", "Tracer mon champ", "ارسم حقلي"],
+  redrawField: ["Draw again", "Retracer", "ارسم من جديد"],
+  drawHelp: ["Tap each corner of your field, then tap Done.", "Touchez chaque coin de votre champ, puis Terminé.", "اضغط على كل زاوية من حقلك، ثم اضغط تم."],
+  drawMore: ["Tap at least 3 corners.", "Touchez au moins 3 coins.", "اضغط على 3 زوايا على الأقل."],
+  done: ["Done", "Terminé", "تم"],
+  noField: ["Draw your field to see its surface.", "Tracez votre champ pour voir sa surface.", "ارسم حقلك لترى مساحته."],
+  noMapLocation: ["Add your location to see your land.", "Ajoutez votre position pour voir votre parcelle.", "أضف موقعك لترى أرضك."],
+  mapLoading: ["Loading the map…", "Chargement de la carte…", "جارٍ تحميل الخريطة…"],
   weekN: ["Week {n} since planting", "Semaine {n} depuis la plantation", "الأسبوع {n} منذ الزراعة"],
   plantingUnknown: ["Planting time not set", "Date de plantation inconnue", "وقت الزراعة غير محدد"],
   edit: ["Edit", "Modifier", "تعديل"],

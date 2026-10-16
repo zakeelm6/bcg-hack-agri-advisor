@@ -6,8 +6,9 @@ import { daysSince, today, useFarm, useT, useTx, type Profile, type Task } from 
 import { activityTypes, cropIcon, cropName, irrigations } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { PhotoCardBody, photoCard, starters } from "@/lib/starters";
+import FieldMap from "./field-map";
 
-type Weather = { place: string; temp: number; days: { date: string; max: number; min: number; rain: number; code: number }[] };
+type Weather = { lat: number; lon: number; place: string; temp: number; days: { date: string; max: number; min: number; rain: number; code: number }[] };
 
 // Open-Meteo: free, keyless. Uses GPS coordinates when the farmer shared them, else geocodes the town name.
 async function getWeather(p: Profile, lang: string): Promise<Weather | null> {
@@ -21,6 +22,7 @@ async function getWeather(p: Profile, lang: string): Promise<Weather | null> {
   }
   const f = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&forecast_days=3&timezone=auto`).then((r) => r.json());
   return {
+    lat: lat!, lon: lon!,
     place,
     temp: Math.round(f.current.temperature_2m),
     days: f.daily.time.map((date: string, i: number) => ({
@@ -89,6 +91,8 @@ export default function MyFarm() {
             <li><Link href="/?edit" className="inline-flex items-center gap-1 font-medium text-leaf underline underline-offset-4"><Icon name="pencil" className="h-4 w-4" />{t("edit")}</Link></li>
           </ul>
         </section>
+
+        <FieldMap center={p?.lat !== undefined && p.lon !== undefined ? [p.lat, p.lon] : weather && weather !== "error" ? [weather.lat, weather.lon] : undefined} />
 
         <section aria-label={t("today")}>
           {!p?.location ? (
