@@ -93,6 +93,7 @@ const T = [
   ["Ask", "Question", "اسأل"], ["Offline", "Hors ligne", "دون اتصال"], ["Model, checked", "Modèle, contrôlé", "نموذج، مُراجَع"], ["Saved on this device", "Enregistré sur cet appareil", "محفوظ على هذا الجهاز"],
   ["Read my tasks", "Lire mes tâches", "اقرأ مهامي"], ["Talk mode", "Mode conversation", "وضع المحادثة"], ["Talk mode on", "Mode conversation activé", "وضع المحادثة مفعّل"], ["Talk mode off", "Mode conversation arrêté", "توقف وضع المحادثة"],
   ["Stopped", "Arrêté", "تم الإيقاف"], ["Listen", "Écouter", "استمع"], ["No voice for this language on this device", "Pas de voix pour cette langue sur cet appareil", "لا يوجد صوت لهذه اللغة على هذا الجهاز"],
+  ["Voice needs a secure page (https)", "La voix nécessite une page sécurisée (https)", "الصوت يحتاج صفحة آمنة (https)"],
   ["Speak", "Parler", "تكلّم"], ["Stop", "Arrêter", "أوقف"], ["Read answers aloud", "Lire les réponses à voix haute", "قراءة الأجوبة بصوت عالٍ"], ["Read aloud", "Lire à voix haute", "قراءة بصوت عالٍ"],
   ["Send", "Envoyer", "إرسال"], ["Close the Copilot", "Fermer le Copilot", "إغلاق المساعد"], ["Open the Copilot", "Ouvrir le Copilot", "فتح المساعد"],
   ["Listening...", "J'écoute...", "أستمع..."], ["Voice needs Chrome or Edge", "La voix nécessite Chrome ou Edge", "الصوت يحتاج Chrome أو Edge"], ["Voice needs internet", "La voix nécessite internet", "الصوت يحتاج اتصالًا بالإنترنت"],

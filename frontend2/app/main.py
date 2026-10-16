@@ -3,15 +3,16 @@ import json
 import os
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import time
 from collections import deque
 
-from . import copilot, engine, geo, llm
+from . import copilot, engine, geo, llm, speech
 from .db import get_conn, init_db
 
 app = FastAPI(title="Farm Advisor", version="0.1.0")
@@ -361,6 +362,52 @@ def copilot_ask(b: CopilotBody):
     res = copilot.answer(q, st, b.task_id, lambda d: engine.what_if_wait(field, zones, sensors, weather, soil, d, lang=lang), lang)
     _log("question", q, res["text"], res["source"], res["numbers_ok"], res["note"])
     return res
+
+
+# ---------------- Voice (Azure AI Speech, optional) ----------------
+_voice_calls = deque(maxlen=120)
+
+
+def _voice_ok(limit=60, window=60):
+    now = time.time()
+    while _voice_calls and now - _voice_calls[0] > window:
+        _voice_calls.popleft()
+    if len(_voice_calls) >= limit:
+        return False
+    _voice_calls.append(now)
+    return True
+
+
+@app.get("/api/speech/status")
+def speech_status():
+    return speech.status()
+
+
+@app.post("/api/stt")
+async def speech_to_text(request: Request, lang: str = "en"):
+    if not _voice_ok():
+        raise HTTPException(429, "too many voice requests, wait a minute")
+    wav = await request.body()
+    try:
+        return {"text": await run_in_threadpool(speech.recognize, wav, lang)}
+    except speech.SpeechError as e:
+        raise HTTPException(e.status, str(e))
+
+
+class TtsBody(BaseModel):
+    text: str
+    lang: str = "en"
+
+
+@app.post("/api/tts")
+async def text_to_speech(b: TtsBody):
+    if not _voice_ok():
+        raise HTTPException(429, "too many voice requests, wait a minute")
+    try:
+        audio = await run_in_threadpool(speech.synthesize, b.text, b.lang)
+    except speech.SpeechError as e:
+        raise HTTPException(e.status, str(e))
+    return Response(audio, media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
 
 
 class VisionBody(BaseModel):

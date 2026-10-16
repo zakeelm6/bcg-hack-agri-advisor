@@ -10,7 +10,7 @@ The mobile screens of the design are in Figma: https://www.figma.com/design/CGzd
 Open it at `http://localhost:8000` (browsers only allow GPS on HTTPS or localhost).
 
 **Exposure:** `./run.sh` listens on this computer only (127.0.0.1). `FA_HOST=0.0.0.0 ./run.sh` opens it to everyone on the same Wi-Fi, for a phone demo. The app has **no login yet**, so anyone who can reach it can read the data, write soil tests and tasks, and (if a model key is configured) spend it, within a 30-calls-per-minute brake. Do not put it on the internet (port forwarding, tunnel, public server) before adding authentication, HTTPS and per-user data.
-Tests (42): `source .venv/bin/activate && python -m pytest -q`
+Tests (50): `source .venv/bin/activate && python -m pytest -q`
 
 ## What is real and what is simulated
 | Part | Status |
@@ -43,6 +43,13 @@ soil-test form). It refuses to diagnose a disease and cannot change a task.
   the mic to end it, and it ends by itself after two silences. On a task page, **Listen** reads that task. Voice commands:
   read my tasks, repeat, stop (English, French, Arabic). Voice input uses the browser's speech service (Chrome or Edge, internet needed);
   voice output uses the voices installed on the device, and Arabic may have none (the app says so).
+- **Server voice (Azure AI Speech), works in every browser and in Arabic.** Put `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION`
+  in `.env` (see `.env.example`). The page then records a short WAV (it stops by itself after 1.4 s of silence), sends it to
+  `POST /api/stt`, and the Copilot's words come back from `POST /api/tts` as MP3 (voices ar-MA, fr-FR, en-US, changeable with
+  `AZURE_SPEECH_VOICE_AR/FR/EN`). The key stays on the server, audio is not stored, the same sentence is cached in memory, and a limit of
+  60 voice calls per minute protects the quota. If the server voice fails or is not configured, the app falls back to the browser's own speech.
+  It needs HTTPS or localhost for the microphone. Tested with a faked Azure (8 automated tests and a browser run with a generated tone);
+  **not yet tested against a real Azure key or with a real voice.**
 - **Photo reading** (vision model only): after a task, a photo is described as observations and things to check, never a
   diagnosis. Without a vision model the photo is saved and the app says reading is off.
 - Every question and answer is stored in an audit log (`GET /api/audit`). A simple limit of 30 calls per minute protects a paid key.

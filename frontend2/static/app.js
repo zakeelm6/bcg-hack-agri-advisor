@@ -437,12 +437,14 @@ function aboutScreen() {
 }
 
 /* ---------- Copilot: chat, voice in, voice out ---------- */
-const cp = { open: false, msgs: [], busy: false, status: null, listening: false, speaking: false, speak: lsGet("fa_speak", false), rec: null, voiceTurn: false, hintFixed: false, speakId: 0, convo: false, silent: 0 };
+const cp = { open: false, msgs: [], busy: false, status: null, listening: false, speaking: false, speak: lsGet("fa_speak", false), rec: null, voiceTurn: false, hintFixed: false, speakId: 0, convo: false, silent: 0, server: false, audio: null, stopRec: null };
 const cpTaskId = () => { const m = /^#\/(?:task|follow)\/(\d+)/.exec(location.hash); return m ? +m[1] : null; };
 const speechCtor = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 async function loadCopilotStatus() {
   try { cp.status = await fetchJson("/api/copilot/status"); lsSet("c:/api/copilot/status", cp.status); }
   catch { cp.status = lsGet("c:/api/copilot/status", null); }
+  try { cp.server = !!(await fetchJson("/api/speech/status")).available; lsSet("c:/api/speech/status", cp.server); }   // server voice (Azure): any browser, Arabic included
+  catch { cp.server = !!lsGet("c:/api/speech/status", false); }
   cpRenderHead();
 }
 function localAnswer(q, taskId) {            // offline Copilot: fixed questions answered from the advice saved on this device
@@ -484,9 +486,9 @@ function cpRenderHead() {
 function cpUpdateMic() {
   const mic = document.getElementById("cp-mic"), sp = document.getElementById("cp-speak"), hint = document.getElementById("cp-hint");
   if (mic) {
-    const ok = !!speechCtor() && !offline;
+    const ok = (cp.server || !!speechCtor()) && !offline;
     mic.classList.toggle("listening", cp.listening); mic.disabled = !ok && !cp.listening;
-    mic.setAttribute("aria-label", tt(cp.listening ? "Stop" : "Speak")); mic.title = !speechCtor() ? tt("Voice needs Chrome or Edge") : offline ? tt("Voice needs internet") : tt("Speak");
+    mic.setAttribute("aria-label", tt(cp.listening ? "Stop" : "Speak")); mic.title = !(cp.server || speechCtor()) ? tt("Voice needs Chrome or Edge") : offline ? tt("Voice needs internet") : tt("Speak");
   }
   const tk = document.getElementById("cp-talk"); if (tk) { tk.classList.toggle("on", cp.convo); tk.setAttribute("aria-pressed", String(cp.convo)); }
   if (sp) { sp.classList.toggle("on", cp.speak); sp.innerHTML = ic(cp.speak ? "speaker" : "mute", 20); sp.setAttribute("aria-pressed", String(cp.speak)); sp.setAttribute("aria-label", tt("Read answers aloud")); }
@@ -501,8 +503,45 @@ function pickVoice(code) {                           // exact language code firs
   const same = voices.filter(v => norm(v).startsWith(base));
   return same.find(v => norm(v) === c) || same[0] || null;
 }
-function stopSpeaking() { cp.speakId++; try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch { /* no speech output */ } cp.speaking = false; }
-function speakText(text, done) {                     // reads sentence by sentence (long texts get cut by some browsers); done() runs after the last one
+function stopSpeaking() {
+  cp.speakId++; cp.speaking = false;
+  try { if (cp.audio) { cp.audio.pause(); cp.audio.src = ""; cp.audio = null; } } catch { /* nothing playing */ }
+  try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch { /* no speech output */ }
+}
+/* server voice: the Copilot's words come from /api/tts (Azure) as MP3 and are played one chunk after the other */
+const speechChunks = text => {
+  const parts = text.replace(/[«»"*_]/g, "").split(/(?<=[.!?؟:;])\s+/).filter(p => p.trim()), out = [];
+  for (const p of parts) { if (out.length && (out[out.length - 1] + " " + p).length < 240) out[out.length - 1] += " " + p; else out.push(p); }
+  return out;
+};
+async function fetchTts(text) {
+  const r = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, lang }) });
+  if (!r.ok) throw new Error("tts " + r.status);
+  return URL.createObjectURL(await r.blob());
+}
+async function serverSpeak(text, done) {
+  stopSpeaking();
+  const id = ++cp.speakId, chunks = speechChunks(text);
+  cp.speaking = true;
+  let next = fetchTts(chunks[0]);
+  for (let i = 0; i < chunks.length; i++) {
+    let url;
+    try { url = await next; } catch { if (id === cp.speakId) { cp.speaking = false; return browserSpeak(chunks.slice(i).join(" "), done); } return; }
+    if (id !== cp.speakId) { URL.revokeObjectURL(url); return; }
+    next = i + 1 < chunks.length ? fetchTts(chunks[i + 1]) : null;   // fetch the next sentence while this one plays
+    const ok = await new Promise(res => {
+      const a = new Audio(url); cp.audio = a;
+      a.onended = () => res(true); a.onerror = () => res(false);
+      a.play().catch(() => res(false));
+    });
+    URL.revokeObjectURL(url);
+    if (id !== cp.speakId) return;
+    if (!ok) { cp.speaking = false; return browserSpeak(chunks.slice(i + 1).join(" "), done); }
+  }
+  cp.speaking = false; done && done();
+}
+function speakText(text, done) { if (cp.server && !offline && text) serverSpeak(text, done); else browserSpeak(text, done); }
+function browserSpeak(text, done) {                  // reads sentence by sentence (long texts get cut by some browsers); done() runs after the last one
   if (!("speechSynthesis" in window) || !text) { done && done(); return; }
   stopSpeaking();
   const id = ++cp.speakId, code = LANGS[lang].speech, v = pickVoice(code);
@@ -536,13 +575,69 @@ function cpCommand(q, text) {
 }
 function cpTalk() {                                  // talk mode: the Copilot reads the tasks, then listens, answers aloud, listens again
   if (cp.convo) { cp.convo = false; cp.rec && cp.listening && cp.rec.stop(); stopSpeaking(); cpUpdateMic(); return cpHint("Talk mode off"); }
-  if (!speechCtor()) return cpHint("Voice needs Chrome or Edge");
+  if (!(cp.server || speechCtor())) return cpHint("Voice needs Chrome or Edge");
   if (offline) return cpHint("Voice needs internet");
   cp.convo = true; cp.silent = 0; cpUpdateMic(); cpHint("Talk mode on");
   cpCommand("read my tasks", tt("Read my tasks"));
 }
+function cpHeard(q) {                                // what the farmer said (empty = silence); talk mode listens again unless it was silent twice
+  if (q) { cp.silent = 0; cp.voiceTurn = true; cpSend(q); }
+  else if (cp.convo) { if (++cp.silent >= 2) { cp.convo = false; cpUpdateMic(); cpHint("Talk mode off"); } else setTimeout(cpMic, 300); }
+}
+/* records the microphone as a 16 kHz WAV and stops by itself when the farmer stops talking */
+function recordWav() {
+  return new Promise(async (resolve, reject) => {
+    let stream, ctx;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return reject(e); }
+    ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.resume && ctx.resume();
+    const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1), chunks = [];
+    let heard = false, quiet = 0, total = 0, done = false;
+    const finish = () => {
+      if (done) return; done = true; cp.stopRec = null;
+      try { proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop()); ctx.close(); } catch { /* already closed */ }
+      resolve(heard ? encodeWav(chunks, ctx.sampleRate) : null);
+    };
+    cp.stopRec = finish;      // pressing the mic while recording sends what was said so far
+    proc.onaudioprocess = e => {
+      const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d)); total += d.length / ctx.sampleRate;
+      let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
+      const rms = Math.sqrt(sum / d.length);
+      if (rms > 0.02) { heard = true; quiet = 0; } else quiet += d.length / ctx.sampleRate;
+      if ((heard && quiet > 1.4) || (!heard && total > 6) || total > 20) finish();
+    };
+    src.connect(proc); proc.connect(ctx.destination);
+  });
+}
+function encodeWav(chunks, rate) {
+  let len = 0; chunks.forEach(c => len += c.length);
+  const all = new Float32Array(len); let o = 0; chunks.forEach(c => { all.set(c, o); o += c.length; });
+  const ratio = rate / 16000, n = Math.floor(len / ratio), buf = new DataView(new ArrayBuffer(44 + n * 2));
+  const w = (p, t) => { for (let i = 0; i < t.length; i++) buf.setUint8(p + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); buf.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); buf.setUint32(16, 16, true); buf.setUint16(20, 1, true); buf.setUint16(22, 1, true);
+  buf.setUint32(24, 16000, true); buf.setUint32(28, 32000, true); buf.setUint16(32, 2, true); buf.setUint16(34, 16, true); w(36, "data"); buf.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const a = all[Math.floor(i * ratio)], v = Math.max(-1, Math.min(1, a)); buf.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true); }
+  return new Blob([buf], { type: "audio/wav" });
+}
+async function serverListen() {                      // record, send to /api/stt, then treat the text like a typed question
+  stopSpeaking();
+  if (!navigator.mediaDevices || !window.isSecureContext) { cp.convo = false; return cpHint("Voice needs a secure page (https)"); }
+  cp.listening = true; cpUpdateMic();
+  let blob;
+  try { blob = await recordWav(); }
+  catch (e) { cp.listening = false; cp.convo = false; cpUpdateMic(); return cpHint(e && e.name === "NotAllowedError" ? "Microphone is blocked" : "Voice did not work"); }
+  cp.listening = false; cpUpdateMic();
+  if (!blob) { cpHint("I heard nothing"); return cpHeard(""); }
+  let text = "";
+  try {
+    const r = await fetchJson(`/api/stt?lang=${lang}`, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: blob }, 20000);
+    text = (r.text || "").trim();
+  } catch { cp.convo = false; cpUpdateMic(); return cpHint("Voice did not work"); }
+  if (!text) cpHint("I heard nothing");
+  cpHeard(text);
+}
 function cpMic() {                                   // browser speech recognition (Chrome and Edge send the audio to their speech service)
-  if (cp.listening) { cp.convo = false; cp.rec && cp.rec.stop(); cpUpdateMic(); return; }
+  if (cp.listening) { cp.convo = false; cp.stopRec ? cp.stopRec() : cp.rec && cp.rec.stop(); cpUpdateMic(); return; }
+  if (cp.server && !offline) return serverListen();
   const SR = speechCtor();
   if (!SR) return cpHint("Voice needs Chrome or Edge");
   if (offline) return cpHint("Voice needs internet");
@@ -553,8 +648,7 @@ function cpMic() {                                   // browser speech recogniti
   rec.onresult = e => { let t = ""; for (let i = e.resultIndex; i < e.results.length; i++) { t += e.results[i][0].transcript; if (e.results[i].isFinal) finalText = t; } input.value = t; };
   rec.onerror = e => { if (e.error !== "no-speech" && e.error !== "aborted") cp.convo = false; cpHint(e.error === "not-allowed" || e.error === "service-not-allowed" ? "Microphone is blocked" : e.error === "no-speech" ? "I heard nothing" : e.error === "network" ? "Voice needs internet" : "Voice did not work"); };
   rec.onend = () => { cp.listening = false; cpUpdateMic(); const q = (finalText || input.value).trim(); input.value = "";
-    if (q) { cp.silent = 0; cp.voiceTurn = true; cpSend(q); }
-    else if (cp.convo) { if (++cp.silent >= 2) { cp.convo = false; cpUpdateMic(); cpHint("Talk mode off"); } else setTimeout(cpMic, 300); } };
+    cpHeard(q); };
   cp.rec = rec;
   try { rec.start(); } catch { cpHint("Voice did not work"); }
 }
