@@ -47,7 +47,7 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - Privacy: the town lookup sends the position to a third party. Offer the lookup through our backend, or say it plainly.
 - Done when: changing the crop in "Edit" changes the engine's advice the next time the Co-Pilot answers.
 
-### Step 2: "Do this now" inside My Farm (M)
+### Step 2: "Do this now" inside My Farm (M) - DONE on branch `step2/do-this-now` (see section 9)
 - On My Farm, above his weather: one large card with the engine's top task as a picture, a short title, when, and how sure we are (a three-step meter with a word). One tap opens the detail.
 - Replace his local "Today" list by the engine's tasks (his checkbox row stays, fed by `/api/state`). Keep his `Task` shape in the UI; map the engine fields to it.
 - Task detail, picture-first: what, when, cost, plan B behind "Why?", and two big buttons: **Done** and **Can't** (reasons as pictures: no water, no time, not needed). **Undo** for six seconds after Done.
@@ -155,3 +155,21 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
   refusal (1 call, own message), no geolocation (message, button usable, no error), the crop changed in the engine after onboarding (Tomato, then Wheat after an edit),
   an edit made while the server was stopped stayed on the phone and reached the engine after the connection came back, and the notes shown on My Farm.
 - Not done in Step 1: the engine still works on the demo parcel (Step 4); irrigation method and main worry do not change the rules yet; the profile is one per server (Step 8).
+
+### Step 2 done: "Do this now" inside My Farm
+- A new card at the top of My Farm (`frontend/app/farm/engine-card.tsx`, data in `frontend/lib/engine.ts`): the engine's most urgent task as a picture (water, fertilizer or a visit),
+  its title, when, and how sure we are (three bars plus a word, never colour alone), a speaker button that reads it aloud, a "Why?" fold-out (why, cost, how sure and why, plan B),
+  and two big answers: **Done** and **Cannot do it** (then three picture reasons: no water or product, no time, not needed). "+N more today" lists the other tasks, each opening the same way.
+  When there is nothing to do it says so calmly.
+- **Done** adds the matching entry to his Activities by itself (watered, or other work for fertilizer) and shows "Done: ..." with **Undo** for 6 seconds (undo reopens the task and removes the entry).
+  **Cannot do it** stores the reason with the answer (an observation on the server) for the next steps.
+- The farmer's answers go through the same replay route as everything offline (`POST /sync`). The screen changes at once; if the server cannot be reached the answer waits in a small queue on the phone
+  (`growmate-queue`) and is sent, in order, when the connection is back. The last advice is kept on the phone (`growmate-engine`) and shown with "Saved advice (no connection)".
+- Honest label under the card: "This advice is for the demo field (satellite picture and simulated sensors)" until Step 4 makes the field the farmer's own.
+- **Decision that differs from the plan:** his own "Today" list (tasks the farmer saves from the Co-Pilot) stays as it is, below, instead of being replaced; the engine's tasks sit above it in the new card.
+  Two lists of different origin, one on top of the other, lose nothing; merging them is a design choice for Step 9.
+- Without `NEXT_PUBLIC_API_URL` the card is not shown and the app is exactly what it was.
+- Checked in a browser against the running backend: card on My Farm, details, Done (server 1:done, activity added), Undo (server back to open, activity removed), Cannot do it with a reason
+  (server: skipped), the hero moving to the next task each time, an answer given while the server was stopped (queued, then delivered after the `online` event, queue empty), a reload with the server down
+  (cached advice and the "saved advice" note), and Darija right to left. TypeScript, the Darija check, a production build and the backend tests pass.
+- Not done: a task answered on one phone is not shown on another (Step 8); no automated front-end tests yet (Step 11); the activity entry keeps the language the task title had when it was done.

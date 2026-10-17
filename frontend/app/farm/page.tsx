@@ -6,6 +6,7 @@ import { daysSince, today, useFarm, useT, useTx, type Profile, type Task } from 
 import { activityTypes, cropIcon, cropName, intlLocale, irrigations } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { PhotoCardBody, photoCard, starters } from "@/lib/starters";
+import EngineCard from "./engine-card";
 import FieldMap from "./field-map";
 
 type Weather = { lat: number; lon: number; place: string; temp: number; days: { date: string; max: number; min: number; rain: number; code: number }[] };
@@ -88,7 +89,9 @@ export default function MyFarm() {
   );
 
   return (
-    <div className="grid gap-x-16 gap-y-12 pt-4 lg:grid-cols-2">
+    <div className="pt-4">
+    <EngineCard />
+    <div className="grid gap-x-16 gap-y-12 lg:grid-cols-2">
       <div className="space-y-12">
         <section>
           <img src="/images/field-drip.webp" alt="" width={960} height={640} className="mb-6 aspect-[21/9] w-full rounded-2xl object-cover" />
@@ -189,6 +192,7 @@ export default function MyFarm() {
           <Link href="/activities" className="mt-4 inline-block font-medium text-leaf underline underline-offset-4">{t("recordWhat")}</Link>
         </section>
       </div>
+    </div>
     </div>
   );
 }
