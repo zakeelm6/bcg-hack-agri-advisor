@@ -91,3 +91,10 @@ def test_no_match_gives_empty_text(monkeypatch, azure):
     monkeypatch.setattr(httpx, "post", lambda *a, **k: FakeResp(json={"RecognitionStatus": "NoMatch"}))
     with TestClient(app) as c:
         assert c.post("/api/stt?lang=en", content=WAV).json() == {"text": ""}
+
+
+def test_dotenv_file_is_found_in_the_backend_folder():
+    """llm.py loads backend/.env for every key (Azure, model). It broke once when the module moved into app/processing/."""
+    import os
+    from app.processing import llm
+    assert os.path.normpath(llm.ENV_FILE) == os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".env"))

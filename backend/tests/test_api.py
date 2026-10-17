@@ -83,3 +83,20 @@ def test_offers_carry_the_harvest_value_computed_on_the_server():
         for o in j["offers"]:
             assert o["est_value_mad"] % 1000 == 0
             assert abs(o["est_value_mad"] - mid_kg * o["price_mad_kg"]) <= 500
+
+
+def test_farmer_profile_reaches_the_engine_and_says_what_it_could_not_use():
+    with client() as c:
+        assert c.get("/api/farmer").json()["saved"] in (False, True)
+        r = c.post("/api/farmer", json={"location": "Berrechid", "crop": "tomatoes", "planted_on": "2026-09-01", "area_ha": 3.2, "irrigation": "drip", "challenge": "water", "lat": 33.2, "lon": -7.5, "lang": "fr"}).json()
+        assert r["saved"] and r["applied"] == {"crop": "Tomato", "sowing_date": "2026-09-01", "area_ha": 3.2}
+        assert len(r["not_applied"]) == 2 and "Position" in r["not_applied"][0]
+        s = c.get("/api/state").json()
+        assert s["field"]["crop"] == "Tomato" and s["field"]["area_ha"] == 3.2 and s["field"]["sowing_date"] == "2026-09-01"
+        assert abs(sum(z["area_ha"] for z in s["zones"]) - 3.2) < 0.01
+        assert c.get("/api/forecast").json()["crop"] == "Tomato"
+        assert c.get("/api/farmer").json()["profile"]["location"] == "Berrechid"
+        assert c.post("/api/farmer", json={"area_ha": -1}).status_code == 422
+        # replay through the offline queue works too
+        j = c.post("/api/sync", json={"actions": [{"type": "farmer", "payload": {"crop": "wheat"}}]}).json()
+        assert j["results"][0]["ok"] and c.get("/api/state").json()["field"]["crop"] == "Wheat"

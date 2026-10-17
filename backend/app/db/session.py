@@ -48,7 +48,7 @@ def run_migrations(url: str | None = None):
     cfg = _alembic_config(url)
     if "fields" in names and "alembic_version" not in names:
         # which revision does this unversioned schema already match? (plot_offsets arrived with 0002)
-        command.stamp(cfg, "0002" if "plot_offsets" in names else "0001")
+        command.stamp(cfg, "0003" if "farmers" in names else "0002" if "plot_offsets" in names else "0001")
     command.upgrade(cfg, "head")
 
 

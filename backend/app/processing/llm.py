@@ -14,7 +14,7 @@ import re
 
 import httpx
 
-ENV_FILE = os.path.join(os.path.dirname(__file__), "..", ".env")
+ENV_FILE = os.path.join(os.path.dirname(__file__), "..", "..", ".env")   # backend/.env (llm.py lives in app/processing/)
 
 
 def _load_env():

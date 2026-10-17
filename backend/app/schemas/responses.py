@@ -238,3 +238,11 @@ class AnomaliesOut(Loose):
     source: str | None = None
     dates: int = 0
     note: str
+
+
+class FarmerOut(Loose):
+    """The saved profile, what the engine now uses from it, and what it could not use (honest)."""
+    saved: bool
+    profile: dict | None = None
+    applied: dict = {}
+    not_applied: list[str] = []

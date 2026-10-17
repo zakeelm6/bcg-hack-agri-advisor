@@ -47,6 +47,19 @@ class Action(BaseModel):
     payload: dict = {}
 
 
+class FarmerBody(BaseModel):
+    """The onboarding answers of the React app. Stable English keys for the choices; free text allowed for the crop."""
+    location: str | None = Field(None, max_length=120)
+    crop: str | None = Field(None, max_length=60)
+    planted_on: str | None = None                      # ISO date, or null when unknown
+    area_ha: float | None = Field(None, gt=0, le=10000)
+    irrigation: str | None = Field(None, max_length=40)
+    challenge: str | None = Field(None, max_length=40)
+    lat: float | None = Field(None, ge=-90, le=90)
+    lon: float | None = Field(None, ge=-180, le=180)
+    lang: str | None = None
+
+
 class SyncBody(BaseModel):
     actions: list[Action]
 

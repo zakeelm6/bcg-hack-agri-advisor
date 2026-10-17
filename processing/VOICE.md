@@ -100,10 +100,23 @@ path speaks English and French for real; Chrome lists no Arabic voice. The voice
 offline) are shown under the mic and were checked state by state. The Electron pane of OpenCode has no speech service: the app now
 says "Microphone is blocked. Allow it, or type your question" and disables the mic instead of going quiet.
 
-- A real Azure key: real recognition quality, the real names of the voices, and the quality of `ar-MA`.
+- A real Azure key: **now verified on the server side**, see below. Not verified: the page recording a real voice and sending it.
 - A real person speaking into a real microphone, in a noisy field.
 - Arabic and French end to end, and a phone (Android with Chrome, HTTPS).
 - Whether Moroccan Arabic (darija) mixed with French is recognised well by `ar-MA`. The interface text is standard Arabic.
+
+### Azure resource and what was checked with it (17 October 2026)
+
+Speech service `farm-advisor-speech-casa2`, region France Central, pricing tier Free F0, resource group `CASA-team-2`, subscription
+`AZ-EUR-PlatinionHackathon-Dev`. West Europe refused new customers, and the account could not create a new resource group, so the team's existing one
+was used. The key is only in `backend/.env` (ignored by git), with `AZURE_SPEECH_REGION=francecentral`. The free tier has monthly limits.
+
+Checked for real, with the app's own code: speech synthesis worked in English, French and Arabic (`ar-MA-MounaNeural`), and speech recognition
+understood each synthesized sentence back in the three languages (for example "Irrigate zone D tomorrow morning 20mm", the Arabic one with the number written as 20).
+This proves the key, the region and the voices; it does not prove recognition of a real person through a microphone.
+
+A bug found on the way and fixed: `llm.py` looked for `.env` in `backend/app/` after the Phase 1 move, so no key was ever loaded. It now reads `backend/.env`
+(a test guards it).
 
 ## 8. Known limits and ideas
 

@@ -75,6 +75,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/farmer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Farmer */
+        get: operations["get_farmer_api_farmer_get"];
+        put?: never;
+        /** Save Farmer */
+        post: operations["save_farmer_api_farmer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/forecast": {
         parameters: {
             query?: never;
@@ -544,6 +562,56 @@ export interface components {
             provider: string;
             /** Vision */
             vision: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * FarmerBody
+         * @description The onboarding answers of the React app. Stable English keys for the choices; free text allowed for the crop.
+         */
+        FarmerBody: {
+            /** Area Ha */
+            area_ha?: number | null;
+            /** Challenge */
+            challenge?: string | null;
+            /** Crop */
+            crop?: string | null;
+            /** Irrigation */
+            irrigation?: string | null;
+            /** Lang */
+            lang?: string | null;
+            /** Lat */
+            lat?: number | null;
+            /** Location */
+            location?: string | null;
+            /** Lon */
+            lon?: number | null;
+            /** Planted On */
+            planted_on?: string | null;
+        };
+        /**
+         * FarmerOut
+         * @description The saved profile, what the engine now uses from it, and what it could not use (honest).
+         */
+        FarmerOut: {
+            /**
+             * Applied
+             * @default {}
+             */
+            applied: {
+                [key: string]: unknown;
+            };
+            /**
+             * Not Applied
+             * @default []
+             */
+            not_applied: string[];
+            /** Profile */
+            profile?: {
+                [key: string]: unknown;
+            } | null;
+            /** Saved */
+            saved: boolean;
         } & {
             [key: string]: unknown;
         };
@@ -1085,6 +1153,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CopilotStatusOut"];
+                };
+            };
+        };
+    };
+    get_farmer_api_farmer_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmerOut"];
+                };
+            };
+        };
+    };
+    save_farmer_api_farmer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FarmerBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

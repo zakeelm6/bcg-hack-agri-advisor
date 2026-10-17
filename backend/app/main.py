@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .api.routers import copilot, health, market, pages, state, sync, tasks, voice
+from .api.routers import copilot, farmer, health, market, pages, state, sync, tasks, voice
 from .core.config import settings
 from .db import init_db, session_scope
 from .services.advice import refresh_advice
@@ -33,7 +33,7 @@ async def no_stale_pages(request, call_next):
     return resp
 
 
-for r in (health, state, tasks, market, copilot, voice, sync, pages):
+for r in (health, state, tasks, market, copilot, voice, sync, farmer, pages):
     app.include_router(r.router)
 
 app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")

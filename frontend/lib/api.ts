@@ -66,7 +66,10 @@ export type QueuedAction =
   | { type: "observation"; payload: { task_id?: number | null; result?: string | null; note?: string | null; photo?: string | null; yield_kg?: number | null } }
   | { type: "soil_test"; payload: { zone_code: string; ph?: number | null; om_pct?: number | null; moisture?: number | null } }
   | { type: "listing"; payload: Record<string, never> }
-  | { type: "offer_accept"; payload: { offer_id: number } };
+  | { type: "offer_accept"; payload: { offer_id: number } }
+  | { type: "farmer"; payload: FarmerBody };
+export type FarmerBody = components["schemas"]["FarmerBody"];
+export type FarmerOut = components["schemas"]["FarmerOut"];
 
 export const getQueue = () => lsGet<(QueuedAction & { ts: number })[]>("fa_queue", []);
 const setQueue = (q: (QueuedAction & { ts: number })[]) => lsSet("fa_queue", q);

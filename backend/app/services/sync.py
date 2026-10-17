@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ..schemas import requests as rq
-from . import market, tasks
+from . import farmer, market, tasks
 
 
 def replay(db: Session, actions: list[rq.Action]) -> list[dict]:
@@ -20,6 +20,8 @@ def replay(db: Session, actions: list[rq.Action]) -> list[dict]:
                 market.create_listing(db)
             elif a.type == "offer_accept":
                 market.accept_offer(db, int(a.payload["offer_id"]))
+            elif a.type == "farmer":
+                farmer.save(db, rq.FarmerBody(**a.payload))
             else:
                 raise HTTPException(422, f"unknown action {a.type}")
             results.append({"type": a.type, "ok": True})

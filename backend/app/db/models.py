@@ -168,3 +168,19 @@ class Cache(Base):
     key: Mapped[str] = mapped_column(Text, primary_key=True)
     value: Mapped[str] = mapped_column(Text)
     ts: Mapped[str] = mapped_column(Text)
+
+
+class Farmer(Base):
+    """The farmer's own answers (onboarding). One farmer for now (id 1). What the engine can use is copied to the field."""
+    __tablename__ = "farmers"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    location: Mapped[str | None] = mapped_column(Text, nullable=True)
+    crop: Mapped[str | None] = mapped_column(Text, nullable=True)            # key from the app (tomatoes, wheat...) or free text
+    planted_on: Mapped[str | None] = mapped_column(Text, nullable=True)      # ISO date
+    area_ha: Mapped[float | None] = mapped_column(Float, nullable=True)
+    irrigation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    challenge: Mapped[str | None] = mapped_column(Text, nullable=True)
+    lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lon: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lang: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[str] = mapped_column(Text)

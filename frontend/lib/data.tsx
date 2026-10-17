@@ -63,6 +63,7 @@ export function useActions() {
       const o = qc.getQueryData<OffersOut | null>(["offers", "/api/offers"]);
       if (o) { const n = structuredClone(o); n.offers.forEach((x) => { x.status = x.id === a.payload.offer_id ? "accepted" : "declined"; }); qc.setQueryData(["offers", "/api/offers"], n); writeCache("/api/offers", n); }
     }
+    if (a.type === "farmer") { /* the server rebuilds the advice; the state is refetched after the flush */ }
     if (a.type === "listing") {
       const f = qc.getQueryData<ForecastOut | null>(["forecast", `/api/forecast?lang=${lang}`]);
       if (f) { const n = { ...f, listing: { status: "published" } }; qc.setQueryData(["forecast", `/api/forecast?lang=${lang}`], n); }

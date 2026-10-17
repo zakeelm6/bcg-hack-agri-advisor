@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useFarm, useT, type Profile } from "@/lib/farm";
+import { useActions } from "@/lib/data";
 import { challenges, cropName, crops, irrigations, langs, plantedChoices, tr, type Key } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { speak } from "@/lib/voice";
@@ -18,6 +19,7 @@ async function townAt(lat: number, lon: number, lang: string) {
 
 function Onboarding() {
   const { profile, saveProfile, lang, setLang } = useFarm();
+  const { act } = useActions();
   const t = useT();
   const router = useRouter();
   const [p, setP] = useState<Profile>(profile ?? blank);
@@ -54,6 +56,8 @@ function Onboarding() {
   function next(np = p) {
     if (!last) return setStep(step + 1);
     saveProfile(np);
+    // the answers go to the server too: crop, planting date and area feed the engine; queued when offline
+    act({ type: "farmer", payload: { location: np.location || null, crop: np.crop || null, planted_on: np.plantedOn || null, area_ha: parseFloat(np.area) || null, irrigation: np.irrigation || null, challenge: np.challenge || null, lat: np.lat ?? null, lon: np.lon ?? null, lang } });
     router.replace("/home");
   }
   // Picture choices move on by themselves: one tap per question.

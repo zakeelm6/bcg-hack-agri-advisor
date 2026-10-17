@@ -70,7 +70,7 @@ def test_a_database_without_migration_history_is_adopted_not_rebuilt():
     run_migrations(url)
     run_migrations(url)                                  # running twice changes nothing
     with eng.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0002"   # create_all made the current schema
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0003"   # create_all made the current schema
         assert conn.execute(text("SELECT name FROM fields")).scalar() == "Mine"
     assert "tasks" in inspect(eng).get_table_names()
 

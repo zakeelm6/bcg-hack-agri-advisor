@@ -9,6 +9,7 @@ import { cachedGet, fetchJson, type CopilotStatusOut, type SpeechStatusOut, type
 import { stateKey, useActions, useAppState, useOffline } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 import { cropName, langs } from "@/lib/i18n";
+import { FieldFinder } from "@/components/FieldFinder";
 
 export default function Me() {
   const t = useT();
@@ -30,7 +31,7 @@ export default function Me() {
     <div className="grid2">
       <div>
         <div className="card flex items-center gap-3"><Circle tone="green"><Ic name="user" size={28} /></Circle><div><div className="text-[17px] font-bold">{s.field.name}</div><div className="sub">{t("ha", { n: num(s.field.area_ha, 1) })}</div></div></div>
-        {profile && <div className="card"><div className="label">{t("myFarm")}</div><div className="sub mt-1.5">{[profile.location, cropName(lang, profile.crop), profile.irrigation].filter(Boolean).join(" · ")}</div><div className="sub mt-1">{t("profileNote")}</div><Link href="/?edit=1" className="btn-sec btn-sm mt-2.5">{t("editProfile")}</Link></div>}
+        {profile && <div className="card"><div className="label">{t("myFarm")}</div><div className="sub mt-1.5">{[profile.location, cropName(lang, profile.crop), profile.irrigation].filter(Boolean).join(" · ")}</div><div className="sub mt-1">{t("profileApplied", { what: [s.field.crop, s.field.sowing_date, t("ha", { n: num(s.field.area_ha, 1) })].join(", ") })}</div><Link href="/?edit=1" className="btn-sec btn-sm mt-2.5">{t("editProfile")}</Link></div>}
         <div className="card"><div className="label">{t("language")}</div>
           <div role="group" aria-label={t("chooseLang")} className="mt-2 inline-flex overflow-hidden rounded-full border-[1.5px] border-leaf text-xs font-bold text-leaf">{langs.map((l) => <button key={l.id} type="button" lang={l.id} onClick={() => setLang(l.id)} aria-pressed={lang === l.id} className={`min-h-12 min-w-12 px-3 ${lang === l.id ? "bg-leaf text-paper" : "opacity-80"}`}>{{ ar: "عربي", ary: "دارجة", fr: "FR", en: "EN" }[l.id]}</button>)}</div>
         </div>
@@ -41,7 +42,8 @@ export default function Me() {
       </div>
       <div>
         <div className="card"><div className="label">{t("waitingToSync")}</div><div className="mt-2 flex items-center gap-3"><b className="text-[28px]">{queued}</b>{queued ? <button type="button" onClick={async () => { const r = await flush(); toast(r ? (r.failed ? t("syncPartial", { a: r.sent, b: r.failed }) : t("synced")) : t("offline")); }} className="btn btn-sm">{t("syncNow")}</button> : <span className="sub"><Ic name="check" size={18} /></span>}</div></div>
-        <button type="button" onClick={refresh} className="btn-sec"><Ic name="refresh" size={22} /> {t("refreshAdvice")}</button>
+        <button type="button" onClick={refresh} className="btn-sec mb-3"><Ic name="refresh" size={22} /> {t("refreshAdvice")}</button>
+        <FieldFinder field={s.field} />
         <div id="about" className="card mt-3"><div className="label">{t("about")}</div>
           <p className="sub mt-2"><b>{t("realLabel")}</b> {t("realList")}</p>
           <p className="sub mt-2"><b>{t("simLabel")}</b> {t("simList")}</p>
