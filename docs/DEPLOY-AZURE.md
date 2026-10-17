@@ -2,6 +2,20 @@
 
 A step-by-step guide, from nothing to a public HTTPS address. It uses two Azure Container Apps (the API and the web app), Azure Container Registry for the images, and the Azure AI Speech resource you already have for the voice. Read section 1 first: it lists what costs money and what must be decided before you start.
 
+## 0. What is deployed today (17 October 2026)
+
+Deployed in the team's existing resource group `CASA-team-2` (subscription `AZ-EUR-PlatinionHackathon-Dev`, tenant "Platinion hackathon 2026"), next to the team's own `frontend` app, which was not touched. It shares the registry `growmateacr2026` and the environment `growmate-env`, and uses the Speech resource `farm-advisor-speech-casa2` (F0, `francecentral`).
+
+| What | Address |
+|---|---|
+| Web app | https://farm-final-web.yellowsmoke-0cdf2834.germanywestcentral.azurecontainerapps.io |
+| API | https://farm-final-api.yellowsmoke-0cdf2834.germanywestcentral.azurecontainerapps.io (`/api/health`, `/docs`) |
+
+Checked from the public address: the API is healthy, the Azure voice is available in four languages and returned Darija audio, CORS accepts the web address, and the web app loads its data from the API. Not checked: a real microphone and a phone.
+Images: `farm-final-api:1` and `farm-final-web:1` (the web one was built with the API address inside). The API runs on one replica with the demo SQLite database inside the container, so **data resets when the app restarts**. The Speech key is a Container App secret (`speech-key`), not in git.
+Sign-in notes: the tenant blocks the device-code login (`az login --use-device-code` fails with a security-defaults error); use `az login --tenant cdd2c4c3-eab5-47da-9e28-dde56d3af48e`, which opens the browser.
+To update, follow section 9 with the registry `growmateacr2026`, the group `CASA-team-2` and the app names above. To remove only this deployment: `az containerapp delete -n farm-final-web -g CASA-team-2` and the same for `farm-final-api` (the team's resources stay).
+
 ## 1. Read this before you start
 
 **What costs money (rough, check the Azure price calculator for your region):**
