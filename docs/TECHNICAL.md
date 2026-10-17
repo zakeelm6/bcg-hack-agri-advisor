@@ -1,6 +1,6 @@
 # Sanabils (سنابل): technical structure, why each choice, and what comes next
 
-BCG Platinion Hackathon 2026, Team 2. State on 17 October 2026, commit `832d931`.
+BCG Platinion Hackathon 2026, Team 2. State on 17 October 2026, commit `7342dea`.
 This document is for the technical staff who will read, run, judge or continue the project: what the system is made of, why it was built this way, and what we would do next. For the idea, the farmer's journey, the sandbox and the diagrams see [`OVERVIEW.md`](OVERVIEW.md). For how to run it see `README.md`; for the API see `docs/API_CONTRACT.md`; for deployment see `docs/DEPLOY-AZURE.md` and `docs/CI-CD.md`.
 
 ---
@@ -62,6 +62,9 @@ Two deployable units (API and web), each a Docker image, each an Azure Container
 - Providers behind one interface: Anthropic, any OpenAI-compatible endpoint (including Azure OpenAI), Ollama for a fully local run.
 - **Number check**: the model receives the facts as JSON and its answer is scanned; any number that is not in the facts (in any usual notation: 0.194, 19 %, 19.4) rejects the answer, and the engine's text is used instead. This is what makes "the code decides every number; the model only explains" a property of the system rather than a promise.
 - Brakes (`core/ratelimit.py`): per-minute limits on copilot and voice calls, so a public URL cannot burn the keys.
+- **Orchestration: plain Python, no LangGraph / LangChain / agent framework, no code execution sandbox.** The Copilot is a fixed five-step flow (`copilot.answer`): `make_facts` (the engine's numbers as JSON) → `detect` (keyword intent in four languages: why, what-if, cost, spend, diagnose) → `engine_answer` (deterministic draft; what-if calls `engine.what_if_wait`) → optional `llm.complete` ("rewrite this draft for the farmer, in this language, with these facts only") → `numbers_ok`. The model cannot call tools, change a task or write to the database: that is the whole "sandbox". Every answer is logged (`CopilotLog`, `/api/audit`) with its source (engine or model) and the reason when a model answer was rejected.
+- Why not a graph framework for this: at most one model call per question and no model-decided branching, so a graph would orchestrate zero or one call, add ~30 MB and a second way of reading 450 lines of auditable Python. The reference design we studied (`processing/ai-and-internal-processing.md`, the AgriMind note) uses LangGraph for a 50-second planning graph with Monte Carlo and a judge; we transposed its rules (code decides, model explains, verified = executed, needs_input, verifier statuses) without its simulator. Estimates if a graph is wanted: wrap the existing Copilot as a `StateGraph` with the number check as a node, 3–4 h, behaviour unchanged; a daily graph with a RAG knowledge base and citations as evidence, 1.5–2 days; the full AgriMind planning graph (strategies, Monte Carlo, judge, optimizer), 2–3 weeks.
+- State today: no model key is configured on local or Azure (`/api/copilot/status` → `mode: engine`); every text the farmer hears comes from the engine. Turning a model on is one Azure OpenAI deployment plus three variables (`FA_LLM_PROVIDER`, `FA_LLM_BASE_URL`, `FA_LLM_API_KEY`); the OpenAI-compatible client needs a small `api-version` tweak for Azure (about 1 h).
 
 ### 3.4 Data sources and honesty
 
@@ -74,6 +77,8 @@ Two deployable units (API and web), each a Docker image, each an Azure Container
 | Prices and offers | Local market | **Not validated** | `services/market.py` |
 
 Every response carries `data_notes`, and the UI shows the label (real / simulated / not validated) next to the data. Simulated data is never styled to look real.
+
+**The farmer's own field (satellite job, `services/own_field.py`).** When the farmer places his field (onboarding, the map on Me, or `POST /api/farmer` with `lat`/`lon`/`boundary`), the engine moves to it: the demo zones' vigor is forgotten, and a background process (`scripts/fetch_satellite.py`, run with the interpreter that has `rasterio` + `pystac-client`) downloads the last clear Sentinel-2 scenes around the field from the Earth Search STAC, computes NDVI per zone and a true-colour picture, and writes them under `backend/data/own/<field>/`. The API reports `satellite_status` (`pending` → `ready` / `failed` / `none`) with an honest note. The API image ships the geospatial libraries (`requirements-sat.txt`) and `libexpat1` (needed by GDAL inside the rasterio wheel), so this works on Azure: measured 17 October, a 2 ha field near Berrechid went `pending` → `ready` in 2 minutes with NDVI per zone dated 2026-10-12. Clouds over the last months give the honest "no clear picture, try again in a few days".
 
 ### 3.5 Multi-tenant on one SQLite file (`db/scope.py`)
 
@@ -129,7 +134,7 @@ Tasks are rewritten without units ("Water zone D", "Feed the whole field"), grou
 | Item | Choice | Why |
 |---|---|---|
 | Hosting | **Azure Container Apps** (API + web), **Azure Container Registry** | Scale-to-zero cost profile, HTTPS and a domain in one command, images tagged with the commit so Azure always says which code runs |
-| Images | `backend/Dockerfile` (python-slim, uvicorn), `frontend/Dockerfile` (two-stage node:22-alpine, standalone server, `NEXT_PUBLIC_API_URL` baked at build) | Small, reproducible, no runtime secrets in the web image |
+| Images | `backend/Dockerfile` (python:3.12-slim + `libexpat1`, `requirements.txt` + `requirements-sat.txt`, import check at build, uvicorn), `frontend/Dockerfile` (two-stage node:22-alpine, standalone server, `NEXT_PUBLIC_API_URL` baked at build) | Reproducible, the satellite job works in production, no runtime secrets in the web image |
 | Database | SQLite inside the API container (`FA_DB`), `FA_DATABASE_URL` ready for Postgres | Enough for a demo; see section 7 for the known limit |
 | Secrets | Speech key as a Container App secret; nothing in Git, enforced by review | A leaked key is the fastest way to lose a hackathon budget |
 | CI | GitHub Actions `backend` and `frontend` workflows: tests, contract diff, type check, Darija check, build | Green on `main` since the merge |
@@ -151,7 +156,7 @@ Tasks are rewritten without units ("Water zone D", "Feed the whole field"), grou
 
 ## 7. Known limits (be honest about them in the demo)
 
-- **Database in the container**: a redeploy or restart resets farmer data on Azure. Fix: Azure Database for PostgreSQL (one variable, `FA_DATABASE_URL`) or an Azure Files mount.
+- **Database and satellite files in the container**: a redeploy or restart resets farmer data and the downloaded pictures on Azure. Fix: Azure Database for PostgreSQL (one variable, `FA_DATABASE_URL`) and an Azure Files mount for `backend/data/own/`.
 - **Darija** was written by the team and reviewed once by a native speaker; the speech recognition for Darija goes through `ar-MA` and is approximate.
 - **Sensors are simulated** unless real hardware is connected; the water balance without sensors is marked Low confidence on purpose.
 - **Prices** are illustrative.
@@ -212,7 +217,7 @@ ROADMAP.md, README.md
 
 - 30 API routes, 17 tables, 143 backend tests, 532 UI texts × 4 languages (441 Darija overrides).
 - Latency measured locally: a full `/api/state` (engine + season + verification) in 8 ms warm, 80 ms cold.
-- Images (compressed, in the registry): API 88 MB, web 88 MB; Container Apps cold start of a few seconds.
+- Images (compressed, in the registry): API 142 MB with the geospatial libraries, web 88 MB; Container Apps cold start of a few seconds.
 - Voice: Azure Speech, en/fr/ar/ary, TTS→STT round trip verified in en, fr, ar.
 - Lighthouse mobile (Home): Performance 90, Accessibility 100, Best practices 100, SEO 100.
 
