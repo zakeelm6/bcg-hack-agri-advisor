@@ -1,8 +1,10 @@
 FROM python:3.12-slim
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 FA_DB=/data/farm_advisor.db
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements.txt requirements-sat.txt ./
+# requirements-sat.txt brings the geospatial libraries (rasterio, pystac-client, pyproj) so the API can fetch the Sentinel-2
+# pictures of the farmer's own field in a background process; without them the field works from weather and sensors only.
+RUN pip install -r requirements.txt -r requirements-sat.txt
 COPY . .
 # The SQLite file lives in /data (a volume). Use FA_DATABASE_URL for a managed database instead.
 RUN useradd -m app && mkdir -p /data && chown -R app /data /app
