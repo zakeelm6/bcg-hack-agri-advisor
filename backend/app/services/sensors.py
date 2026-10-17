@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import models as m
+from ..db.scope import fid
 from ..processing.sensors import FLAG_DESCRIPTIONS, Node, QCConfig, Reading, SoilTexture, run_qc
 from ..processing.sensors.sentinel import PlotOffset
 from .common import now_iso
@@ -41,7 +42,7 @@ def _to_layer(rows: list[m.Reading], irrigations: list[tuple[datetime, float]]) 
 def _irrigations(db: Session, zone_code: str) -> list[tuple[datetime, float]]:
     """Irrigation tasks the farmer reported done (follow-up observation), with their depth, for the rain-consistency check."""
     out = []
-    tasks = {t.id: t for t in db.scalars(select(m.Task).where(m.Task.type == "irrigate", m.Task.zone_code == zone_code))}
+    tasks = {t.id: t for t in db.scalars(select(m.Task).where(m.Task.field_id == fid(db), m.Task.type == "irrigate", m.Task.zone_code == zone_code))}
     if not tasks:
         return out
     for o in db.scalars(select(m.Observation).where(m.Observation.task_id.in_(list(tasks)))):
@@ -88,8 +89,8 @@ def sensor_quality(rows: list[m.Reading]) -> dict:
 def learn_offsets(db: Session) -> dict:
     """For each zone without a sensor: pair its soil-sample moistures with the nearest good sentinel reading in time,
     learn delta (mean gap) and sdrd (spread). Stored in plot_offsets; returned as {zone: {sentinel, delta, sdrd, n}}."""
-    zones = list(db.scalars(select(m.Zone).where(m.Zone.field_id == 1)))
-    sensors = {s.zone_code: s for s in db.scalars(select(m.Sensor).where(m.Sensor.field_id == 1))}
+    zones = list(db.scalars(select(m.Zone).where(m.Zone.field_id == fid(db))))
+    sensors = {s.zone_code: s for s in db.scalars(select(m.Sensor).where(m.Sensor.field_id == fid(db)))}
     by_code = {z.code: z for z in zones}
     good_readings = {}
     for zc, s in sensors.items():
@@ -100,21 +101,21 @@ def learn_offsets(db: Session) -> dict:
         if z.code in sensors or not sensors:
             continue
         sentinel = min(sensors, key=lambda c: abs(by_code[c].col - z.col) + abs(by_code[c].row - z.row))   # nearest shared sensor
-        samples = db.scalars(select(m.SoilTest).where(m.SoilTest.field_id == 1, m.SoilTest.zone_code == z.code, m.SoilTest.moisture.isnot(None)).order_by(m.SoilTest.ts)).all()
+        samples = db.scalars(select(m.SoilTest).where(m.SoilTest.field_id == fid(db), m.SoilTest.zone_code == z.code, m.SoilTest.moisture.isnot(None)).order_by(m.SoilTest.ts)).all()
         diffs = []
         for st in samples:
             t = _ts(st.ts)
             near = [(abs((rt - t).total_seconds()), v) for rt, v in good_readings.get(sentinel, []) if abs(rt - t) <= timedelta(hours=PAIR_WINDOW_HOURS)]
             if near:
                 diffs.append(st.moisture - min(near)[1])
-        row = db.scalars(select(m.PlotOffset).where(m.PlotOffset.field_id == 1, m.PlotOffset.zone_code == z.code)).first()
+        row = db.scalars(select(m.PlotOffset).where(m.PlotOffset.field_id == fid(db), m.PlotOffset.zone_code == z.code)).first()
         if len(diffs) < 2:
             if row is not None:
                 db.delete(row)
             continue
         off = PlotOffset(plot_id=z.code, delta=round(statistics.mean(diffs), 4), sdrd=round(statistics.stdev(diffs), 4), n_samples=len(diffs))
         if row is None:
-            row = m.PlotOffset(field_id=1, zone_code=z.code)
+            row = m.PlotOffset(field_id=fid(db), zone_code=z.code)
             db.add(row)
         row.sentinel_zone, row.delta, row.sdrd, row.n_samples, row.learned_at = sentinel, off.delta, off.sdrd, off.n_samples, now_iso()
         out[z.code] = {"sentinel": sentinel, "delta": off.delta, "sdrd": off.sdrd, "n": off.n_samples, "transferable": off.is_transferable}
@@ -124,4 +125,4 @@ def learn_offsets(db: Session) -> dict:
 
 def stored_offsets(db: Session) -> dict:
     return {r.zone_code: {"sentinel": r.sentinel_zone, "delta": r.delta, "sdrd": r.sdrd, "n": r.n_samples, "transferable": r.sdrd < 0.03}
-            for r in db.scalars(select(m.PlotOffset).where(m.PlotOffset.field_id == 1))}
+            for r in db.scalars(select(m.PlotOffset).where(m.PlotOffset.field_id == fid(db)))}

@@ -6,7 +6,12 @@ os.environ["FA_DB"] = os.path.join(tempfile.mkdtemp(), "test.db")
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import create_engine, inspect, text  # noqa: E402
 from app.db import models as m  # noqa: E402
-from app.db.session import run_migrations  # noqa: E402
+from app.db.session import _alembic_config, run_migrations  # noqa: E402
+from alembic.script import ScriptDirectory  # noqa: E402
+
+
+def head_revision():
+    return ScriptDirectory.from_config(_alembic_config("sqlite://")).get_current_head()
 from app.main import app  # noqa: E402
 
 
@@ -70,7 +75,7 @@ def test_a_database_without_migration_history_is_adopted_not_rebuilt():
     run_migrations(url)
     run_migrations(url)                                  # running twice changes nothing
     with eng.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0004"   # create_all made the current schema
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == head_revision()   # create_all made the current schema
         assert conn.execute(text("SELECT name FROM fields")).scalar() == "Mine"
     assert "tasks" in inspect(eng).get_table_names()
 

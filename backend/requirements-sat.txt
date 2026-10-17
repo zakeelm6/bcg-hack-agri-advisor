@@ -1,0 +1,8 @@
+# Only needed where the farmer's own field is read from Sentinel-2 (the "satellite job"): install in a separate environment,
+#   python -m venv .venv-sat && .venv-sat/bin/pip install -r requirements-sat.txt
+# The API finds it by itself (backend/.venv-sat) or through FA_SAT_PYTHON. Without it the field is placed and the engine works from
+# weather, sensors and soil tests, and says that there is no satellite picture.
+numpy
+rasterio
+pystac-client
+pyproj

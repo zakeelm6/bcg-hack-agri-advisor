@@ -3,6 +3,7 @@ import os
 from contextlib import contextmanager
 
 from alembic import command
+from fastapi import Request
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session, sessionmaker
@@ -14,10 +15,12 @@ engine = create_engine(_url, connect_args={"check_same_thread": False} if _url.s
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
-def get_db():
-    """FastAPI dependency: one session per request."""
+def get_db(request: Request):
+    """FastAPI dependency: one session per request, limited to the field of the phone that sent it (header X-Device)."""
+    from .scope import resolve
     db = SessionLocal()
     try:
+        db.info["field_id"] = resolve(db, request.headers.get("x-device"))
         yield db
     finally:
         db.close()
@@ -47,9 +50,12 @@ def run_migrations(url: str | None = None):
     names = set(inspect(eng).get_table_names())
     cfg = _alembic_config(url)
     if "fields" in names and "alembic_version" not in names:
-        # which revision does this unversioned schema already match? (plot_offsets arrived with 0002)
-        cols = {c["name"] for c in inspect(eng).get_columns("tasks")} if "tasks" in names else set()
-        command.stamp(cfg, "0004" if "verify_status" in cols else "0003" if "farmers" in names else "0002" if "plot_offsets" in names else "0001")
+        # which revision does this unversioned schema already match? (plot_offsets arrived with 0002, farmers with 0003, task verification with 0004,
+        # activities with 0005, task quantities with 0006, the farmer's own field with 0007, devices with 0008)
+        task_cols = {c["name"] for c in inspect(eng).get_columns("tasks")} if "tasks" in names else set()
+        field_cols = {c["name"] for c in inspect(eng).get_columns("fields")}
+        command.stamp(cfg, "0008" if "devices" in names else "0007" if "source" in field_cols else "0006" if "qty" in task_cols else "0005" if "activities" in names
+                      else "0004" if "verify_status" in task_cols else "0003" if "farmers" in names else "0002" if "plot_offsets" in names else "0001")
     command.upgrade(cfg, "head")
 
 

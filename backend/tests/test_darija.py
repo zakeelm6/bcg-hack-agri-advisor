@@ -33,8 +33,8 @@ def test_darija_has_every_text_that_standard_arabic_has():
 def test_darija_texts_format_with_the_same_placeholders_as_english():
     """A wrong placeholder would crash at runtime, so check every text against the English one."""
     fields = lambda s: sorted(re.findall(r"{(\w+)}", s))
-    for key, text in engine.TEXTS["ary"].items():
-        assert fields(text) == fields(engine.TEXTS["en"][key]), key
+    for key, text in engine.TEXTS["ary"].items():       # Arabic may leave out a number (for example the days of a wait), so compare with Arabic
+        assert fields(text) == fields(engine.TEXTS["ar"][key]), key
     for key, text in copilot.CT["ary"].items():       # Arabic uses {unit} and {tasks_word} where English uses {s}, so compare with Arabic
         if isinstance(text, str):
             assert fields(text) == fields(copilot.CT["ar"][key]), key

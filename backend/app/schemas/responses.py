@@ -19,6 +19,10 @@ class FieldOut(Loose):
     lon: float
     sowing_date: str
     cycle_days: int
+    source: str = "demo"                 # demo parcel or the farmer's own field
+    satellite_status: str = "ready"      # ready, pending, failed or none
+    satellite_note: str | None = None
+    side_m: float | None = None
 
 
 class ZoneOut(Loose):
@@ -28,7 +32,7 @@ class ZoneOut(Loose):
     col: int
     row: int
     area_ha: float
-    ndvi: float
+    ndvi: float | None = None      # null until a satellite picture of the farmer's own field has been read
     ndvi_hist: list[float]
     ndvi_source: str
     moisture: float | None = None
@@ -69,6 +73,8 @@ class TaskOut(Loose):
     confidence: str
     conf_reason: str
     plan_b: str
+    qty: float | None = None      # amount decided by the engine: mm of water, or kg of nitrogen per hectare
+    unit: str | None = None     # mm or kg_n_ha
     status: str
     x: float
     y: float
@@ -278,3 +284,42 @@ class BriefingOut(Loose):
     open_tasks: int
     escalated: int
     source: str
+
+
+class PlaceOut(Loose):
+    """The town name at a position, or null when the name service did not answer."""
+    place: str | None = None
+
+
+class ActivityOut(Loose):
+    client_id: str
+    type: str
+    date: str
+    note: str = ""
+    cost: float | None = None
+    zone: str | None = None
+    amount_mm: float | None = None
+
+
+class ActivitiesOut(Loose):
+    activities: list[ActivityOut]
+
+
+class PictureOut(Loose):
+    date: str
+    side_m: float                 # side of the picture, metres
+    field_side_m: float           # side of the field square inside it, metres
+
+
+class FieldInfoOut(Loose):
+    """Whose field the engine works on. `source` is "demo" (the parcel the satellite data was made for) or "own" (the farmer's).
+    `satellite_status`: ready, pending (a download is running), failed or none (not set up on this server)."""
+    source: str
+    satellite_status: str
+    satellite_note: str | None = None
+    lat: float
+    lon: float
+    area_ha: float
+    side_m: float | None = None
+    boundary: list[list[float]] | None = None
+    picture: PictureOut | None = None

@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ..schemas import requests as rq
-from . import farmer, market, tasks
+from . import activities, farmer, market, tasks
 
 
 def replay(db: Session, actions: list[rq.Action]) -> list[dict]:
@@ -16,6 +16,10 @@ def replay(db: Session, actions: list[rq.Action]) -> list[dict]:
                 tasks.add_observation(db, rq.Observation(**a.payload))
             elif a.type == "soil_test":
                 tasks.add_soil_test(db, rq.SoilTest(**a.payload))
+            elif a.type == "activity":
+                activities.save(db, rq.ActivityBody(**a.payload))
+            elif a.type == "activity_remove":
+                activities.remove(db, str(a.payload["client_id"]))
             elif a.type == "listing":
                 market.create_listing(db)
             elif a.type == "offer_accept":
