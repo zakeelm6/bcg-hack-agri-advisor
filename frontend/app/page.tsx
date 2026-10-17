@@ -8,7 +8,7 @@ import { challenges, cropName, crops, irrigations, langs, plantedChoices, tr, ty
 import { Icon } from "@/lib/icons";
 import { useVoice } from "@/lib/useVoice";
 import { useOffline } from "@/lib/data";
-import { Button, Icon as UiIcon } from "@/components/ui";
+import { Button, FormField, Icon as UiIcon } from "@/components/ui";
 import { matchAnswer, parseArea, type Choice } from "@/lib/voiceAnswers";
 
 const blank: Profile = { location: "", crop: "", plantedOn: "", area: "", irrigation: "", challenge: "" };
@@ -124,16 +124,21 @@ function Onboarding() {
   }
 
   function area() {
-    const n = parseFloat(p.area) || 1;
-    const setN = (v: number) => setP({ ...p, area: `${Math.max(0.5, v)} ha` });
+    const n = parseFloat(p.area) || 0;
+    const setN = (v: number) => setP({ ...p, area: v > 0 ? `${Math.round(v * 100) / 100} ha` : "" });
     return (
-      <div className="flex items-center justify-between gap-4">
-        <Button variant="secondary" size="lg" icon="minus" iconOnly onClick={() => setN(n - 0.5)}>{t("less")}</Button>
-        <div className="text-center">
-          <div className="font-display num text-6xl">{n}</div>
-          <div className="text-lg text-text-2">{t("hectares")}</div>
+      <div className="space-y-5">
+        <div className="flex items-center justify-between gap-4">
+          <Button variant="secondary" size="lg" icon="minus" iconOnly disabled={n <= 0.5} onClick={() => setN(Math.max(0.5, (n || 1) - 0.5))}>{t("less")}</Button>
+          <div className="text-center">
+            <div className="font-display num text-6xl">{n ? n.toLocaleString(lang === "ar" || lang === "ary" ? "ar-MA-u-nu-latn" : lang) : "–"}</div>
+            <div className="text-lg text-text-2">{t("hectares")}</div>
+          </div>
+          <Button variant="secondary" size="lg" icon="plus" iconOnly onClick={() => setN((n || 0.5) + 0.5)}>{t("more")}</Button>
         </div>
-        <Button variant="secondary" size="lg" icon="plus" iconOnly onClick={() => setN(n + 0.5)}>{t("more")}</Button>
+        {/* exact value typed by hand, for a farmer who knows his surface (e.g. 2.37 ha) */}
+        <FormField label={t("areaExact")} unit={t("hectares")} hint={t("areaHint")} type="number" inputMode="decimal" step="0.01" min="0.01" max="10000"
+          value={n ? String(n) : ""} placeholder={t("eg", { v: "2.37" })} onChange={(e) => setN(parseFloat(e.target.value.replace(",", ".")) || 0)} />
       </div>
     );
   }

@@ -337,6 +337,7 @@ const S = {
   outlineUsed: ["Outline drawn by you. Its surface is sent to the advice engine.", "Contour tracé par vous. Sa surface est envoyée au moteur de conseil.", "حدود رسمتها بنفسك. مساحتها تُرسل إلى محرك النصائح."],
   answerByVoice: ["Answer by voice", "Répondre à la voix", "أجب بالصوت"], answerHint: ["Say your answer, or tap a picture.", "Dites votre réponse, ou touchez une image.", "قل جوابك، أو المس صورة."],
   notUnderstood: ["I did not catch that. Say it again or tap a picture.", "Je n'ai pas compris. Redites-le ou touchez une image.", "لم أفهم. أعد قولها أو المس صورة."],
+  areaExact: ["Or type the exact surface", "Ou saisissez la surface exacte", "أو اكتب المساحة بالضبط"], areaHint: ["From your title deed or a measurement", "D'après votre titre ou une mesure", "من عقد الملكية أو من قياس"],
   close: ["Close", "Fermer", "إغلاق"], theme: ["Appearance", "Apparence", "المظهر"], themeAuto: ["Automatic", "Automatique", "تلقائي"], themeLight: ["Light", "Clair", "فاتح"], themeDark: ["Dark", "Sombre", "داكن"],
   highContrast: ["High contrast for sunlight", "Contraste élevé pour le soleil", "تباين عالٍ لضوء الشمس"],
   darijaNote: ["Darija was written by an AI model and awaits a native review.", "La darija a été écrite par un modèle d'IA et attend une relecture native.", "الدارجة كتبها نموذج ذكاء اصطناعي وتنتظر مراجعة ناطق أصلي."],

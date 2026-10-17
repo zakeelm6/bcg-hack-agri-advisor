@@ -426,4 +426,6 @@ export const ARY: Partial<Record<Key, string>> = {
   answerByVoice: "جاوب بالصوت",
   answerHint: "قول الجواب ديالك، ولا ضغط على صورة.",
   notUnderstood: "ما فهمتش. عاود قولها ولا ضغط على صورة.",
+  areaExact: "ولا كتب المساحة بالضبط",
+  areaHint: "من الرسم العقاري ولا من قياس",
 };
