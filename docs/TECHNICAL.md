@@ -215,3 +215,53 @@ ROADMAP.md, README.md
 - Images (compressed, in the registry): API 88 MB, web 88 MB; Container Apps cold start of a few seconds.
 - Voice: Azure Speech, en/fr/ar/ary, TTS→STT round trip verified in en, fr, ar.
 - Lighthouse mobile (Home): Performance 90, Accessibility 100, Best practices 100, SEO 100.
+
+## Appendix C. Frameworks and tools, exact list
+
+**Backend: Python 3.12 + FastAPI**
+
+| Tool | Version | Used for |
+|---|---|---|
+| FastAPI | latest | the HTTP API (30 routes), validation, auto OpenAPI |
+| Uvicorn | latest | ASGI server, local and in the container |
+| Pydantic v2 + pydantic-settings | ≥ 2.2 | request/response schemas; settings from `FA_*` variables and `backend/.env` |
+| SQLAlchemy 2 | ≥ 2.0 | ORM, 17 tables |
+| SQLite (stdlib) / Alembic | ≥ 1.13 | database for dev and demo; migrations; Postgres-ready via `FA_DATABASE_URL` |
+| httpx | latest | calls to Open-Meteo, Azure Speech, the LLM provider, reverse geocoding |
+| NumPy | ≥ 1.26 | NDVI, anomaly grid, sensor physics, water balance |
+| pytest | latest | 143 tests |
+| pystac-client + rasterio (`requirements-sat.txt`, own venv) | — | script that fetches real Sentinel-2 L2A from Earth Search and caches NDVI |
+
+External services: Open-Meteo (no key), Azure AI Speech (key in `.env` / Container App secret), Element84 Earth Search (public Sentinel-2), BigDataCloud reverse geocoding, optional LLM (Anthropic, OpenAI-compatible including Azure OpenAI, Ollama).
+
+**Frontend: React 19 + Next.js 15 (TypeScript 5, Node 22)**
+
+| Tool | Version | Used for |
+|---|---|---|
+| Next.js (App Router, `output: standalone`) | 15.5 | routing, first-paint server render, production server in Docker |
+| React / React DOM | 19.1 | UI |
+| TypeScript | 5 | strict types, `tsc --noEmit` in CI |
+| Tailwind CSS + `@tailwindcss/postcss` | 4 | styling with design tokens; dark mode, high contrast, logical properties for RTL |
+| TanStack Query | 5 | fetching, caching, optimistic updates; localStorage as the offline copy |
+| openapi-typescript | 7 | `lib/api-types.d.ts` generated from `backend/openapi.json` |
+| MapLibre GL | 6 | interactive map to find the field (OpenStreetMap tiles) |
+| Leaflet + leaflet-measure | 1.9 / 3.1 | the team's parcel-measuring map |
+| lucide-react | 1.58 | icons in the team's map screens (the app's own set is `components/ui/Icon.tsx`) |
+| `next/font` (Geist, Fraunces, Noto Naskh Arabic) | — | self-hosted fonts, Arabic on demand |
+| Service worker + Web App Manifest | hand-written | installable PWA, opens offline |
+| Web Speech API, MediaDevices | browser | voice fallback, camera for the Copilot |
+| `lib/i18n.check.mjs`, `lib/map.check.ts` | own | Darija key/placeholder check, map check |
+
+No UI kit, no state library (small React context in `lib/farm.tsx`), no CSS-in-JS.
+
+**Infrastructure and tooling**
+
+| Tool | Used for |
+|---|---|
+| Docker (`python:3.12-slim`, `node:22-alpine` two-stage) | the two images, 88 MB each |
+| Azure Container Apps, Azure Container Registry (`az acr build`) | hosting and image builds |
+| Azure AI Speech (France Central) | voice in en / fr / ar / ary |
+| GitHub Actions (`checkout@v4`, `setup-python@v5`, `setup-node@v4`, `azure/login@v2` OIDC, `docker/build-push-action@v6`, `setup-buildx-action@v3`) | CI and CD |
+| Bicep (`infra/github-oidc.bicep`) | the three role assignments for CD |
+| Playwright, Lighthouse | screenshots and audits during the UX work |
+| Git, GitHub CLI | repository, pipeline variables |
