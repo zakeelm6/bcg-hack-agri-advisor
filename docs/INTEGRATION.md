@@ -35,5 +35,5 @@ Backend tests (95), TypeScript, the Darija check, and in a browser: Darija welco
 3. The land view (Sentinel-2 picture with zones, sensors and anomalies) is not in his My Farm yet; his Photo / Measure / 3D map is.
 4. Voice is still the browser's own in his app; the Azure server voice, talk mode and commands are not ported.
 5. No offline queue for actions; the Co-Pilot falls back to his local stand-in when the server is unreachable.
-6. The repository root still has Meryy4's `sensors/` and `satellite/` and their demos; the backend carries its own copies in `backend/app/processing/`. They should become one.
+6. ~~The repository root had Meryy4's `sensors/` and `satellite/` and their demos next to the backend's copies.~~ Done in `chore/repo-structure`: one copy in `backend/app/processing/` (it was identical), the demos moved to `backend/scripts/demos/`, the root tests replaced by their pytest versions in `backend/tests/`. The old files stay in the Git history.
 7. Darija texts are written by an AI model and need a native review.

@@ -1,8 +1,8 @@
 """Generate the figures for the deck.
 
-Run:  python3 make_figures.py
+Run (from backend/, needs matplotlib):  python scripts/demos/make_figures.py
 
-Produces figures/ containing:
+Produces docs/figures/ containing:
   satellite_detection.png  - the NDVI time series, baseline, and detection
   sensor_timeline.png      - moisture, tension and QC flags over a month
 """
@@ -10,6 +10,9 @@ Produces figures/ containing:
 from __future__ import annotations
 
 import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))   # run from anywhere: the packages live in backend/app/processing
 
 import matplotlib
 matplotlib.use("Agg")
@@ -17,15 +20,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 
-from satellite import (
+from app.processing.satellite import (
     DetectionConfig,
     delineate_zones,
     detect,
     generate_field,
     score_detection,
 )
-from satellite.anomaly import learn_baseline
-from sensors import (
+from app.processing.satellite.anomaly import learn_baseline
+from app.processing.sensors import (
     FaultType,
     Node,
     NodeSimulator,
@@ -37,7 +40,7 @@ from sensors import (
     wilting_point,
 )
 
-OUT = "figures"
+OUT = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "figures")   # docs/figures
 NDVI_CMAP = LinearSegmentedColormap.from_list(
     "ndvi", ["#8c510a", "#d8b365", "#f6e8c3", "#c7eae5", "#5ab4ac", "#1a7a3e"])
 

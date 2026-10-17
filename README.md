@@ -4,10 +4,34 @@
 
 BCG Platinion Hackathon 2026 - Fighting World Hunger - Team 2
 
-> This repository currently holds the project description. The working prototype (website, rule engine, tests,
-> satellite pipeline) is described below with its exact status.
+> A hackathon prototype with a working web app, API, rule engine, sensor and satellite layers and tests.
+> The status of every part, real or simulated, is in the table further down.
 
 ---
+
+## Repository layout
+
+| Folder | What it is |
+|---|---|
+| [`frontend/`](frontend/) | The farmer's web app, **growmate** (Next.js, React, TypeScript, Tailwind): picture-first onboarding, My Farm with the engine's "do this now" card and the land maps, Co-Pilot (voice, photo), Activities. English, French, Arabic and Darija. |
+| [`backend/`](backend/) | The API (FastAPI, SQLite, migrations): decision engine, Copilot, voice routes, and under `app/processing/` the engine, the **sensor layer** (simulator, quality checks, drift, sentinel offset) and the **satellite layer** (indices, anomaly detection, zones). Tests in `backend/tests/`, demos in `backend/scripts/demos/`. |
+| [`docs/`](docs/README.md) | Architecture, API contract, sensors, voice, Darija, the plan to bring the engine to the app. |
+| `.github/workflows/` | Checks that run on every push: backend tests and API contract, front-end type check, Darija check and build. |
+
+## Run it
+
+```bash
+# 1. the API (http://127.0.0.1:8000, documentation at /docs)
+cd backend && ./run.sh
+
+# 2. the app (http://localhost:3000), in another terminal
+cd frontend && cp .env.example .env.local && npm ci && npm run dev
+
+# or everything at once with Docker
+docker compose up --build
+```
+Optional keys (a language model, Azure speech) go in `backend/.env`, see `backend/.env.example`. Checks before a pull request: `make check`
+(see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## The problem
 
@@ -92,37 +116,35 @@ a task or state a number that is not in the facts.
 
 | Part | Status |
 |---|---|
-| Rule engine (irrigation, fertilizer, inspection, alerts, soil-test effects) | **Built**, rule based, 22 automated tests |
-| Responsive website (landing page, field map, tasks, task detail, follow-up, alerts, sell, profile) | **Built** |
+| Decision engine (irrigation, fertilizer, inspection, alerts, soil-test effects) | **Built**, rule based, tested |
+| API (state, tasks, soil tests, Copilot, voice, sync, farmer profile, place names) with a typed, frozen contract | **Built**, 100 automated tests |
+| Sensor layer: simulator, quality checks (spikes, jumps, plateaus, rain consistency, frozen soil), drift detection, sentinel offset per plot | **Built and tested** on **simulated** data |
+| Satellite layer: vegetation indices, anomaly detection with a learned baseline, management zones | **Built and tested**; **real Sentinel-2 data** only for the demo parcel near El Jadida, downloaded by a script |
+| Team web app: onboarding (six picture questions), My Farm, land maps (photo, measure, 3D), Co-Pilot, Activities | **Built** |
+| Engine inside the web app: Co-Pilot answers, the "do this now" card with undo, the profile sent to the engine, answers kept offline | **Built** (branch work, see [the plan](docs/ROADMAP-TEAM-FRONTEND.md)) |
+| Languages: English, French, Arabic, Darija | **Built**; Darija and Arabic texts are not reviewed by a native speaker yet |
+| Voice | Browser voice in the web app; Azure speech (server side) tested in the backend; not in the web app yet |
 | Weather and 5-day forecast | **Real** (Open-Meteo, cached, with a labelled fallback) |
-| Crop vigor (NDVI) per zone | **Real Sentinel-2 data** for one irrigated parcel near El Jadida (Morocco), downloaded with a script; about 55 pixels of 10 m per zone, so values are coarse |
-| Vigor-over-time chart | **Built**, from the real image series |
-| Soil tests | **Typed by the user** (pH, organic matter, moisture); they change warnings, doses and confidence |
-| GPS (find position, walk the field edge) | **Built** (browser geolocation, works without internet on a phone) |
-| Offline queue and sync | **Built** and tested |
-| Two soil-moisture sensors | **Simulated** |
-| Buyers, offers and prices | **Simulated** |
+| Field of the farmer | **Not yet**: the engine works on the demo parcel until the farmer's own field is processed |
+| Soil-moisture sensors, buyers, offers and prices | **Simulated** |
 | Crop type and harvest forecast | **Placeholder**: a satellite shows vigor, not the species; the forecast is not validated |
 | Rule thresholds (vigor target, fertilizer band, moisture trigger) | **Demo values**, to be calibrated on real fields |
-| Orchestrator, vision agent, explainer agent, Copilot, sandbox isolation | **Designed, not built** |
-| French and darija interface, voice | Planned |
+| Orchestrator, vision agent, explainer agent, sandbox isolation | **Designed, not built** |
 
 ## Technology
 
-- **Back end:** Python, FastAPI, SQLite
-- **Front end:** plain JavaScript, responsive website, service worker for offline use
-- **Satellite:** Sentinel-2 L2A through the free Earth Search STAC catalog, read with rasterio (only the field's pixels are downloaded)
+- **Back end:** Python, FastAPI, SQLAlchemy and Alembic (SQLite for the demo), pytest
+- **Front end:** Next.js 15, React 19, TypeScript, Tailwind 4; MapLibre and Leaflet for the land maps
+- **Satellite:** Sentinel-2 L2A through the free Earth Search STAC catalog (only the field's pixels are downloaded)
 - **Weather:** Open-Meteo (no account needed)
-- **Tests:** pytest (rule engine and API)
-- **Models (planned):** a hosted multimodal model online, a small open-weight model on a local machine when offline, the engine's own texts when neither is available
+- **Voice:** the browser's speech, and Azure AI Speech on the server
+- **Models (optional):** a hosted model or a local one, only to word answers; the engine's own texts are used when none is configured
 
 ## Next steps
 
-1. Build the safety check on generated text and the explainer agent behind a swappable model interface.
-2. Add the Copilot panel, starting with fixed questions ("Why?", "Plan B?", "When?").
-3. Prove the sensor-calibration idea on public soil-moisture data.
-4. French and darija interface and voice output.
-5. Real buyers through a cooperative.
+The step-by-step plan is in [docs/ROADMAP-TEAM-FRONTEND.md](docs/ROADMAP-TEAM-FRONTEND.md): the activities teach the engine, the farmer's own
+field with its satellite zones, confidence and data quality shown to the farmer, Azure voice and talk mode, offline, one farmer per phone,
+a professional visual pass, Azure deployment, and hardening with real-phone tests.
 
 ## Limits and disclaimer
 
