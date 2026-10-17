@@ -19,7 +19,7 @@ Design system: `../docs/DESIGN_SYSTEM.md`; living page at `/design` (`npm run de
 
 ## Layout
 ```
-app/            page.tsx (onboarding, first screen)  home/  field/  field/soil/[zone]/  tasks/  tasks/[id]/  tasks/[id]/follow/  alerts/  sell/  me/
+app/            page.tsx (public landing page)  start/ (onboarding questions)  home/  field/  field/soil/[zone]/  tasks/  tasks/[id]/  tasks/[id]/follow/  alerts/  sell/  me/
                 shell.tsx (brand, language, navigation, offline banner), layout.tsx (providers), globals.css (tokens, dark mode, RTL)
 components/     Land.tsx (SVG over the Sentinel-2 picture: zones, layers, pins, sensors, anomaly cells, honest labels)
                 Copilot.tsx (chat, voice states, talk mode, offline answers; docked on Home, floating elsewhere), Banner.tsx, ui.tsx, common.tsx, SoilLine.tsx

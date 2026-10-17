@@ -21,12 +21,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const path = usePathname() ?? "/";
   const router = useRouter();
-  const onboarding = path === "/";
+  const landing = path === "/";
+  const onboarding = landing || path === "/start";   // public pages: no app navigation, no banner
   const design = path === "/design";
   const { data: s } = useAppState();
 
   useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = isRtl(lang) ? "rtl" : "ltr"; }, [lang]);
-  useEffect(() => { if (ready && profile && onboarding) router.replace("/home"); }, [ready, profile, onboarding, router]);
+  useEffect(() => { if (ready && profile && path === "/start" && !location.search.includes("edit")) router.replace("/home"); }, [ready, profile, path, router]);
   useEffect(() => { if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {}); }, []);
 
   if (!ready) return null;
@@ -49,7 +50,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               ))}
             </nav>
           )}
-          <span className={`inline-flex items-center gap-2 ${onboarding ? "ms-auto" : "ms-auto md:ms-0"}`}><LangControl onDark /></span>
+          <span className={`inline-flex items-center gap-2 ${onboarding ? "ms-auto" : "ms-auto md:ms-0"}`}>
+            {landing && <Link href="/#about" className="hidden min-h-11 items-center rounded-full px-4 text-sm font-semibold opacity-90 hover:bg-white/10 sm:inline-flex">{t("aboutTitle")}</Link>}
+            <LangControl onDark />
+            {landing && <Link href={profile ? "/home" : "/start"} className="pressable hidden min-h-12 items-center gap-1.5 rounded-full bg-accent px-4 text-sm font-bold text-on-accent sm:inline-flex">{t("goIn")}<Icon name="chev" size={16} className="rtl:-scale-x-100" /></Link>}
+          </span>
         </div>
       </header>
       <main className={`mx-auto w-full max-w-[1200px] flex-1 px-3 pt-3 md:px-6 md:pt-5 ${onboarding || design ? "pb-8" : "pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-10"}`}>

@@ -38,7 +38,7 @@ export default function Me() {
     <TwoCol main={<>
       <Section title={t("secYou")}>
         <ListItem icon="leaf" iconTone="brand" title={s.field.name} sub={`${t("ha", { n: num(s.field.area_ha, 1) })} · ${s.field.crop}`} />
-        {profile && <Card><Label>{t("myFarm")}</Label><p className="mt-1 text-sm text-text-2">{[profile.location, cropName(lang, profile.crop), profile.irrigation].filter(Boolean).join(" · ")}</p><p className="mt-1 text-xs text-text-3">{t("profileNote")}</p><Button href="/?edit=1" variant="ghost" size="sm" icon="refresh" className="mt-2">{t("editProfile")}</Button></Card>}
+        {profile && <Card><Label>{t("myFarm")}</Label><p className="mt-1 text-sm text-text-2">{[profile.location, cropName(lang, profile.crop), profile.irrigation].filter(Boolean).join(" · ")}</p><p className="mt-1 text-xs text-text-3">{t("profileNote")}</p><Button href="/start?edit=1" variant="ghost" size="sm" icon="refresh" className="mt-2">{t("editProfile")}</Button></Card>}
         <Card><Label>{t("language")}</Label>
           <div className="mt-2 grid grid-cols-2 gap-2">{langs.map((l) => <button key={l.id} type="button" lang={l.id} aria-pressed={lang === l.id} onClick={() => setLang(l.id)} className={`pressable flex min-h-12 items-center justify-between rounded-lg border px-3 text-start text-base font-semibold ${lang === l.id ? "border-brand bg-brand-soft text-brand" : "border-line bg-surface hover:bg-surface-2"}`}>{LANG_NATIVE[l.id]}{lang === l.id && <Icon name="check" size={18} />}</button>)}</div>
         </Card>

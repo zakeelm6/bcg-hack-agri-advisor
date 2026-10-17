@@ -6,6 +6,7 @@ State on 17 October 2026, checked with headless Chromium at 390 px and 1440 px (
 
 | Screen or behaviour | Legacy | React | State |
 |---|---|---|---|
+| Public landing page (`/`): headline, how it works, the AI inside, what is real, about, one "Go in" action; returning farmers go to Home | About page | `/` | done |
 | Onboarding with picture choices (language, location, crop, planting, area, irrigation, worry), skip to the demo field; each question read aloud (Azure when configured) and **answered by voice** (the answer is matched to the pictures in the four languages) | no (About page only) | `/` | done; answers reach the engine through `/api/farmer` |
 | Team's land maps: satellite photo with the outline, measure by finger (Leaflet), 3D terrain (MapLibre); a drawn outline sends its area to the engine | no | Me → Find your field | done |
 | Home: "Do this now" card with confidence and "+N more", "All good" empty state | yes | `/home` | done |

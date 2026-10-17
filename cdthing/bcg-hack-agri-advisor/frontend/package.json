@@ -1,0 +1,31 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "check:map": "node --experimental-strip-types lib/map.check.ts",
+    "predev": "cp node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs public/",
+    "prebuild": "cp node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs public/"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "leaflet-measure": "^3.1.0",
+    "lucide-react": "^1.58.0",
+    "maplibre-gl": "^6.14.0",
+    "next": "16.4.2",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

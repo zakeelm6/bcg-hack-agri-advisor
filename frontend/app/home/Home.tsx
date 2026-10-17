@@ -53,7 +53,7 @@ export default function Home({ initial }: { initial?: StateOut | null }) {
           <Card tone="inset" className="flex items-center gap-3 !py-3">
             <Icon name="info" size={20} className="flex-none text-text-2" />
             <div className="min-w-0 flex-1"><b className="block text-sm">{t("missingTitle")}</b><span className="text-sm text-text-2">{t("missingBody", { n: missing })}</span></div>
-            <Button href="/?edit=1" variant="secondary" size="sm" iconEnd="chev">{t("answerNow")}</Button>
+            <Button href="/start?edit=1" variant="secondary" size="sm" iconEnd="chev">{t("answerNow")}</Button>
           </Card>
         )}
         <LandCard s={s} land={land} anomalies={anomalies} margin={30} title={<div className="mb-2.5 flex items-baseline justify-between gap-3 px-1"><h2 className="font-display text-xl">{s.field.name}</h2><span className="num text-sm text-text-2">{t("ha", { n: num(s.field.area_ha, 1) })}</span></div>} />
