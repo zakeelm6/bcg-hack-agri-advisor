@@ -383,6 +383,7 @@ const S = {
   cant: ["Can't", "Impossible", "لا أستطيع"], tellMeWhy: ["Why?", "Pourquoi ?", "لماذا؟"],
   listenToday: ["Listen to today", "Écouter aujourd'hui", "اسمع اليوم"], callAdvisor: ["Call my advisor", "Appeler mon conseiller", "اتصل بمستشاري"],
   alsoToday: ["Also today", "Aussi aujourd'hui", "أيضًا اليوم"], seeNumbers: ["See the numbers", "Voir les chiffres", "اعرض الأرقام"],
+  zoneNothing: ["Zone {z}: nothing to do today, it is fine.", "Zone {z} : rien à faire aujourd'hui, tout va bien.", "المنطقة {z}: لا شيء لفعله اليوم، كل شيء بخير."], zoneTapHint: ["Tap a zone to hear what to do there", "Touchez une zone pour entendre quoi y faire", "المس منطقة لتسمع ما يجب فعله فيها"],
   wellDone: ["Well done", "Bien joué", "أحسنت"], nextCheck: ["Come back tomorrow morning.", "Revenez demain matin.", "عد صباح الغد."],
   // setup
   setup: ["Setup", "Réglages", "الإعداد"], qSensors: ["Do you have soil sensors?", "Avez-vous des capteurs de sol ?", "هل لديك مستشعرات تربة؟"],

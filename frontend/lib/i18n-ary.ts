@@ -483,6 +483,7 @@ export const ARY: Partial<Record<Key, string>> = {
   plainWaterMany: "سقي المناطق {z}", plainFeedMany: "سمد المناطق {z}", plainWalkMany: "سير شوف المناطق {z}", checkSoil: "شوف التربة",
   plainWaterAll: "سقي الأرض كاملة", plainFeedAll: "سمد الأرض كاملة", plainWalkAll: "دور على الأرض كاملة",
   cant: "ما نقدرش", tellMeWhy: "علاش؟", listenToday: "سمع اليوم", callAdvisor: "عيط للمستشار ديالي",
+  zoneNothing: "المنطقة {z}: ما كاين والو اليوم، كلشي مزيان.", zoneTapHint: "ورّك على منطقة باش تسمع شنو دير فيها",
   alsoToday: "حتى اليوم", seeNumbers: "ورّي الأرقام", wellDone: "مزيان", nextCheck: "رجع غدا الصباح.",
   setup: "الإعدادات", qSensors: "واش عندك مستشعرات ديال التربة؟",
   sensNone: "لا، غير القمر الصناعي والجو", sensShared: "المستشعر المشترك ديال الدوار", sensOwn: "المستشعرات ديالي",

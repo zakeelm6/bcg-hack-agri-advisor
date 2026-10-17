@@ -3,7 +3,7 @@
 // optimistic updates for the queued writes. Components never compute a number: they show what the server returned.
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { cachedGet, enqueue, flushQueue, getQueue, net, readCache, writeCache, type ActivitiesOut, type AnomaliesOut, type BriefingOut, type FieldInfoOut, type FarmerOut, type ForecastOut, type NdviSeriesOut, type OffersOut, type QueuedAction, type SeasonOut, type StateOut } from "./api";
+import { cacheAge, cachedGet, enqueue, flushQueue, getQueue, net, readCache, writeCache, type ActivitiesOut, type AnomaliesOut, type BriefingOut, type FieldInfoOut, type FarmerOut, type ForecastOut, type NdviSeriesOut, type OffersOut, type QueuedAction, type SeasonOut, type StateOut } from "./api";
 import { useFarm } from "./farm";
 import type { LandMeta } from "@/components/Land";
 import type { Lang } from "./i18n";
@@ -24,6 +24,7 @@ function useCached<T>(key: string, path: string, enabled = true, initial?: T | n
     enabled,
     queryFn: async () => (await cachedGet<T>(path)).data,
     initialData: () => (typeof window === "undefined" ? initial ?? undefined : readCache<T>(path) ?? initial ?? undefined),
+    initialDataUpdatedAt: () => (typeof window === "undefined" ? undefined : cacheAge(path) || undefined),   // an old copy is shown, then refreshed at once
     placeholderData: (prev) => prev,
   });
 }

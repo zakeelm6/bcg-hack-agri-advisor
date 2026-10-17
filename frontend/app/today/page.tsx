@@ -29,6 +29,7 @@ export default function Today() {
   const cp = useCopilot();
   const [cant, setCant] = useState<number | null>(null);
   const [result, setResult] = useState<{ id: number; step: "result" } | null>(null);
+  const [zone, setZone] = useState<string | null>(null);
   void useFmt;
   if (!s) return <div role="status" className="space-y-3"><Skeleton className="aspect-square w-full rounded-xl" /><Skeleton className="h-40 rounded-xl" /></div>;
   const groups = groupTasks(openTasks(s)), g0 = groups[0], first = g0?.task, rest = groups.slice(1);
@@ -39,11 +40,19 @@ export default function Today() {
   const skip = (tasks: TaskOut[], reason: string) => { tasks.forEach((task) => { act({ type: "task_status", payload: { task_id: task.id, status: "skipped" } }); act({ type: "observation", payload: { task_id: task.id, result: "skipped", note: "reason:" + reason } }); }); setCant(null); toast(t("skippedToast"), { label: t("undo"), fn: () => tasks.forEach((task) => act({ type: "task_status", payload: { task_id: task.id, status: "open" } })) }); };
   const saveResult = (r: string) => { if (result) act({ type: "observation", payload: { task_id: result.id, result: r } }); setResult(null); toast(t("savedThanks"), undefined, "check"); };
   const speak = (text: string) => cp.speakText(text);
+  // tap a zone: say what to do there today, in plain words (the engine's tasks for that zone, or "nothing to do")
+  // on screen: the plain words only (no numbers); spoken: the same, plus the engine's reason
+  const zoneLine = (code: string) => { const mine = openTasks(s).filter((x) => x.zone_code === code); return mine.length ? mine.map((x) => `${plainTitle(t, x)}. ${x.when_text}.`).join(" ") : t("zoneNothing", { z: code }); };
+  const zoneText = (code: string) => { const mine = openTasks(s).filter((x) => x.zone_code === code); return mine.length ? mine.map((x) => `${plainTitle(t, x)}. ${x.when_text}. ${x.why}`).join(" ") : t("zoneNothing", { z: code }); };
+  const pickZone = (code: string | null) => { setZone(code); if (code) speak(zoneText(code)); };
 
   return (
     <div className="mx-auto max-w-xl space-y-3">
       {/* the land: zones coloured, the pin on the zone that needs you, no numbers */}
-      <div className="overflow-hidden rounded-xl bg-neutral-900"><LandSvg s={s} layer="vigor" land={land} anomalies={anomalies} margin={24} simple /></div>
+      <div className="overflow-hidden rounded-xl bg-neutral-900"><LandSvg s={s} layer="vigor" land={land} anomalies={anomalies} margin={24} simple selected={zone} onSelect={pickZone} /></div>
+      {zone ? (
+        <button type="button" onClick={() => speak(zoneText(zone))} className="pressable anim-fade-up flex w-full items-center gap-3 rounded-xl border border-line bg-surface p-3 text-start"><span className="grid h-12 w-12 flex-none place-items-center rounded-full bg-surface-2 text-brand"><Icon name="speaker" size={24} /></span><span className="flex-1"><b className="font-display text-lg">{t("zone", { z: zone })}</b><span className="block text-base">{zoneLine(zone)}</span></span></button>
+      ) : <p className="text-center text-sm text-text-3">{t("zoneTapHint")}</p>}
 
       {result ? (
         <Card className="anim-fade-up text-center">

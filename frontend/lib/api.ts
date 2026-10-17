@@ -76,6 +76,8 @@ export async function cachedGet<T>(path: string): Promise<{ data: T | null; from
   }
 }
 export const readCache = <T,>(path: string): T | null => lsGet<{ t: number; j: T } | null>("c:" + path, null)?.j ?? null;
+/** When the local copy was written (0 when there is none), so a stale copy is refreshed on the first paint. */
+export const cacheAge = (path: string): number => lsGet<{ t: number } | null>("c:" + path, null)?.t ?? 0;
 export const writeCache = (path: string, j: unknown) => lsSet("c:" + path, { t: Date.now(), j });
 
 // ---------------------------------------------------------------- offline queue
