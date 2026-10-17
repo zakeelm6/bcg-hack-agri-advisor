@@ -18,6 +18,17 @@ const S = {
   navFarm: ["My Farm", "Ma ferme", "مزرعتي"],
   navCopilot: ["Co-Pilot", "Assistant", "المساعد"],
   navActivities: ["Activities", "Activités", "الأنشطة"],
+  howMuchWater: ["How much water?", "Quelle quantité d'eau ?", "كم من الماء؟"],
+  waterLittle: ["A little", "Un peu", "قليلًا"],
+  waterNormal: ["Normal", "Normal", "عادي"],
+  waterLot: ["A lot", "Beaucoup", "كثيرًا"],
+  waterUnknown: ["Not sure", "Je ne sais pas", "لا أعرف"],
+  satPending: ["Getting the satellite pictures of your field. This takes a few minutes; the advice uses the weather and the sensors meanwhile.", "Nous récupérons les images satellite de votre champ. Cela prend quelques minutes ; en attendant, les conseils se basent sur la météo et les capteurs.", "نجلب صور القمر الصناعي لحقلك. يستغرق ذلك بضع دقائق؛ وتعتمد النصائح في الأثناء على الطقس والمستشعرات."],
+  satFailed: ["The satellite pictures of your field could not be read.", "Les images satellite de votre champ n'ont pas pu être lues.", "تعذّرت قراءة صور القمر الصناعي لحقلك."],
+  satNone: ["No satellite pictures for your field on this server.", "Pas d'images satellite pour votre champ sur ce serveur.", "لا صور من القمر الصناعي لحقلك على هذا الخادم."],
+  tryAgain: ["Try again", "Réessayer", "حاول مجددًا"],
+  ownFieldNote: ["This advice is for your own field. The vigor of its zones comes from the satellite; the soil-moisture sensors are still simulated.", "Ces conseils concernent votre propre champ. La vigueur de ses zones vient du satellite ; les capteurs d'humidité du sol sont encore simulés.", "هذه النصائح تخص حقلك. قوة نباتات مناطقه تأتي من القمر الصناعي؛ ومستشعرات رطوبة التربة ما زالت محاكاة."],
+  demoParcel: ["This is the demo parcel, not your field. Use \"Use my location\" to see yours.", "Ceci est la parcelle de démonstration, pas votre champ. Utilisez « Utiliser ma position » pour voir le vôtre.", "هذه القطعة التجريبية وليست حقلك. استعمل «استعمل موقعي» لترى حقلك."],
   askCopilot: ["Ask Co-Pilot", "Demander", "اسأل المساعد"],
 
   // Welcome + onboarding

@@ -68,24 +68,39 @@ def ndvi_path(field_id: int) -> str:
     return os.path.join(own_dir(field_id), "ndvi.json")
 
 
-def _picture_meta(field_id: int) -> dict | None:
+DEMO_PICTURE = os.path.join(BACKEND_DIR, "data", "demo_land.png")   # the picture of the demo parcel (kept with the data so the API image carries it)
+
+
+def _read_json(path: str) -> dict | None:
     try:
-        with open(os.path.join(own_dir(field_id), "land.json"), encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except (OSError, ValueError):
         return None
 
 
-def picture_path(field_id: int = 1) -> str | None:
-    p = os.path.join(own_dir(field_id), "land.png")
+def picture_path(field_id: int = 1, source: str = "own") -> str | None:
+    """The true-colour picture around a field: the farmer's own download, or the demo parcel's."""
+    p = os.path.join(own_dir(field_id), "land.png") if source == "own" else DEMO_PICTURE
     return p if os.path.exists(p) else None
+
+
+def _picture_meta(field_id: int, source: str) -> dict | None:
+    """date, side of the picture and side of the field square inside it (metres)."""
+    path = picture_path(field_id, source)
+    if not path:
+        return None
+    d = _read_json(path[:-4] + ".json")
+    if not d or not all(k in d for k in ("date", "side_m", "field_side_m")):
+        return None
+    return {"date": d["date"], "side_m": d["side_m"], "field_side_m": d["field_side_m"]}
 
 
 def describe(db: Session) -> dict:
     f = db.get(m.Field, fid(db))
     return {"source": f.source, "satellite_status": f.satellite_status, "satellite_note": f.satellite_note, "lat": f.lat, "lon": f.lon,
             "area_ha": f.area_ha, "side_m": f.side_m, "boundary": json.loads(f.boundary) if f.boundary else None,
-            "picture": _picture_meta(f.id) if f.source == "own" and picture_path(f.id) else None}
+            "picture": _picture_meta(f.id, f.source)}
 
 
 def activate(db: Session):

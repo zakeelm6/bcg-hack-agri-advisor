@@ -66,3 +66,14 @@ def test_bad_positions_are_refused_and_the_rate_is_limited(monkeypatch):
         assert c.get("/api/geo/place?lat=0").status_code == 422
         codes = [c.get(f"/api/geo/place?lat={i / 100}&lon=1").status_code for i in range(35)]
     assert codes.count(429) >= 1
+
+
+def test_the_demo_parcel_has_its_picture_served_by_the_api():
+    """The API image does not carry the legacy app: the demo picture comes from /api/field/picture, with its geometry."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    with TestClient(app) as c:
+        info = c.get("/api/field").json()
+        assert info["source"] == "demo" and info["picture"]["field_side_m"] == 155.0 and info["picture"]["side_m"] == 480.0
+        r = c.get("/api/field/picture")
+        assert r.status_code == 200 and r.headers["content-type"] == "image/png" and r.content[:4] == b"\x89PNG"

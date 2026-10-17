@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from ...db import get_db
+from ...db import get_db, models as m
 from ...db.scope import fid
 from ...schemas.responses import FieldInfoOut
 from ...services import own_field
@@ -26,7 +26,8 @@ def field_satellite_retry(db: Session = Depends(get_db)):
 
 @router.get("/api/field/picture", include_in_schema=True, responses={200: {"description": "PNG, true-colour Sentinel-2 picture around the field", "content": {"image/png": {"schema": {"type": "string", "format": "binary"}}}}})
 def field_picture(db: Session = Depends(get_db)):
-    p = own_field.picture_path(fid(db))
+    f = db.get(m.Field, fid(db))
+    p = own_field.picture_path(f.id, f.source)
     if not p or not os.path.exists(p):
         raise HTTPException(404, "no picture of the field yet")
     return FileResponse(p, media_type="image/png", headers={"Cache-Control": "no-cache"})

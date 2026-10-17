@@ -3,8 +3,9 @@
 // optimistic updates for the queued writes. Components never compute a number: they show what the server returned.
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { cachedGet, enqueue, flushQueue, getQueue, net, readCache, writeCache, type AnomaliesOut, type BriefingOut, type FarmerOut, type ForecastOut, type NdviSeriesOut, type OffersOut, type QueuedAction, type SeasonOut, type StateOut } from "./api";
+import { cachedGet, enqueue, flushQueue, getQueue, net, readCache, writeCache, type ActivitiesOut, type AnomaliesOut, type BriefingOut, type FieldInfoOut, type FarmerOut, type ForecastOut, type NdviSeriesOut, type OffersOut, type QueuedAction, type SeasonOut, type StateOut } from "./api";
 import { useFarm } from "./farm";
+import type { LandMeta } from "@/components/Land";
 import type { Lang } from "./i18n";
 
 const client = new QueryClient({ defaultOptions: { queries: { retry: 0, staleTime: 60_000, refetchOnWindowFocus: false } } });
@@ -40,9 +41,14 @@ export const useAnomalies = () => { const { lang } = useFarm(); return useCached
 export const useSeason = () => { const { lang } = useFarm(); return useCached<SeasonOut>("season", `/api/season?lang=${lang}`); };
 export const useBriefing = () => { const { lang } = useFarm(); return useCached<BriefingOut>("briefing", `/api/briefing?lang=${lang}`); };
 export const useFarmer = () => { const { lang } = useFarm(); return useCached<FarmerOut>("farmer", `/api/farmer?lang=${lang}`); };
+/** Whose field this is (the demo parcel or the farmer's own) and the state of its satellite picture. */
+export const useFieldInfo = () => useCached<FieldInfoOut>("field", "/api/field");
+/** The picture around the field with its geometry, or null while there is none. */
 export function useLand() {
-  return useQuery<{ date: string; px: number } | null>({ queryKey: ["land"], queryFn: async () => (await cachedGet<{ date: string; px: number }>("/static/land.json")).data, initialData: () => readCache("/static/land.json") ?? undefined });
+  const q = useFieldInfo();
+  return { ...q, data: (q.data?.picture ?? null) as LandMeta | null };
 }
+export const useActivities = () => useCached<ActivitiesOut>("activities", "/api/activities");
 
 /** Queue a write, apply it to the local state at once, then try to send. */
 export function useActions() {
@@ -76,7 +82,7 @@ export function useActions() {
 
   const flush = useCallback(async (): Promise<{ sent: number; failed: number } | null> => {
     const r = await flushQueue();
-    if (r) await qc.invalidateQueries({ queryKey: ["state"] });
+    if (r) { await qc.invalidateQueries({ queryKey: ["state"] }); void qc.invalidateQueries({ queryKey: ["activities"] }); void qc.invalidateQueries({ queryKey: ["field"] }); }
     bump((n) => n + 1);
     return r;
   }, [qc]);

@@ -59,3 +59,13 @@ verified, fixed, escalated), `farmer` action in `/api/sync`.
 
 ## Planned additions (not frozen yet)
 Authentication routes.
+
+## Added when the team's engine work was merged (October 2026)
+
+All additive: nothing above changed. The machine-readable file is still `backend/openapi.json`.
+
+- **`X-Device` header.** The app makes a random token on first launch (`fa_device` in `localStorage`, 22 to 128 URL-safe characters) and sends it on every request. The server keeps only its SHA-256, gives the phone a field of its own on first sight and limits every route to it. A request without the header uses the shared demo field (id 1), unless the server runs with `FA_REQUIRE_DEVICE=1` (then 401). Limits: `FA_MAX_DEVICES` (503), `FA_NEW_DEVICES_PER_MINUTE` (429).
+- **Activities:** `GET /api/activities`, `POST /api/activities` (`client_id`, `type`, `date`, `note`, `cost`, `zone`, `amount_mm`; sending the same `client_id` again is harmless), `DELETE /api/activities/{client_id}`. Also through `/api/sync` as `activity` and `activity_remove`. A watering with an amount raises the estimated moisture; without it the engine waits two days.
+- **The farmer's own field:** `GET /api/field` (source `demo` or `own`, `satellite_status` ready, pending, failed or none, a note, and `picture` = date, side of the picture and side of the field square), `POST /api/field/satellite` (try the download again), `GET /api/field/picture` (PNG, the farmer's own or the demo parcel's). `POST /api/farmer` with a position (and optionally `boundary`) moves the engine to a square of the farmer's area centred there and starts a Sentinel-2 download in the background; until it ends, `zones[].ndvi` is `null` and the engine says so.
+- **Tasks** carry `qty` and `unit` (mm of water, kg of nitrogen per hectare). **Places:** `GET /api/place` (town name at a position).
+- **Money:** the Copilot answers spending questions in `FA_CURRENCY` (MAD by default).
