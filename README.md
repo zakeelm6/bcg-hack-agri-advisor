@@ -1,5 +1,7 @@
 # Sanabils (سنابل): final project
 
+> The idea, what we are building, the Azure sandbox and the diagrams: [`docs/OVERVIEW.md`](docs/OVERVIEW.md). Technical structure and justifications: [`docs/TECHNICAL.md`](docs/TECHNICAL.md).
+
 BCG Platinion Hackathon 2026, Fighting World Hunger, Team 2.
 An AI that reads a small farmer's land (satellite, weather, shared soil sensors, soil tests, photos) and says what to do,
 when, why, how much it costs, how sure it is and what the plan B is. Then it follows up. A voice Copilot explains it.

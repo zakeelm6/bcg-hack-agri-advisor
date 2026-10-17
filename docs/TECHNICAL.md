@@ -1,7 +1,7 @@
 # Sanabils (سنابل): technical structure, why each choice, and what comes next
 
 BCG Platinion Hackathon 2026, Team 2. State on 17 October 2026, commit `832d931`.
-This document is for the technical staff who will read, run, judge or continue the project: what the system is made of, why it was built this way, and what we would do next. For how to run it see `README.md`; for the API see `docs/API_CONTRACT.md`; for deployment see `docs/DEPLOY-AZURE.md` and `docs/CI-CD.md`.
+This document is for the technical staff who will read, run, judge or continue the project: what the system is made of, why it was built this way, and what we would do next. For the idea, the farmer's journey, the sandbox and the diagrams see [`OVERVIEW.md`](OVERVIEW.md). For how to run it see `README.md`; for the API see `docs/API_CONTRACT.md`; for deployment see `docs/DEPLOY-AZURE.md` and `docs/CI-CD.md`.
 
 ---
 
