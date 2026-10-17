@@ -13,7 +13,7 @@ changes without regenerating the file, and when one of the endpoints below disap
 
 ## Endpoints
 
-Language parameter: `lang` is `en`, `fr` or `ar` (default `en`). Errors are JSON `{"detail": "..."}` with 422 (invalid input), 429 (too many requests), 503 (service not configured), 502 (a service behind the API failed).
+Language parameter: `lang` is `en`, `fr`, `ar` or `ary` (Darija, Moroccan Arabic; falls back to Arabic then English) (default `en`). Errors are JSON `{"detail": "..."}` with 422 (invalid input), 429 (too many requests), 503 (service not configured), 502 (a service behind the API failed).
 
 | Method and path | Request | Response (keys) | Used by |
 |---|---|---|---|

@@ -1,13 +1,17 @@
 // UI strings in English, French and Arabic. Each entry is [en, fr, ar]; {name} placeholders are filled by tr().
 // ponytail: plain object, no i18n library. Arabic is Modern Standard Arabic; have a native Darija speaker review before launch.
 
-export type Lang = "en" | "fr" | "ar";
+export type Lang = "en" | "fr" | "ar" | "ary"; // ary = Darija (Moroccan Arabic), see i18n-ary.ts
+export const isRtl = (lang: Lang) => lang === "ar" || lang === "ary";
 
 export const langs: { id: Lang; name: string; speech: string }[] = [
   { id: "ar", name: "العربية", speech: "ar-MA" },
+  { id: "ary", name: "الدارجة", speech: "ar-MA" },
   { id: "fr", name: "Français", speech: "fr-FR" },
   { id: "en", name: "English", speech: "en-US" },
 ];
+
+import { ARY } from "./i18n-ary";
 
 const S = {
   // Navigation
@@ -307,10 +311,11 @@ const S = {
 } satisfies Record<string, [string, string, string]>;
 
 export type Key = keyof typeof S;
-const idx = { en: 0, fr: 1, ar: 2 } as const;
+const idx = { en: 0, fr: 1, ar: 2, ary: 2 } as const; // Darija reads the standard Arabic column when it has no text of its own
 
 export function tr(lang: Lang, key: Key, vars: Record<string, string | number> = {}) {
-  return S[key][idx[lang]].replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
+  const text = (lang === "ary" && ARY[key]) || S[key][idx[lang]];
+  return text.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
 }
 
 // Text that is stored (advice, tasks) and must follow later language switches: a plain string (farmer's own words,

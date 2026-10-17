@@ -17,8 +17,8 @@ import httpx
 
 from . import llm  # noqa: F401  (importing it loads .env)
 
-LOCALES = {"en": "en-US", "fr": "fr-FR", "ar": "ar-MA"}
-DEFAULT_VOICES = {"en": "en-US-JennyNeural", "fr": "fr-FR-DeniseNeural", "ar": "ar-MA-MounaNeural"}
+LOCALES = {"en": "en-US", "fr": "fr-FR", "ar": "ar-MA", "ary": "ar-MA"}   # Azure has no separate Darija locale: ar-MA is Moroccan Arabic
+DEFAULT_VOICES = {"en": "en-US-JennyNeural", "fr": "fr-FR-DeniseNeural", "ar": "ar-MA-MounaNeural", "ary": "ar-MA-JamalNeural"}
 MAX_AUDIO_BYTES = 2_000_000   # about 60 s of 16 kHz mono, the limit of Azure's short-audio recognition
 MAX_TEXT = 1200
 TIMEOUT_S = 15.0

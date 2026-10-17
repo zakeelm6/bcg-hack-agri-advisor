@@ -87,12 +87,43 @@ CT = {
         "help": "أستطيع شرح النصيحة («لماذا؟»)، وإعطاء خطة بديلة، وذكر الوقت والتكلفة، ومحاكاة «ماذا لو انتظرت يومين»، وتلخيص يومك، أو مساعدتك على إضافة بيانات. لا أستطيع تغيير مهمة ولا تشخيص مرض.",
         "conf_name": {"High": "عالية", "Medium": "متوسطة", "Low": "ضعيفة"},
     },
+    "ary": {   # Darija (Moroccan Arabic) in Arabic script. Needs a native speaker's review before real use.
+        "diagnose": "ما نقدرش نشخص مرض ولا حشرة. اللي نقدر ندير: نعاونك تشوف المنطقة ونوصف اللي كيبان فصورة كتزيدها من بعد مهمة. إلا شفتي مشكل، طلب زيارة من مرشد ميداني.",
+        "insp_btn": "حل مهمة الفحص", "soil_btn": "زيد تحليل تربة", "tasks_btn": "المهام", "field_btn": "الحقل",
+        "wi": "إلا تسنيتي {d} {unit}: المتوقع تقريبا {rain} مم ديال الشتا وكيتبخر {et0} مم ديال الما، وكتبدل رطوبة التربة من فوق ب {pct}%.",
+        "wi_none": " ما خاصش السقي دابا ولا من بعد التسنى.", "wi_row": " المنطقة {z}: {a} دابا، {b} من بعد التسنى.",
+        "wi_mm": "{n} مم", "wi_noirr": "بلا سقي", "wi_cap": " المنطقة {z} غاتوصل للحد الأقصى فمرة وحدة، وممكن يخصك سقي تاني.",
+        "wi_sim": " هادي غير محاكاة: المهمة ما كتبدلش.", "wi_far": "ما نقدرش نشوف لهاد المدى بالتوقعات اللي عندي.",
+        "plan_none": "ما عندك حتى مهمة مفتوحة دابا.",
+        "plan": "عندك {n} {tasks_word} مفتوحة: {lines}. بدا بالأولى.",
+        "photo": "من بعد ما تكمل مهمة تقدر تزيد صورة ديال المنطقة. كتبقى فالتيليفون حتى يجي الأنترنت. كنوصف اللي كيبان وما كنشخصش أبدا.",
+        "data": "تحليل تربة فالمنطقة {z} كيخلي النصيحة أدق: الحموضة والمادة العضوية كيبدلو جرعة السماد والثقة، وقيمة الرطوبة كتحسب قياس ل 3 أيام.",
+        "no_task": "ما كاينة حتى مهمة مفتوحة نهضرو عليها دابا.",
+        "why": "على «{t}»: {why} الثقة: {c}. {r}", "planb": "الخطة البديلة ل «{t}»: {p}", "when": "«{t}»: {w}.", "cost": "«{t}»: {c}",
+        "conf": "الثقة فـ «{t}» هي {c}. {r}",
+        "help": "نقدر نشرح ليك النصيحة («علاش؟»)، نعطيك خطة بديلة، نقولك فوقاش وشحال غادي يكلف، نحاكي «واش نتسنى نهارين»، نلخص ليك نهارك، ولا نعاونك تزيد بيانات. ما نقدرش نبدل مهمة ولا نشخص مرض.",
+        "conf_name": {"High": "قوية", "Medium": "وسط", "Low": "ضعيفة"},
+    },
 }
 
 
+LANG_NAME = {"en": "English", "fr": "French", "ar": "Modern Standard Arabic", "ary": "Moroccan Arabic (Darija), written in Arabic script"}
+FALLBACK = {"ary": ("ary", "ar", "en"), "ar": ("ar", "en"), "fr": ("fr", "en")}   # Darija falls back to standard Arabic, then English
+
+
+def ct_names(lang):
+    """Confidence level names (High, Medium, Low) in the farmer's language."""
+    for l in FALLBACK.get(lang, ("en",)):
+        if l in CT:
+            return CT[l]["conf_name"]
+    return CT["en"]["conf_name"]
+
+
 def ct(lang, key, **kw):
-    d = CT.get(lang, CT["en"])
-    return d.get(key, CT["en"][key]).format(**kw).replace("  ", " ")
+    for l in FALLBACK.get(lang, ("en",)):
+        if key in CT.get(l, {}):
+            return CT[l][key].format(**kw).replace("  ", " ")
+    return CT["en"][key].format(**kw).replace("  ", " ")
 
 
 def _weekday(iso):
@@ -127,26 +158,26 @@ def _has(q, words):
 def detect(question):
     """Very small intent detector (English and French keywords). Returns (intent, extra)."""
     q = question.lower()
-    if _has(q, ["مرض", "آفة", "افة", "حشرة", "فطر", "بياض"]):
+    if _has(q, ["مرض", "آفة", "افة", "حشرة", "فطر", "بياض", "مريض", "مريضة", "حشرات", "دودة", "كتصفار", "صفرا"]):
         return "diagnose", None
-    if _has(q, ["ماذا لو", "لو انتظرت", "انتظر", "تأجيل", "أجّل", "اجل"]):
+    if _has(q, ["ماذا لو", "لو انتظرت", "انتظر", "تأجيل", "أجّل", "اجل", "نتسنى", "تسنى", "نأخر", "نأجل"]):
         m = re.search(r"(\d+)", q)
         return "whatif", int(m.group(1)) if m else (1 if "يوم " in q + " " and "يومين" not in q else 2)
-    if _has(q, ["خطة بديلة", "البديل", "بديل", "لا أستطيع", "لا استطيع"]):
+    if _has(q, ["خطة بديلة", "البديل", "بديل", "لا أستطيع", "لا استطيع", "ما قدرتش", "ماقدرتش", "ما قدرش", "حل آخر", "حل اخر"]):
         return "planb", None
     if _has(q, ["تحليل", "عينة", "عيّنة", "أدق", "ادق", "بيانات"]):
         return "data", None
     if _has(q, ["صورة", "صور", "كاميرا"]):
         return "photo", None
-    if _has(q, ["متأكد", "ثقة", "موثوق", "دقيق"]):
+    if _has(q, ["متأكد", "ثقة", "موثوق", "دقيق", "واثق", "متيقن", "تيقة"]):
         return "confidence", None
-    if _has(q, ["كم", "تكلفة", "ثمن", "سعر", "كلفة"]):
+    if _has(q, ["كم", "تكلفة", "ثمن", "سعر", "كلفة", "شحال", "كيكلف"]):
         return "cost", None
-    if _has(q, ["متى", "موعد", "وقت"]):
+    if _has(q, ["متى", "موعد", "وقت", "فوقاش", "وقتاش", "امتا", "إمتا"]):
         return "when", None
     if _has(q, ["لماذا", "ليش", "علاش", "سبب", "اشرح", "شرح"]):
         return "why", None
-    if _has(q, ["اليوم", "خطتي", "مهامي", "ملخص", "ماذا أفعل", "ماذا افعل"]):
+    if _has(q, ["اليوم", "خطتي", "مهامي", "ملخص", "ماذا أفعل", "ماذا افعل", "شنو ندير", "شنو خاصني", "شنو خصني", "نهاري"]):
         return "plan", None
     if _has(q, ["disease", "sick", "pest", "insect", "fung", "virus", "blight", "mildew", "maladie", "ravageur", "champignon"]):
         return "diagnose", None
@@ -193,8 +224,9 @@ def engine_answer(intent, extra, facts, task_id, whatif, lang="en"):
         if not whatif or not whatif.get("available"):
             return (whatif or {}).get("reason", ct(lang, "wi_far")), []
         d = whatif["days"]
-        unit = {1: "يومًا", 2: "يومين"}.get(d, "أيام") if lang == "ar" else None
-        text = ct(lang, "wi", d=(d if not (lang == "ar" and d in (1, 2)) else ""), unit=unit, s="s" if d != 1 else "", rain=f"{whatif['rain_mm']:g}", et0=f"{whatif['et0_mm']:g}", pct=f"{whatif['moisture_change_pct']:g}")
+        arabic = lang in ("ar", "ary")
+        unit = ({1: "نهار", 2: "نهارين"} if lang == "ary" else {1: "يومًا", 2: "يومين"}).get(d, "أيام") if arabic else None
+        text = ct(lang, "wi", d=(d if not (arabic and d in (1, 2)) else ""), unit=unit, s="s" if d != 1 else "", rain=f"{whatif['rain_mm']:g}", et0=f"{whatif['et0_mm']:g}", pct=f"{whatif['moisture_change_pct']:g}")
         if not whatif["irrigation"]:
             return text + ct(lang, "wi_none"), []
         for r in whatif["irrigation"]:
@@ -209,7 +241,7 @@ def engine_answer(intent, extra, facts, task_id, whatif, lang="en"):
         if not n:
             return ct(lang, "plan_none"), [{"label": ct(lang, "field_btn"), "go": "#/field"}]
         lines = "; ".join(f"{x['title']} ({x['when']})" for x in facts["open_tasks"][:5])
-        tw = ("مهمة" if n == 1 else "مهام") if lang == "ar" else None
+        tw = ("مهمة" if n == 1 else "مهام") if lang in ("ar", "ary") else None
         return ct(lang, "plan", n=n, s="s" if n != 1 else "", tasks_word=tw, lines=lines), [{"label": ct(lang, "tasks_btn"), "go": "#/tasks"}]
     if intent == "photo":
         return ct(lang, "photo"), [{"label": ct(lang, "tasks_btn"), "go": "#/tasks"}]
@@ -219,7 +251,7 @@ def engine_answer(intent, extra, facts, task_id, whatif, lang="en"):
     if not t:
         return ct(lang, "no_task"), [{"label": ct(lang, "field_btn"), "go": "#/field"}]
     title = t["title"]
-    cname = CT.get(lang, CT["en"])["conf_name"].get(t["confidence"], t["confidence"])
+    cname = ct_names(lang).get(t["confidence"], t["confidence"])
     if intent == "why":
         return ct(lang, "why", t=title, why=t["why"], c=cname, r=t["confidence_reason"]), []
     if intent == "planb":
@@ -249,7 +281,7 @@ def answer(question, state, task_id=None, whatif_fn=None, lang="en"):
     draft, actions = engine_answer(intent, extra, facts, task_id, whatif, lang)
     note = None
     if llm.provider_info()["mode"] == "model":
-        user = (f"Farmer's question: {q}\n\nInterface language: {lang}\n\nFacts (JSON):\n{json.dumps(facts, ensure_ascii=False)}\n\n"
+        user = (f"Farmer's question: {q}\n\nInterface language: {LANG_NAME.get(lang, lang)}\n\nFacts (JSON):\n{json.dumps(facts, ensure_ascii=False)}\n\n"
                 f"Draft answer from the rule engine (may be empty):\n{draft or ''}\n\nWrite the answer.")
         text = llm.complete(SYSTEM, user)
         if text is None:

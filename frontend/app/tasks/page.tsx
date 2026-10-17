@@ -13,7 +13,7 @@ export default function Tasks() {
   if (!s) return <PageSkeleton />;
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return d; });
   const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const letters = lang === "fr" ? ["di", "lu", "ma", "me", "je", "ve", "sa"] : lang === "ar" ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const letters = lang === "fr" ? ["di", "lu", "ma", "me", "je", "ve", "sa"] : (lang === "ar" || lang === "ary") ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   const all = [...s.tasks].sort((a, b) => (a.status === "open" ? 0 : 1) - (b.status === "open" ? 0 : 1) || a.when_date.localeCompare(b.when_date));
   const list = day ? all.filter((x) => x.when_date === day) : all;
   return (<>

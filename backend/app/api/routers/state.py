@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ...db import get_db, models as m
 from ...schemas.responses import AnomaliesOut, ForecastOut, NdviSeriesOut, StateOut
 from ...services import advice, field as fld, market, satellite_layer
-from ...services.common import as_dict
+from ...services.common import as_dict, pick
 
 router = APIRouter()
 
@@ -26,7 +26,7 @@ def ndvi_series(lang: str = "en", db: Session = Depends(get_db)):
     points = [{k: as_dict(r)[k] for k in ("zone_code", "date", "ndvi", "clear_share")} for r in rows]
     source = zones[0]["ndvi_source"] if zones else "none"
     return {"real": source.startswith("sentinel-2"), "source": source, "points": points,
-            "note": NDVI_NOTE.get(lang, "Dates with clouds, shadows or too few clear pixels are missing. 10 m pixels: about 55 per zone.")}
+            "note": pick(NDVI_NOTE, lang, "Dates with clouds, shadows or too few clear pixels are missing. 10 m pixels: about 55 per zone.")}
 
 
 @router.get("/api/forecast", response_model=ForecastOut)

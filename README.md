@@ -44,6 +44,7 @@ React app: `cd frontend && npm install && npm run dev` (http://localhost:3000, t
 | Document | What it explains |
 |---|---|
 | [ROADMAP.md](ROADMAP.md) | The steps to go forward: React frontend, backend framework, everything working together |
+| [docs/DARIJA.md](docs/DARIJA.md) | Darija (Moroccan Arabic): what is translated, voice, tests, limits, how to improve it |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Phase 0: decisions, owners, working rules, checklist |
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | The frozen API between frontend and backend (`backend/openapi.json`) |
 | [docs/PARITY.md](docs/PARITY.md) | React app against the legacy app: what is done, what is still open |

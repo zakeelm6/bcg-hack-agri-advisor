@@ -14,6 +14,8 @@ TEXT = {
            "sensor": "Une mesure d'humidité dans la zone {z}", "photo": "Une photo de près des feuilles"},
     "ar": {"plan_b": "الخطة البديلة", "nothing": "لا يوجد شيء يجب فعله الآن.", "test": "تحليل للتربة في المنطقة {z}",
            "sensor": "قياس للرطوبة في المنطقة {z}", "photo": "صورة قريبة للأوراق"},
+    "ary": {"plan_b": "الخطة البديلة", "nothing": "ما كاين والو خاصك تدير دابا.", "test": "تحليل تربة فالمنطقة {z}",
+            "sensor": "قياس ديال الرطوبة فالمنطقة {z}", "photo": "صورة قريبة للورق"},
 }
 ORDER = {"irrigate": 0, "fertilize": 1, "inspect": 2}
 

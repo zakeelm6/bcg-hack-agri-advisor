@@ -6,7 +6,7 @@ import { useFarm, useT } from "@/lib/farm";
 import type { Lang } from "@/lib/i18n";
 import { Circle, Ic, Meter, Skeleton, taskIcon } from "./ui";
 
-export const locale = (lang: Lang) => (lang === "ar" ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB");
+export const locale = (lang: Lang) => ((lang === "ar" || lang === "ary") ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB");
 export const useFmt = () => {
   const { lang } = useFarm();
   return { date: (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString(locale(lang), { day: "numeric", month: "short" }), num: (n: number, d = 0) => Number(n).toLocaleString(locale(lang), { minimumFractionDigits: d, maximumFractionDigits: d }) };

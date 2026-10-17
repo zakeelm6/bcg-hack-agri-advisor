@@ -118,7 +118,7 @@ export function Legend({ s, layer, anomalies }: { s: StateOut; layer: Layer; ano
 export function LandNote({ s, land, anomalies }: { s: StateOut; land: { date: string } | null | undefined; anomalies: AnomaliesOut | null | undefined }) {
   const t = useT();
   const { lang } = useFarm();
-  const fmt = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString(lang === "ar" ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" });
+  const fmt = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString((lang === "ar" || lang === "ary") ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" });
   const m = /sentinel-2 (\d{4}-\d{2}-\d{2})/.exec(s.zones[0]?.ndvi_source ?? "");
   return (
     <div className="mt-1 flex flex-wrap text-xs text-muted">

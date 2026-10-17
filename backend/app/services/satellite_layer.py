@@ -13,6 +13,7 @@ from functools import lru_cache
 import numpy as np
 
 from ..core.config import BACKEND_DIR
+from .common import ar_fallback
 from ..processing.satellite import DetectionConfig, FieldGrid, Scene, detect, to_geojson
 
 CACHE_FILE = os.path.join(BACKEND_DIR, "data", "ndvi_cache.json")
@@ -103,12 +104,12 @@ def geojson(lang: str = "en") -> dict:
     if grid is None:
         return {"type": "FeatureCollection", "features": [], "available": False, "source": None, "dates": 0,
                 "note": {"fr": "Pas encore de pixels Sentinel-2 : lancez scripts/fetch_satellite.py.",
-                         "ar": "لا بكسلات Sentinel-2 بعد: شغّل scripts/fetch_satellite.py."}.get(lang, "No Sentinel-2 pixels yet: run scripts/fetch_satellite.py.")}
+                         "ar": "لا بكسلات Sentinel-2 بعد: شغّل scripts/fetch_satellite.py."}.get(ar_fallback(lang), "No Sentinel-2 pixels yet: run scripts/fetch_satellite.py.")}
     g = to_geojson(zones, grid)
     for f, a, z in zip(g["features"], anomalies_for_engine(), zones):
         f["properties"].update({"zone_code": a["zone"], "x": a["x"], "y": a["y"], "cells": [[int(r), int(c)] for r, c in z.pixel_indices]})
     g.update({"available": True, "source": d.get("source"), "dates": sum(1 for r in d.get("rows", []) if r.get("pixels")),
               "grid": {"rows": grid.rows, "cols": grid.cols, "pixel_m": grid.pixel_size_m}, "config": {"min_persistence": CONFIG.min_persistence, "mad_threshold": CONFIG.mad_threshold},
               "note": {"fr": "Le satellite montre où, pas pourquoi. Une tache est signalée quand elle reste sous sa propre normale sur plusieurs passages.",
-                       "ar": "القمر الصناعي يُظهر الموضع لا السبب. تُرصد البقعة عندما تبقى تحت معدلها عبر عدة مرور."}.get(lang, "The satellite shows where, not why. A patch is reported when it stays below its own normal on several passes.")})
+                       "ar": "القمر الصناعي يُظهر الموضع لا السبب. تُرصد البقعة عندما تبقى تحت معدلها عبر عدة مرور."}.get(ar_fallback(lang), "The satellite shows where, not why. A patch is reported when it stays below its own normal on several passes.")})
     return g
