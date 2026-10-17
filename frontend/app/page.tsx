@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, Icon } from "@/components/ui";
+import { Logo } from "@/components/ui/Logo";
 import { useFarm, useT } from "@/lib/farm";
 import { langs } from "@/lib/i18n";
 import { LANG_NATIVE } from "@/components/LangControl";
@@ -27,6 +28,7 @@ export default function Landing() {
           </div>
         </div>
         <div className="md:order-1">
+          <p className="mb-4 flex items-center gap-3 font-display text-2xl text-brand"><Logo size={48} />{t("appName")}</p>
           <h1 className="font-display text-4xl leading-tight md:text-5xl">{t("headline")}</h1>
           <p className="mt-4 text-lg text-text-2">{t("landingSub")}</p>
           <div role="group" aria-label={t("chooseLang")} className="mt-5 flex flex-wrap gap-2">
@@ -81,7 +83,7 @@ export default function Landing() {
           <h2 id="about-h" className="font-display text-xl">{t("aboutTitle")}</h2>
           <p className="mt-3 text-sm text-text-2">{t("aboutText")}</p>
           <p className="mt-3 text-xs text-text-3">{t("darijaNote")}</p>
-          <p className="mt-4 text-xs text-text-3">Farm Advisor · Team 2 · BCG Platinion Hackathon 2026 · <Link href="/home" className="underline">{t("seeDemo")}</Link></p>
+          <p className="mt-4 text-xs text-text-3">Sanabils · Team 2 · BCG Platinion Hackathon 2026 · <Link href="/home" className="underline">{t("seeDemo")}</Link></p>
         </Card>
       </section>
 

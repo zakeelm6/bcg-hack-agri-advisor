@@ -1,4 +1,4 @@
-# Farm Advisor: final project
+# Sanabils (سنابل): final project
 
 BCG Platinion Hackathon 2026, Fighting World Hunger, Team 2.
 An AI that reads a small farmer's land (satellite, weather, shared soil sensors, soil tests, photos) and says what to do,

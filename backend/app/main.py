@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Farm Advisor", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="Sanabils", version="0.2.0", lifespan=lifespan)
 
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_list, allow_methods=["*"], allow_headers=["*"])
 

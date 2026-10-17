@@ -72,7 +72,7 @@ export default function Me() {
         <p><Badge tone="success" icon="check" className="me-1.5">{t("realLabel").replace(":", "")}</Badge>{t("realList")}</p>
         <p><Badge tone="simulated" icon="sensor" className="me-1.5">{t("simLabel").replace(":", "")}</Badge>{t("simList")}</p>
         <p><Badge tone="warning" icon="warning" className="me-1.5">{t("notValidLabel").replace(":", "")}</Badge>{t("notValidList")}</p>
-        <p className="pt-2 text-xs text-text-3">Farm Advisor · Team 2 · BCG Platinion Hackathon 2026<br />{t("footer")}</p>
+        <p className="pt-2 text-xs text-text-3">Sanabils · Team 2 · BCG Platinion Hackathon 2026<br />{t("footer")}</p>
       </div>
     </Sheet>
   </>);

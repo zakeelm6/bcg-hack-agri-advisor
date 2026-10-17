@@ -14,8 +14,8 @@ const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], wei
 const naskh = Noto_Naskh_Arabic({ variable: "--font-naskh", subsets: ["arabic"], weight: ["400", "700"], preload: false });   // loaded when Arabic or Darija is chosen
 
 export const metadata: Metadata = {
-  title: "Farm Advisor - AI advice from your field data",
-  description: "Farm Advisor reads your land (satellite vigor, weather, soil sensors, soil tests) and tells you what to do, when and why, then follows up. Works offline.",
+  title: "Sanabils - AI advice from your field data",
+  description: "Sanabils reads your land (satellite vigor, weather, soil sensors, soil tests) and tells you what to do, when and why, then follows up. Works offline.",
   manifest: "/manifest.json",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
 };

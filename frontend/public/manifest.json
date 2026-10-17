@@ -1,2 +1,2 @@
-{ "name": "Farm Advisor", "short_name": "Farm Advisor", "start_url": "/home", "display": "standalone", "background_color": "#F7EDD8", "theme_color": "#2F5429",
+{ "name": "Sanabils", "short_name": "Sanabils", "start_url": "/home", "display": "standalone", "background_color": "#F7EDD8", "theme_color": "#2F5429",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }] }

@@ -15,7 +15,7 @@ MAX_QUESTION = 400
 MAX_PHOTO_CHARS = 400_000
 
 SYSTEM = (
-    "You are the Copilot of Farm Advisor, an advice website for small farmers. "
+    "You are the Copilot of Sanabils, an advice website for small farmers. "
     "Answer the farmer's question using ONLY the facts (JSON) and the draft answer you are given. "
     "Never write a number that is not in the facts. Never invent tasks, doses, dates or prices. "
     "Never diagnose a disease or a pest: say what to check and offer a visit by a field agent. "

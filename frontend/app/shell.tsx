@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Banner } from "@/components/Banner";
 import { LangControl } from "@/components/LangControl";
 import { Button, Icon, Sheet } from "@/components/ui";
+import { Logo } from "@/components/ui/Logo";
 import { useAppState, unreadCount } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 import { isRtl } from "@/lib/i18n";
@@ -47,7 +48,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 bg-brand-strong text-on-brand shadow-1">
         <div className="mx-auto flex min-h-16 w-full max-w-[1200px] items-center gap-2 px-3 py-2 md:gap-3 md:px-6">
           <Link href={onboarding ? "/" : homeHref} className="inline-flex min-h-12 items-center gap-2.5 whitespace-nowrap pe-2 font-display text-lg md:text-xl">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-white/12"><Icon name="leaf" size={22} /></span><span>{t("appName")}</span>
+            <Logo size={36} /><span>{t("appName")}</span>
           </Link>
           {!onboarding && (
             <nav aria-label="Main" className="ms-auto hidden gap-1 md:flex">
