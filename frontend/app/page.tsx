@@ -107,7 +107,7 @@ function Onboarding() {
 
   if (step < 0) return (
     <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-12">
-      <div role="group" aria-label={t("chooseLang")} className="grid grid-cols-3 gap-2">
+      <div role="group" aria-label={t("chooseLang")} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {langs.map((l) => (
           <button key={l.id} type="button" aria-pressed={lang === l.id}
             onClick={() => { setLang(l.id); speak(tr(l.id, "headline"), l.id); }}

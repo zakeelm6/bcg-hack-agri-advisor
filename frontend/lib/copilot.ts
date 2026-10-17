@@ -3,19 +3,25 @@ import { crops, type Key, type Lang, type Text } from "./i18n";
 
 export type Context = { profile: Profile; activities: Activity[]; tasks: Task[] };
 
-// Calls the backend AI orchestrator when NEXT_PUBLIC_API_URL is set; otherwise a local rule-based stand-in
-// so the full onboarding → advice → task → log → follow-up loop is demoable without a backend.
-// `lang` tells the backend which language to answer in (en | fr | ar).
+// Asks the backend (`POST {NEXT_PUBLIC_API_URL}/chat`): advice from the decision engine (satellite, sensors, weather, rules),
+// worded in `lang` (en | fr | ar | ary). If NEXT_PUBLIC_API_URL is not set, or the backend cannot be reached (offline, server down),
+// the local rule-based stand-in below answers so the loop onboarding → advice → task → log → follow-up always works.
 export async function askCopilot(question: string, photo: string | undefined, ctx: Context, lang: Lang): Promise<Advice> {
   const api = process.env.NEXT_PUBLIC_API_URL;
   if (api) {
-    const res = await fetch(`${api}/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, photo, context: ctx, lang }),
-    });
-    if (!res.ok) throw new Error(`Co-Pilot error ${res.status}`);
-    return res.json();
+    try {
+      const res = await fetch(`${api}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, photo, context: ctx, lang }),
+        signal: AbortSignal.timeout(25000),
+      });
+      if (!res.ok) throw new Error(`Co-Pilot error ${res.status}`);   // a real answer from the server (limit reached, bad question): show the error
+      return await res.json();
+    } catch (e) {
+      const unreachable = e instanceof TypeError || (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError"));
+      if (!unreachable) throw e;   // fall through to the local stand-in only when the server could not be reached
+    }
   }
   await new Promise((r) => setTimeout(r, 700));
   return mockAdvice(question, !!photo, ctx);

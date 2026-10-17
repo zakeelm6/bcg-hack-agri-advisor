@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useFarm, useT } from "@/lib/farm";
+import { intlLocale } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { IMAGERY_ATTR, staticMap, type LatLng } from "@/lib/map";
 
@@ -35,7 +36,7 @@ export default function FieldMap({ center }: { center?: LatLng }) {
         <h2 className="font-serif text-3xl">{t("myLand")}</h2>
         {ha > 0 && (
           <p className="text-end">
-            <span className="font-serif text-4xl leading-none">{ha.toLocaleString(lang)}</span>{" "}
+            <span className="font-serif text-4xl leading-none">{ha.toLocaleString(intlLocale(lang))}</span>{" "}
             <span className="text-lg text-muted">{t("hectares")}</span>
           </p>
         )}
