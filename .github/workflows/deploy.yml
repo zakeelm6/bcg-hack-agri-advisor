@@ -97,6 +97,14 @@ jobs:
           az containerapp update -g "$RESOURCE_GROUP" -n "$API_APP" --image "$REGISTRY/farm-final-api:${{ github.sha }}" --output none
           az containerapp update -g "$RESOURCE_GROUP" -n "$WEB_APP" --image "$REGISTRY/farm-final-web:${{ github.sha }}" --output none
 
+      - name: Check that Azure really runs this commit
+        run: |
+          for app in "$API_APP" "$WEB_APP"; do
+            img=$(az containerapp show -g "$RESOURCE_GROUP" -n "$app" --query "properties.template.containers[0].image" -o tsv)
+            echo "$app runs $img"
+            case "$img" in *":${{ github.sha }}") ;; *) echo "::error::$app does not run this commit"; exit 1;; esac
+          done
+
       - name: Health check
         run: |
           curl --fail --silent --show-error --retry 12 --retry-delay 10 --retry-all-errors "https://${{ vars.AZURE_API_FQDN }}/api/health"
