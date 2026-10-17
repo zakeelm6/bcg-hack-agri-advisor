@@ -1,0 +1,272 @@
+{
+ "phone-en-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-console": [
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+ ],
+ "desktop-en-home": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-field": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-task": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-me": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-console": [
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+ ],
+ "phone-fr-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-console": [
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+ ],
+ "desktop-fr-home": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-field": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-task": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-me": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-console": [
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+ ],
+ "phone-ar-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-console": [
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+ ],
+ "desktop-ar-home": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-field": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-task": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-me": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-console": [
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+ ]
+}

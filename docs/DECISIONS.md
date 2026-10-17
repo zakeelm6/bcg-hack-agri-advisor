@@ -13,8 +13,8 @@ Status of each decision: **Proposed** means it is my recommendation and needs th
 | D4 | Database: SQLite for development and the demo, PostgreSQL for production, through SQLAlchemy and Alembic | Proposed | Keeps the demo trivial and the production path open | The demo must survive restarts on several instances |
 | D5 | Season plan (Phase 4) and agent sandbox (Phase 5) are **out of scope until Phases 1 to 3 and 6 work** | Proposed | The core loop must work end to end first | The jury needs the sandbox demo earlier |
 | D6 | Azure target: Container Apps (two containers), PostgreSQL, Key Vault, Azure AI Speech, Azure OpenAI optional | Proposed | Matches what was said to be available; Speech is already coded | Subscription or quota differs |
-| D7 | `sensors/` and `satellite/` move under `backend/app/processing/` by pull request in Phase 2 | Proposed | One backend package, one test run | Meryy4 prefers separate packages |
-| D8 | The legacy vanilla app is frozen and renamed `frontend-legacy/` once the React app starts; deleted at parity | Proposed | Avoids two UIs diverging | n/a |
+| D7 | `sensors/` and `satellite/` move under `backend/app/processing/` by pull request in Phase 2 | **Applied locally** (Phase 2) | One backend package, one test run | Meryy4 prefers separate packages |
+| D8 | The legacy vanilla app is frozen and renamed `frontend-legacy/` once the React app starts; deleted at parity | **Applied locally** (renamed in Phase 3; parity in `PARITY.md`) | Avoids two UIs diverging | n/a |
 | D9 | The rule "code decides every number, the model only explains" stays | **Applied** | It is the core of the pitch and is tested | n/a |
 
 ## 2. Layout to reach
@@ -28,7 +28,7 @@ bcg-hack-agri-advisor/
   README.md  ROADMAP.md
 ```
 On GitHub today: `frontend/` is the Next.js app, `sensors/` and `satellite/` sit at the root, and the legacy app and the backend are on the
-branch `add-frontend2` under `frontend2/`. The local `finalproject/` folder already has the target shape, except for `frontend-legacy/`.
+branch `add-frontend2` under `frontend2/`. The local `finalproject/` folder has the target shape since Phase 3 (`frontend/` React, `frontend-legacy/` plain JavaScript).
 
 ## 3. Owners (suggested)
 

@@ -139,3 +139,14 @@ page in any language. Untouched: `engine.py`, `copilot.py`.
 - Real phone, real microphone, noisy place (V2), screen reader run, Arabic voice (needs Azure).
 - A native Arabic review of the new strings.
 - The 10 m Sentinel-2 picture is blurry at this zoom: a vector field outline would look better than the upscaled bitmap.
+
+---
+
+# React app (Phase 3), 17 October 2026
+
+The screens of the legacy app were ported to Next.js 15 / TypeScript / Tailwind 4 in `frontend/`, on the team's base (onboarding kept as the
+first screen). Screenshots of every route at 390 px and 1440 px in EN / FR / AR, the Copilot answer and the offline home: `2026-10-17-react/`
+(`measurements.json`: no horizontal overflow, no touch target under 44 px, no console error apart from the expected failed fetches while offline).
+The audit fixes of 16 October are built in from the start (keyboard-reachable pins and cards, 48 px targets, voice state line, honest labels,
+offline banner with the advice age, server-computed Sell values, "cannot do it" reasons, confirm before accepting an offer).
+Parity with the legacy app: [../PARITY.md](../PARITY.md). Not verified: a real phone, a real microphone, a screen reader.

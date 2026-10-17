@@ -8,7 +8,7 @@ when, why, how much it costs, how sure it is and what the plan B is. Then it fol
 
 ```
  FRONTEND  (what the farmer sees and hears)
-   web app: land view, "do this now", tasks, follow-up, sell, voice Copilot, English / French / Arabic, offline
+   React app (and the legacy web app): land view, "do this now", tasks, follow-up, sell, voice Copilot, English / French / Arabic, offline
         |                      HTTP / JSON
  BACKEND   (FastAPI: API, data, security)
    routes, SQLite, offline sync, brakes (rate limits), audit log, voice routes, serves the web app
@@ -22,7 +22,8 @@ Where each part lives in the code:
 
 | Layer | Folder | Main files |
 |---|---|---|
-| Frontend | [frontend/](frontend/) | `app.js`, `i18n.js`, `style.css`, `sw.js` |
+| Frontend (React) | [frontend/](frontend/) | Next.js 15, TypeScript, Tailwind 4: `app/` (screens), `components/` (land view, Copilot), `lib/` (typed API client, offline queue, voice hook, i18n) |
+| Frontend (legacy, served at `/`) | [frontend-legacy/](frontend-legacy/) | `app.js`, `i18n.js`, `style.css`, `sw.js`; stays until [docs/PARITY.md](docs/PARITY.md) is complete |
 | Backend | [backend/](backend/) | `app/api/routers/` (routes), `app/services/`, `app/db/` (models, migrations in `migrations/`), `app/schemas/`, `scripts/`, `tests/` |
 | Processing | [backend/app/processing/](backend/app/processing/) and [processing/](processing/) | `engine.py` (decisions), `copilot.py`, `llm.py`, `speech.py`, `geo.py` (weather), `sensors/` (quality flags, learned offset), `satellite/` (anomaly detection, zones); the notes are in `processing/` and [docs/SENSORS.md](docs/SENSORS.md) |
 
@@ -36,6 +37,7 @@ cd backend
 python -m pytest -q      # 84 tests (activate .venv first)
 ```
 Optional: copy `backend/.env.example` to `backend/.env` for a language model and for the Azure voice.
+React app: `cd frontend && npm install && npm run dev` (http://localhost:3000, talks to the API on 8000). The legacy app is at http://127.0.0.1:8000/.
 
 ## Read next
 
@@ -44,6 +46,7 @@ Optional: copy `backend/.env.example` to `backend/.env` for a language model and
 | [ROADMAP.md](ROADMAP.md) | The steps to go forward: React frontend, backend framework, everything working together |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Phase 0: decisions, owners, working rules, checklist |
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | The frozen API between frontend and backend (`backend/openapi.json`) |
+| [docs/PARITY.md](docs/PARITY.md) | React app against the legacy app: what is done, what is still open |
 | [processing/ai-and-internal-processing.md](processing/ai-and-internal-processing.md) | How the AI and the internal treatment work in a reference design (planning graph, daily loop, verifier) and what could be reused |
 | [processing/VOICE.md](processing/VOICE.md) | How the Copilot talks and listens, setup, tests, limits |
 | [processing/sensors-and-differentiators.md](processing/sensors-and-differentiators.md) | Which sensors, how to detect errors, ideas that differentiate the project |

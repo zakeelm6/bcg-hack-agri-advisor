@@ -9,7 +9,7 @@ plus the branch `add-frontend2`). Effort is given as S (hours), M (about a day),
 
 | Piece | Where | State |
 |---|---|---|
-| Working web app (plain JavaScript) | `frontend/` here, `frontend2/` on branch `add-frontend2` | Most complete UI: land picture with zones, "do this now", tasks and follow-up with undo, alerts, sell, soil tests, GPS, offline queue, voice Copilot, English / French / Arabic, accessibility pass |
+| Working web app (plain JavaScript) | `frontend-legacy/` here, `frontend2/` on branch `add-frontend2` | Most complete UI: land picture with zones, "do this now", tasks and follow-up with undo, alerts, sell, soil tests, GPS, offline queue, voice Copilot, English / French / Arabic, accessibility pass |
 | Decision engine, Copilot, voice, API | `backend/` here, `frontend2/app` on `add-frontend2` | FastAPI + SQLite. Rule engine (water balance, doses, caps), Copilot with number check, optional language model, Azure voice with browser fallback. 50 tests |
 | Next.js app "growmate" (3zden) | `frontend/` on `main` | React 19, Next 15, Tailwind 4, TypeScript. Onboarding (picture choices for low literacy), My Farm, Co-Pilot, Activities. Three languages (`lib/i18n.ts`), voice in the browser (`lib/voice.ts`), Dockerfile |
 | Sensor layer (Meryy4) | `sensors/`, `docs/SENSORS.md`, `test_sensors.py` on `main` | Simulator, quality checks (bounds, spikes, jumps, plateaus, rain consistency, frozen soil, depth order), drift detection against a water balance, sentinel selection and learned offset per plot |
@@ -99,18 +99,19 @@ and [docs/ux/CHANGELOG.md](docs/ux/CHANGELOG.md). Open: real phone and microphon
 5. ~~Cross-layer tests.~~ **Done:** `tests/test_layers.py` (7 tests): flagged sensor -> no dose, Low, "Sensor unreliable" alert; a sample beats the flagged sensor; offsets; anomaly task; the same through the API.
 6. Done when: with a faulty simulated sensor the app says it cannot be sure and shows why (**yes**: moisture "?", Low, reason with the flag codes, red "!" on the map), and with an anomaly it points to the zone (**yes**). Open: the soil texture of the node is assumed loam; the sentinel is the nearest sensor (not `choose_sentinel`, which needs 20 aligned pairs); flag codes are shown raw (C02, D06) next to the explanation.
 
-### Phase 3: React frontend (L)
-Port in this order; each step ends with the screen working against the real API in three languages.
-1. Shell: API client, data cache, language switch with right-to-left, navigation. Use the team's onboarding as the first screen.
-2. Home: land view with zones, sensor dots and task pins, the "do this now" card, and the Copilot docked next to it.
-3. Tasks, task detail with confidence and plan B, follow-up with photo, undo after "done".
-4. Field: weather, soil test form, vigor over time chart, GPS and walking the field edge.
-5. Alerts and Sell.
-6. Farmer profile (crop, sowing date, area, soil, irrigation, water source) saved to the backend and used by the engine instead of the demo values.
-7. Offline: service worker, IndexedDB queue, replay through `/api/sync`, calm offline banner.
-8. Voice: `useVoice` with Azure first and the browser as fallback, talk mode, commands, "Listen" on a task (see `processing/VOICE.md`).
-9. Accessibility and UX pass with `docs/prompts/ux-redesign.md`, screenshots before and after.
-10. Parity checklist against the legacy app, then remove it.
+### Phase 3: React frontend (L) - built locally, branch `phase2/ux-fixes`; parity checklist in [docs/PARITY.md](docs/PARITY.md)
+Built on the team's Next.js app (onboarding, `i18n.ts`, `farm.tsx` kept; My Farm, Co-Pilot and Activities moved to `frontend/_archive-team/`).
+The legacy app moved to `frontend-legacy/` and is still served by the API at `/`.
+1. ~~Shell~~ **Done:** typed client generated from `openapi.json` (`npm run types`), TanStack Query, language switch with RTL, six-tab navigation, onboarding as the first screen (skippable).
+2. ~~Home~~ **Done:** land view as an SVG over the Sentinel-2 picture (zones, layers, pins, sensors, anomaly cells, honest labels), "do this now", Copilot docked.
+3. ~~Tasks, task detail, follow-up~~ **Done** with confidence, plan B, undo, reasons for "cannot do it", photo notes.
+4. ~~Field~~ **Done:** weather, soil test form, vigor chart. GPS and walking the field edge: **open** (legacy About page only).
+5. ~~Alerts and Sell~~ **Done** (server-computed values, confirm before accept).
+6. Farmer profile saved to the backend and used by the engine: **open** (needs the `/api/farmer` contract addition; the answers stay on the phone).
+7. ~~Offline~~ **Done** with a service worker and a localStorage queue replayed through `/api/sync`; IndexedDB **open**.
+8. ~~Voice~~ **Done in code:** `useVoice` (Azure first, browser fallback, adaptive loudness, every state visible, talk mode, commands). **Not verified** with a microphone or an Azure key.
+9. Accessibility and UX pass: measured at 390 and 1440 px in three languages: no overflow, no target under 44 px, no console error (`docs/ux/2026-10-17-react/`). Screen reader and real phone: **open**.
+10. Parity checklist: written, 3 rows open; the legacy app stays.
 
 ### Phase 4: farmer profile and season plan (optional, M to L)
 From `processing/ai-and-internal-processing.md`: a farmer form with "needs input" questions when an answer is missing, a season

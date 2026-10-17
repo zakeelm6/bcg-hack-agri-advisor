@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     db: str = os.path.join(BACKEND_DIR, "farm_advisor.db")      # path of the SQLite file (development and demo)
     database_url: str | None = None                              # full SQLAlchemy URL, for example PostgreSQL in production
-    static_dir: str = os.path.abspath(os.path.join(BACKEND_DIR, "..", "frontend"))   # the legacy web app, served at "/"
+    static_dir: str = os.path.abspath(os.path.join(BACKEND_DIR, "..", "frontend-legacy"))   # the legacy web app, served at "/" until the React app reaches parity
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"                # comma separated, for the React app in development
     max_photo_chars: int = 400_000
     copilot_calls_per_minute: int = Field(30, ge=1)              # brake that protects a paid model key

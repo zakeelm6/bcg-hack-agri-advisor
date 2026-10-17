@@ -102,7 +102,7 @@ def save_land_image(lat, lon, scene_hint=None):
         bands.append(np.clip(dn * sc + off, 0, 1))
     refl = np.stack(bands, axis=-1)
     img = np.clip((refl / 0.28) ** 0.8, 0, 1)                      # gain and gamma for a natural look
-    out_dir = os.environ.get("FA_STATIC_DIR") or os.path.join(ROOT, "..", "frontend")   # the land picture is part of the web app
+    out_dir = os.environ.get("FA_STATIC_DIR") or os.path.join(ROOT, "..", "frontend-legacy")   # the land picture is served by the API as /static/land.png
     open(os.path.join(out_dir, "land.png"), "wb").write(_png((img * 255).astype("uint8")))
     meta = {"date": it.datetime.date().isoformat(), "side_m": LAND_SIDE_M, "field_side_m": SIDE_M, "scene": it.id,
             "source": "Sentinel-2 L2A true colour, 10 m pixels", "px": int(LAND_SIDE_M // 10)}
@@ -164,7 +164,7 @@ def main():
         sys.exit("No zone had enough clear pixels. The database was not changed.")
     try:
         meta = save_land_image(data["lat"], data["lon"])
-        print(f"Land picture saved: frontend/land.png ({meta['date']}, {meta['px']}x{meta['px']} px)" if meta else "No clear scene for the land picture.")
+        print(f"Land picture saved: frontend-legacy/land.png ({meta['date']}, {meta['px']}x{meta['px']} px)" if meta else "No clear scene for the land picture.")
     except Exception as e:  # the picture is optional: the app falls back to a plain background
         print(f"Land picture skipped ({type(e).__name__}: {e})")
     print("Database updated:")

@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* Farm Advisor tokens: a field tool, not a dashboard. Deep agri green bars with warm cream text, 17 px base for sunlight,
+   semantic names so dark mode is one block. Logical properties only (Arabic is right to left). */
+@theme inline {
+  --color-paper: #F7EDD8;        /* text on green bars, and the cream surface */
+  --color-surface: #F7EDD8;
+  --color-page: #CBE6D2;
+  --color-card: #F7EDD8;
+  --color-soft: #F2FAF4;
+  --color-ink: #1B2917;
+  --color-muted: #51624B;
+  --color-line: #E3DAF5;
+  --color-leaf: #2F5429;
+  --color-leaf-dark: #223E1E;
+  --color-leaf-soft: #E4EFE2;
+  --color-sun: #E9A23B;
+  --color-violet: #5B3FA8;
+  --color-violet-soft: #ECE6FA;
+  --color-violet-line: #E3DAF5;
+  --font-sans: var(--font-geist-sans), "Segoe UI", system-ui, sans-serif;
+}
+@custom-variant dark (&:where(.dark, .dark *));
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-page: #141C11; --color-surface: #202B1A; --color-card: #202B1A; --color-soft: #2B3823;
+    --color-ink: #EDF4E6; --color-muted: #AFBDA6; --color-leaf-dark: #1C3318;
+    --color-violet-soft: #2C2544; --color-violet-line: #45396B; --color-violet: #8C74D8;
+  }
+}
+@media (prefers-contrast: more) { :root { --color-ink: #0C130A; --color-muted: #32402D; --color-surface: #FFF9EA; --color-card: #FFF9EA; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+html, body { margin: 0; background: var(--color-surface); color: var(--color-ink); }
+body { font-size: 17px; line-height: 1.5; overflow-x: hidden; }
+input, select, textarea { font-size: 16px; }   /* stops iOS zoom on focus */
+:focus-visible { outline: 3px solid var(--color-sun); outline-offset: 2px; border-radius: 4px; }
+button { cursor: pointer; }
+button:active:not([disabled]) { transform: scale(.97); }
+
+/* Latin fonts have no Arabic glyphs: switch the whole page when Arabic is chosen. */
+:root[lang="ar"] body { font-family: var(--font-arabic), sans-serif; }
+
+@layer components {
+  .card { @apply mb-3 rounded-3xl bg-card px-[18px] py-4; }
+  .btn { @apply inline-flex min-h-[58px] w-full items-center justify-center gap-2 rounded-full bg-leaf px-4 text-lg font-bold text-paper hover:bg-leaf-dark disabled:opacity-45; }
+  .btn-sec { @apply inline-flex min-h-[58px] w-full items-center justify-center gap-2 rounded-full border-[2.5px] border-leaf bg-transparent px-4 text-lg font-bold text-leaf hover:bg-soft disabled:opacity-45; }
+  .btn-sm { @apply min-h-12 w-auto px-5 text-base; }
+  .btn-ghost { @apply rounded-xl border border-line bg-card px-4 py-3 font-medium active:scale-[.98]; }
+  .field { @apply w-full rounded-2xl border-2 border-transparent bg-soft px-[18px] py-[15px] text-base text-ink outline-none focus:border-leaf; }
+  .label { @apply text-xs font-bold uppercase tracking-[.08em] text-leaf; }
+  .sub { @apply text-sm leading-[1.45] text-muted; }
+  .chip { @apply inline-flex min-h-12 min-w-12 items-center justify-center gap-1.5 rounded-full bg-soft px-4 text-sm font-semibold text-leaf; }
+  .chip-on { @apply bg-leaf text-paper; }
+  .chip-big { @apply min-h-[52px] min-w-16 text-lg; }
+  .pill { @apply inline-flex min-h-7 items-center rounded-full bg-sun px-3 text-xs font-bold text-amber-950; }
+  .pill-dk { @apply bg-leaf text-paper; }
+  .pill-ol { @apply border-[1.5px] border-leaf bg-soft text-leaf; }
+  .pagetitle { @apply mb-3 text-[27px] font-bold text-leaf md:text-[31px]; }
+  .grid2 { @apply md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-start md:gap-6; }
+}
+details > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 48px; font-weight: 700; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::after { content: "+"; color: var(--color-leaf); font-size: 22px; line-height: 1; }
+details[open] > summary::after { content: "\2212"; }
+details { border-top: 1.5px solid var(--color-page); padding: 2px 0; }
+details:first-of-type { border-top: 0; }
