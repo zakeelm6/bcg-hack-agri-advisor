@@ -40,14 +40,14 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - Decide with Meryy4 what happens to the root `sensors/` and `satellite/` (the backend carries tested copies in `backend/app/processing/`): one copy, moved by pull request.
 - Done when: the branch is merged or agreed, CI (`backend.yml`) runs on GitHub.
 
-### Step 1: his onboarding feeds the engine (M)
+### Step 1: his onboarding feeds the engine (M) - DONE on branch `step1/profile-to-engine` (see section 9)
 - After the six questions (and on every "Edit"), send the answers to `POST /api/farmer` (crop, planting date, area, irrigation, challenge, position). Keep the local copy as the source of truth; if offline, send later.
 - Show what the engine actually used ("Used by the advice: crop, planting date, area"): the backend already returns it (`profileApplied`).
 - Fix the geolocation button while here: guard `navigator.geolocation`, ask for high accuracy with a fallback, timeout on the town lookup, a different message for "permission refused".
 - Privacy: the town lookup sends the position to a third party. Offer the lookup through our backend, or say it plainly.
 - Done when: changing the crop in "Edit" changes the engine's advice the next time the Co-Pilot answers.
 
-### Step 2: "Do this now" inside My Farm (M)
+### Step 2: "Do this now" inside My Farm (M) - DONE on branch `step2/do-this-now` (see section 9)
 - On My Farm, above his weather: one large card with the engine's top task as a picture, a short title, when, and how sure we are (a three-step meter with a word). One tap opens the detail.
 - Replace his local "Today" list by the engine's tasks (his checkbox row stays, fed by `/api/state`). Keep his `Task` shape in the UI; map the engine fields to it.
 - Task detail, picture-first: what, when, cost, plan B behind "Why?", and two big buttons: **Done** and **Can't** (reasons as pictures: no water, no time, not needed). **Undo** for six seconds after Done.
@@ -138,3 +138,38 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 | His voice-first screens regress when ours replaces them | Keep his tests scenario (Step 11) and review each screen with him |
 | Two code bases drift | One repository, pull requests, the contract test, CI on both sides |
 | Satellite jobs are slow or empty (clouds) | Honest waiting and "no clear picture yet" states; weather-only advice meanwhile |
+
+## 9. Progress log
+
+### Step 1 done: his onboarding feeds the engine
+- The answers (town, crop, planting date, area, irrigation, worry, position) are sent to `POST /api/farmer` whenever the profile is saved (end of the six
+  questions, "Edit", drawing the field boundary). The phone keeps its copy; if the server cannot be reached the profile is marked "waiting to be sent" and goes
+  when the connection is back (the `online` event, or the next start). A refusal by the server is not retried in a loop.
+- My Farm shows what the engine did, in the farmer's language: "Used by the advice: main crop, planting date, field size", then the honest notes the server
+  returns (the position still belongs to the demo parcel; irrigation method and main worry are stored but not used by the rules yet).
+- The geolocation button is hardened: a missing `navigator.geolocation` no longer leaves it stuck on "Finding you..."; the GPS is asked first with high accuracy and a rough
+  position is accepted if it does not answer in 10 s; a refusal is final and has its own message (how to allow it); the town lookup waits at most 6 s, then shows coordinates.
+- Privacy: the town lookup goes through `GET /api/geo/place` (our server asks the place-name service, with a small cache). Without a backend the app asks the service directly, as before.
+- New files: `frontend/lib/api.ts` (backend client), `backend/app/services/places.py`, `backend/app/api/routers/places.py`, `backend/tests/test_places.py` (5 tests).
+- Checked: backend tests (100), TypeScript, the Darija check, and in a browser against the running backend: GPS with a failed first try then a rough position (2 calls),
+  refusal (1 call, own message), no geolocation (message, button usable, no error), the crop changed in the engine after onboarding (Tomato, then Wheat after an edit),
+  an edit made while the server was stopped stayed on the phone and reached the engine after the connection came back, and the notes shown on My Farm.
+- Not done in Step 1: the engine still works on the demo parcel (Step 4); irrigation method and main worry do not change the rules yet; the profile is one per server (Step 8).
+
+### Step 2 done: "Do this now" inside My Farm
+- A new card at the top of My Farm (`frontend/app/farm/engine-card.tsx`, data in `frontend/lib/engine.ts`): the engine's most urgent task as a picture (water, fertilizer or a visit),
+  its title, when, and how sure we are (three bars plus a word, never colour alone), a speaker button that reads it aloud, a "Why?" fold-out (why, cost, how sure and why, plan B),
+  and two big answers: **Done** and **Cannot do it** (then three picture reasons: no water or product, no time, not needed). "+N more today" lists the other tasks, each opening the same way.
+  When there is nothing to do it says so calmly.
+- **Done** adds the matching entry to his Activities by itself (watered, or other work for fertilizer) and shows "Done: ..." with **Undo** for 6 seconds (undo reopens the task and removes the entry).
+  **Cannot do it** stores the reason with the answer (an observation on the server) for the next steps.
+- The farmer's answers go through the same replay route as everything offline (`POST /sync`). The screen changes at once; if the server cannot be reached the answer waits in a small queue on the phone
+  (`growmate-queue`) and is sent, in order, when the connection is back. The last advice is kept on the phone (`growmate-engine`) and shown with "Saved advice (no connection)".
+- Honest label under the card: "This advice is for the demo field (satellite picture and simulated sensors)" until Step 4 makes the field the farmer's own.
+- **Decision that differs from the plan:** his own "Today" list (tasks the farmer saves from the Co-Pilot) stays as it is, below, instead of being replaced; the engine's tasks sit above it in the new card.
+  Two lists of different origin, one on top of the other, lose nothing; merging them is a design choice for Step 9.
+- Without `NEXT_PUBLIC_API_URL` the card is not shown and the app is exactly what it was.
+- Checked in a browser against the running backend: card on My Farm, details, Done (server 1:done, activity added), Undo (server back to open, activity removed), Cannot do it with a reason
+  (server: skipped), the hero moving to the next task each time, an answer given while the server was stopped (queued, then delivered after the `online` event, queue empty), a reload with the server down
+  (cached advice and the "saved advice" note), and Darija right to left. TypeScript, the Darija check, a production build and the backend tests pass.
+- Not done: a task answered on one phone is not shown on another (Step 8); no automated front-end tests yet (Step 11); the activity entry keeps the language the task title had when it was done.

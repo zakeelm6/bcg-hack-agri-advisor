@@ -246,3 +246,8 @@ class FarmerOut(Loose):
     profile: dict | None = None
     applied: dict = {}
     not_applied: list[str] = []
+
+
+class PlaceOut(Loose):
+    """The town name at a position, or null when the name service did not answer."""
+    place: str | None = None

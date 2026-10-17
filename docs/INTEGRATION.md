@@ -30,7 +30,7 @@ Backend tests (95), TypeScript, the Darija check, and in a browser: Darija welco
 "واش نسقي اليوم؟" with the engine's task (irrigate zone D, 20 mm, time, pump cost, plan B) in his answer card.
 
 ## Known gaps (next stages)
-1. The engine still works on its demo parcel: his profile (town, GPS, crop, planting date, area) stays on the phone. The backend already has `GET/POST /api/farmer` (see `docs/API_CONTRACT.md`); his onboarding does not call it yet.
+1. The engine still works on its demo parcel. His profile now reaches the engine (crop, planting date, area; Step 1, see `docs/ROADMAP-TEAM-FRONTEND.md` section 9) but the position and the field outline do not move the parcel yet (Step 4).
 2. His My Farm "Today" list and Activities are local; the engine's tasks (with confidence and plan B) are not shown there yet.
 3. The land view (Sentinel-2 picture with zones, sensors and anomalies) is not in his My Farm yet; his Photo / Measure / 3D map is.
 4. Voice is still the browser's own in his app; the Azure server voice, talk mode and commands are not ported.

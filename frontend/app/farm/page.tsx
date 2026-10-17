@@ -6,6 +6,7 @@ import { daysSince, today, useFarm, useT, useTx, type Profile, type Task } from 
 import { activityTypes, cropIcon, cropName, intlLocale, irrigations } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { PhotoCardBody, photoCard, starters } from "@/lib/starters";
+import EngineCard from "./engine-card";
 import FieldMap from "./field-map";
 
 type Weather = { lat: number; lon: number; place: string; temp: number; days: { date: string; max: number; min: number; rain: number; code: number }[] };
@@ -36,7 +37,7 @@ async function getWeather(p: Profile, lang: string): Promise<Weather | null> {
 const sky = (c: number) => c === 0 ? "field-sun" : c <= 2 ? "cloud-sun" : c === 3 ? "cloud" : c <= 48 ? "fog" : c <= 67 || (c >= 80 && c <= 82) ? "rain" : c <= 86 ? "snow" : "storm";
 
 export default function MyFarm() {
-  const { profile: p, tasks, activities, toggleTask, lang } = useFarm();
+  const { profile: p, sync, tasks, activities, toggleTask, lang } = useFarm();
   const t = useT();
   const tx = useTx();
   const [weather, setWeather] = useState<Weather | null | "error">();
@@ -60,6 +61,16 @@ export default function MyFarm() {
     p?.location && ["pin", p.location],
   ].filter(Boolean) as [string, string][];
 
+  // What the engine did with the answers: honest about what it used and what it did not (for example: still the demo parcel).
+  const used = Object.keys(sync?.applied ?? {}).map((k) => ({ crop: t("m_crop"), sowing_date: t("m_planted"), area_ha: t("m_area") })[k as "crop"]).filter(Boolean);
+  const engineNotes = sync ? (
+    <div className="mt-4 space-y-1.5 text-base text-muted" aria-live="polite">
+      {sync.pending && <p className="flex items-center gap-2"><Icon name="hourglass" className="h-4 w-4 shrink-0" />{t("waitingSync")}</p>}
+      {!sync.pending && used.length > 0 && <p className="flex items-center gap-2"><Icon name="check" className="h-4 w-4 shrink-0 text-leaf" />{t("profileApplied", { what: used.join(", ") })}</p>}
+      {!sync.pending && (sync.notApplied ?? []).map((n) => <p key={n} className="flex items-start gap-2"><Icon name="alert" className="mt-1 h-4 w-4 shrink-0 text-sun" />{n}</p>)}
+    </div>
+  ) : null;
+
   const taskRow = (x: Task, overdue = false) => (
     <li key={x.id} className="py-1">
       <label className="flex cursor-pointer items-start gap-4 py-2.5">
@@ -78,7 +89,9 @@ export default function MyFarm() {
   );
 
   return (
-    <div className="grid gap-x-16 gap-y-12 pt-4 lg:grid-cols-2">
+    <div className="pt-4">
+    <EngineCard />
+    <div className="grid gap-x-16 gap-y-12 lg:grid-cols-2">
       <div className="space-y-12">
         <section>
           <img src="/images/field-drip.webp" alt="" width={960} height={640} className="mb-6 aspect-[21/9] w-full rounded-2xl object-cover" />
@@ -90,6 +103,7 @@ export default function MyFarm() {
             {facts.map(([icon, label]) => <li key={icon} className="flex items-center gap-2"><Icon name={icon} className="h-5 w-5 text-muted" />{label}</li>)}
             <li><Link href="/?edit" className="inline-flex items-center gap-1 font-medium text-leaf underline underline-offset-4"><Icon name="pencil" className="h-4 w-4" />{t("edit")}</Link></li>
           </ul>
+          {engineNotes}
         </section>
 
         <FieldMap center={p?.lat !== undefined && p.lon !== undefined ? [p.lat, p.lon] : weather && weather !== "error" ? [weather.lat, weather.lon] : undefined} />
@@ -178,6 +192,7 @@ export default function MyFarm() {
           <Link href="/activities" className="mt-4 inline-block font-medium text-leaf underline underline-offset-4">{t("recordWhat")}</Link>
         </section>
       </div>
+    </div>
     </div>
   );
 }
