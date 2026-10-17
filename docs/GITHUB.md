@@ -2,6 +2,8 @@
 
 How to publish `finalproject` safely, keep it clean, and work on it with branches and pull requests. Written for this repository: the work is on the branch `ux/pro-polish` (and `chore/deploy-and-clean` for the deployment files), the `main` branch is older, and there is **no remote yet**.
 
+> **State on 17 October 2026:** `finalproject` was pushed to the team repository `github.com/zakeelm6/bcg-hack-agri-advisor` as the branch **`final-project`** (its history is unrelated to the team's `main`, which was left untouched). The local branch `chore/deploy-and-clean` tracks it. Sections 2 and 3 below describe the other option, a repository of its own.
+
 ## 1. Before the first push: check there is no secret
 
 A repository on GitHub keeps its whole history. A key pushed once must be treated as leaked, even if you delete it afterwards.
