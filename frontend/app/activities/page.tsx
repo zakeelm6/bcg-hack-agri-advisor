@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { today, useFarm, useT, type ActivityType } from "@/lib/farm";
-import { activityTypes } from "@/lib/i18n";
+import { activityTypes, intlLocale } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 
 const yesterday = () => new Date(Date.now() - 864e5).toISOString().slice(0, 10);
@@ -87,8 +87,8 @@ function Activities() {
                   <span>{t(label(a.type).key)}{a.note && <span className="text-muted">, {a.note}</span>}</span>
                 </span>
                 <span className="shrink-0 text-end text-muted">
-                  {new Date(`${a.date}T00:00`).toLocaleDateString(lang, { month: "short", day: "numeric" })}
-                  {a.cost !== undefined && <span className="block font-medium text-ink">{a.cost.toLocaleString(lang)}</span>}
+                  {new Date(`${a.date}T00:00`).toLocaleDateString(intlLocale(lang), { month: "short", day: "numeric" })}
+                  {a.cost !== undefined && <span className="block font-medium text-ink">{a.cost.toLocaleString(intlLocale(lang))}</span>}
                 </span>
               </li>
             ))}

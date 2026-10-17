@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useFarm, useT } from "@/lib/farm";
-import { langs } from "@/lib/i18n";
+import { isRtl, langs } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 
 const nav = [
@@ -26,7 +26,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.documentElement.dir = isRtl(lang) ? "rtl" : "ltr";
   }, [lang]);
 
   if (!ready || (!profile && !onboarding)) return null;
@@ -41,7 +41,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {langs.map((l) => (
             <button key={l.id} type="button" onClick={() => setLang(l.id)} aria-pressed={lang === l.id} lang={l.id}
               className={`rounded-lg px-2.5 py-1.5 text-sm ${lang === l.id ? "bg-leaf-soft font-semibold text-leaf" : "hover:bg-card"}`}>
-              {{ ar: "عربي", fr: "FR", en: "EN" }[l.id]}
+              {{ ar: "عربي", ary: "دارجة", fr: "FR", en: "EN" }[l.id]}
             </button>
           ))}
         </div>

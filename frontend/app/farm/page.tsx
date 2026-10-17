@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { daysSince, today, useFarm, useT, useTx, type Profile, type Task } from "@/lib/farm";
-import { activityTypes, cropIcon, cropName, irrigations } from "@/lib/i18n";
+import { activityTypes, cropIcon, cropName, intlLocale, irrigations } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { PhotoCardBody, photoCard, starters } from "@/lib/starters";
 import FieldMap from "./field-map";
@@ -40,7 +40,7 @@ export default function MyFarm() {
   const t = useT();
   const tx = useTx();
   const [weather, setWeather] = useState<Weather | null | "error">();
-  const day = (d: string, o: Intl.DateTimeFormatOptions) => new Date(`${d}T00:00`).toLocaleDateString(lang, o);
+  const day = (d: string, o: Intl.DateTimeFormatOptions) => new Date(`${d}T00:00`).toLocaleDateString(intlLocale(lang), o);
   const short = (d: string) => day(d, { month: "short", day: "numeric" });
   const rain = (mm: number) => (mm > 0 ? t("rainMm", { mm }) : t("dry"));
 

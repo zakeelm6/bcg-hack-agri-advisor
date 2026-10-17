@@ -1,0 +1,65 @@
+"""The farmer's profile (onboarding answers) and how it reaches the engine.
+
+What the engine can use today: crop (for the harvest reference yield), sowing date, field area (split evenly over the four zones).
+What it cannot use yet: the position. The satellite data and the picture belong to the parcel that was downloaded
+(scripts/fetch_satellite.py); moving the field without new imagery would show one place and compute on another, so the
+position is stored but the field stays where its data is. The answer says so.
+"""
+from sqlalchemy import delete, select
+from sqlalchemy.orm import Session
+
+from ..db import models as m
+from ..schemas import requests as rq
+from .common import ar_fallback, as_dict, now_iso
+
+# app keys -> the crop names the engine knows (YIELD_T_HA); anything else is kept as typed, capitalised
+CROP_KEYS = {"tomatoes": "Tomato", "potatoes": "Potato", "onions": "Onion", "wheat": "Wheat", "olives": "Olive", "citrus": "Citrus", "maize": "Maize", "melons": "Melon"}
+
+NOT_APPLIED = {
+    "en": {"pos": "Position: the satellite data is for the demo parcel. Run scripts/fetch_satellite.py for your field to move it.",
+           "irr": "Irrigation method and main worry: stored, not used by the rules yet."},
+    "fr": {"pos": "Position : les données satellite sont celles de la parcelle de démonstration. Lancez scripts/fetch_satellite.py pour votre champ.",
+           "irr": "Méthode d'irrigation et préoccupation : enregistrées, pas encore utilisées par les règles."},
+    "ar": {"pos": "الموقع: بيانات القمر الصناعي تخص القطعة التجريبية. شغّل scripts/fetch_satellite.py لحقلك لنقله.",
+           "irr": "طريقة السقي والهمّ الرئيسي: محفوظان، ولا تستخدمهما القواعد بعد."},
+}
+
+
+def get(db: Session) -> dict | None:
+    f = db.get(m.Farmer, 1)
+    return as_dict(f) if f else None
+
+
+def save(db: Session, b: rq.FarmerBody) -> dict:
+    row = db.get(m.Farmer, 1)
+    if row is None:
+        row = m.Farmer(id=1)
+        db.add(row)
+    for k in ("location", "crop", "planted_on", "area_ha", "irrigation", "challenge", "lat", "lon", "lang"):
+        setattr(row, k, getattr(b, k))
+    row.updated_at = now_iso()
+    lang = ar_fallback(b.lang) if ar_fallback(b.lang) in NOT_APPLIED else "en"
+    field = db.get(m.Field, 1)
+    applied, not_applied = {}, []
+    if b.crop:
+        key = b.crop.strip().lower()
+        field.crop = CROP_KEYS.get(key, b.crop.strip()[:1].upper() + b.crop.strip()[1:])
+        applied["crop"] = field.crop
+    if b.planted_on:
+        field.sowing_date = b.planted_on
+        applied["sowing_date"] = b.planted_on
+    if b.area_ha:
+        field.area_ha = round(b.area_ha, 2)
+        zones = db.scalars(select(m.Zone).where(m.Zone.field_id == 1)).all()
+        for z in zones:
+            z.area_ha = round(b.area_ha / len(zones), 3)
+        applied["area_ha"] = field.area_ha
+    if b.lat is not None or b.location:
+        not_applied.append(NOT_APPLIED[lang]["pos"])
+    if b.irrigation or b.challenge:
+        not_applied.append(NOT_APPLIED[lang]["irr"])
+    db.execute(delete(m.Task).where(m.Task.status == "open"))   # the advice is rebuilt on the new field facts
+    db.commit()
+    from .advice import refresh_advice
+    refresh_advice(db)
+    return {"saved": True, "profile": as_dict(row), "applied": applied, "not_applied": not_applied}
