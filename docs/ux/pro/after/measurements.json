@@ -1,0 +1,494 @@
+{
+ "phone-en-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-light-console": [],
+ "desktop-en-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-en-light-console": [],
+ "phone-en-dark-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-en-dark-console": [],
+ "phone-fr-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-light-console": [],
+ "desktop-fr-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-fr-light-console": [],
+ "phone-fr-dark-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-fr-dark-console": [],
+ "phone-ar-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-light-console": [],
+ "desktop-ar-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ar-light-console": [],
+ "phone-ar-dark-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ar-dark-console": [],
+ "phone-ary-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-light-console": [],
+ "desktop-ary-light-home": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-field": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-task": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-me": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "desktop-ary-light-console": [],
+ "phone-ary-dark-home": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-field": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-tasks": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-task": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-follow": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-soil": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-alerts": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-sell": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-me": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-onboarding": {
+  "overflow": false,
+  "small": []
+ },
+ "phone-ary-dark-console": []
+}

@@ -52,6 +52,7 @@ Palettes: light (default), **dark** (`html.dark`: green-black surfaces, warm off
 5. Every string exists in `en`, `fr`, `ar`, `ary` (`node lib/i18n.check.mjs`).
 6. Touch targets 44 px minimum, 48 px preferred; focus rings two-tone so they show on amber and on green.
 
-## Status
-Foundations and components: done (17 October 2026). Screens are redesigned one by one in `ux/pro/CHANGELOG` order; until a
-screen is moved, it runs on temporary alias tokens and `.card/.btn` classes at the end of `globals.css`, which are removed last.
+## Screens on the system (17 October 2026)
+Home, Tasks, Task detail, Follow-up, Field, Soil test, Sell, Alerts, Me, Onboarding, Copilot, shell. No alias tokens or one-off classes remain.
+Templates: `PageTitle` (title, optional back and sub-line), `TwoCol` (main + side on wide screens), `LandCard`, `Section` in Me.
+Per-screen notes and the verification log: [ux/CHANGELOG.md](ux/CHANGELOG.md).

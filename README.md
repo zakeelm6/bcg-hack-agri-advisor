@@ -48,6 +48,7 @@ React app: `cd frontend && npm install && npm run dev` (http://localhost:3000, t
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Phase 0: decisions, owners, working rules, checklist |
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | The frozen API between frontend and backend (`backend/openapi.json`) |
 | [docs/PARITY.md](docs/PARITY.md) | React app against the legacy app: what is done, what is still open |
+| [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Tokens, type, components, themes of the React app (`/design` page) |
 | [processing/ai-and-internal-processing.md](processing/ai-and-internal-processing.md) | How the AI and the internal treatment work in a reference design (planning graph, daily loop, verifier) and what could be reused |
 | [processing/VOICE.md](processing/VOICE.md) | How the Copilot talks and listens, setup, tests, limits |
 | [processing/sensors-and-differentiators.md](processing/sensors-and-differentiators.md) | Which sensors, how to detect errors, ideas that differentiate the project |

@@ -15,6 +15,8 @@ npm run typecheck
 ```
 Another port: `npx next start -p 3100` and `FA_CORS_ORIGINS=...,http://localhost:3100` on the backend.
 
+Design system: `../docs/DESIGN_SYSTEM.md`; living page at `/design` (`npm run dev`, or a build with `NEXT_PUBLIC_SHOW_DESIGN=1`).
+
 ## Layout
 ```
 app/            page.tsx (onboarding, first screen)  home/  field/  field/soil/[zone]/  tasks/  tasks/[id]/  tasks/[id]/follow/  alerts/  sell/  me/
