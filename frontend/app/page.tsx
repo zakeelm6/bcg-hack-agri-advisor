@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { API, get } from "@/lib/api";
 import { useFarm, useT, type Profile } from "@/lib/farm";
 import { challenges, cropName, crops, irrigations, langs, plantedChoices, tr, type Key } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
@@ -10,10 +11,30 @@ import { speak } from "@/lib/voice";
 const blank: Profile = { location: "", crop: "", plantedOn: "", area: "", irrigation: "", challenge: "" };
 const weeksAgo = (w: number) => new Date(Date.now() - w * 7 * 864e5).toISOString().slice(0, 10);
 
-// Reverse-geocodes GPS to a town name (BigDataCloud client endpoint: free, keyless, only called when the farmer taps the button).
+// Name of the town at a position. With a backend it asks our server (the position goes from there, not from the phone, to the
+// place-name service); without one it asks the service directly. Never waits long: after 6 s the coordinates are shown instead.
 async function townAt(lat: number, lon: number, lang: string) {
-  const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`).then((x) => x.json());
-  return r.city || r.locality || r.principalSubdivision || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+  if (API) {
+    const r = await get<{ place: string | null }>(`/geo/place?lat=${lat}&lon=${lon}&lang=${lang}`, 6000);
+    if (r.place) return r.place;
+  } else {
+    const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`, { signal: AbortSignal.timeout(6000) }).then((x) => x.json());
+    const name = r.city || r.locality || r.principalSubdivision;
+    if (name) return name as string;
+  }
+  return `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+}
+
+// A field needs a good fix: ask for the GPS first, and if it does not answer in time (indoors) accept a rough position.
+// A refusal by the farmer is final: no second try.
+const askPosition = (opts: PositionOptions) => new Promise<GeolocationPosition>((ok, no) => navigator.geolocation.getCurrentPosition(ok, no, opts));
+async function position() {
+  try {
+    return await askPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  } catch (e) {
+    if ((e as GeolocationPositionError).code === 1) throw e;
+    return askPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+  }
 }
 
 function Onboarding() {
@@ -23,7 +44,7 @@ function Onboarding() {
   const [p, setP] = useState<Profile>(profile ?? blank);
   const edit = useSearchParams().has("edit");
   const [step, setStep] = useState(edit ? 0 : -1); // -1 = welcome screen
-  const [locating, setLocating] = useState<"" | "busy" | "failed">("");
+  const [locating, setLocating] = useState<"" | "busy" | "failed" | "denied">("");
 
   // Returning farmers land on My Farm; the welcome + questions are for new users or ?edit.
   useEffect(() => { if (profile && !edit) router.replace("/farm"); }, [profile, edit, router]);
@@ -65,17 +86,17 @@ function Onboarding() {
 
   // Plain render functions, not components: a component defined in here would remount and drop input focus on every keystroke.
   function location() {
-    function locate() {
+    async function locate() {
+      if (!("geolocation" in navigator)) return setLocating("failed"); // some in-app browsers have none: say so instead of waiting forever
       setLocating("busy");
-      navigator.geolocation.getCurrentPosition(
-        async ({ coords: { latitude: lat, longitude: lon } }) => {
-          const location = await townAt(lat, lon, lang).catch(() => `${lat.toFixed(2)}, ${lon.toFixed(2)}`);
-          setP((x) => ({ ...x, location, lat, lon }));
-          setLocating("");
-        },
-        () => setLocating("failed"),
-        { timeout: 15000 },
-      );
+      try {
+        const { coords: { latitude: lat, longitude: lon } } = await position();
+        const location = await townAt(lat, lon, lang).catch(() => `${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+        setP((x) => ({ ...x, location, lat, lon }));
+        setLocating("");
+      } catch (e) {
+        setLocating((e as GeolocationPositionError).code === 1 ? "denied" : "failed");
+      }
     }
     return (
       <div className="space-y-4">
@@ -83,7 +104,7 @@ function Onboarding() {
           <Icon name="pin" />{locating === "busy" ? t("locating") : t("useLocation")}
         </button>
         {p.location && p.lat !== undefined && <p className="flex items-center justify-center gap-2 text-xl font-medium"><Icon name="pin" className="h-6 w-6 text-leaf" />{p.location}<Icon name="check" className="h-6 w-6 text-leaf" /></p>}
-        {locating === "failed" && <p role="alert" className="text-sun">{t("locationFailed")}</p>}
+        {(locating === "failed" || locating === "denied") && <p role="alert" className="text-sun">{t(locating === "denied" ? "locationDenied" : "locationFailed")}</p>}
         <input className="field" value={p.lat === undefined ? p.location : ""} placeholder={t("typeTown")} aria-label={t("typeTown")}
           onChange={(e) => setP({ ...p, location: e.target.value, lat: undefined, lon: undefined })} />
       </div>

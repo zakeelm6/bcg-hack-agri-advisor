@@ -36,6 +36,7 @@ Language parameter: `lang` is `en`, `fr`, `ar` or `ary` (Darija, Moroccan Arabic
 | `POST /api/tts` | `{text, lang}` | audio (MP3) | voice out |
 | `POST /api/sync` | `{actions: [{type, payload}]}` where `type` is `task_status`, `observation`, `soil_test`, `listing` or `offer_accept` | `results[]` | offline replay |
 | `GET /api/audit` | none | `entries[]` | audit view |
+| `GET /api/geo/place?lat&lon&lang` | position (`lang` en, fr, ar, ary) | `place` (town name, or null when the name service does not answer) | onboarding "Where is your farm?" (added in Step 1) |
 | `GET /api/zones/anomalies?lang` | none | GeoJSON `FeatureCollection` + `available`, `source`, `dates`, `grid`, `note`; each feature has `zone_code`, `severity`, `persistence`, `cells[]`, `x`, `y`, `why` | land view (Phase 2) |
 
 `GET /` serves the legacy web app and `GET /sw.js` its service worker. They are not in `openapi.json` and disappear when the React app replaces it.

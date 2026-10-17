@@ -883,6 +883,25 @@
         "title": "Ok",
         "type": "object"
       },
+      "PlaceOut": {
+        "additionalProperties": true,
+        "description": "The town name at a position, or null when the name service did not answer.",
+        "properties": {
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          }
+        },
+        "title": "PlaceOut",
+        "type": "object"
+      },
       "Reading": {
         "properties": {
           "moisture": {
@@ -1948,6 +1967,69 @@
           }
         },
         "summary": "Forecast"
+      }
+    },
+    "/api/geo/place": {
+      "get": {
+        "description": "Town name at a position (cached). `place` is null when the name service does not answer.",
+        "operationId": "place_api_geo_place_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lat",
+            "required": true,
+            "schema": {
+              "maximum": 90,
+              "minimum": -90,
+              "title": "Lat",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lon",
+            "required": true,
+            "schema": {
+              "maximum": 180,
+              "minimum": -180,
+              "title": "Lon",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "title": "Lang",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place"
       }
     },
     "/api/health": {

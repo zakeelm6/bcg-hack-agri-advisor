@@ -36,7 +36,7 @@ async function getWeather(p: Profile, lang: string): Promise<Weather | null> {
 const sky = (c: number) => c === 0 ? "field-sun" : c <= 2 ? "cloud-sun" : c === 3 ? "cloud" : c <= 48 ? "fog" : c <= 67 || (c >= 80 && c <= 82) ? "rain" : c <= 86 ? "snow" : "storm";
 
 export default function MyFarm() {
-  const { profile: p, tasks, activities, toggleTask, lang } = useFarm();
+  const { profile: p, sync, tasks, activities, toggleTask, lang } = useFarm();
   const t = useT();
   const tx = useTx();
   const [weather, setWeather] = useState<Weather | null | "error">();
@@ -59,6 +59,16 @@ export default function MyFarm() {
     irr && [irr.icon, t(irr.key)],
     p?.location && ["pin", p.location],
   ].filter(Boolean) as [string, string][];
+
+  // What the engine did with the answers: honest about what it used and what it did not (for example: still the demo parcel).
+  const used = Object.keys(sync?.applied ?? {}).map((k) => ({ crop: t("m_crop"), sowing_date: t("m_planted"), area_ha: t("m_area") })[k as "crop"]).filter(Boolean);
+  const engineNotes = sync ? (
+    <div className="mt-4 space-y-1.5 text-base text-muted" aria-live="polite">
+      {sync.pending && <p className="flex items-center gap-2"><Icon name="hourglass" className="h-4 w-4 shrink-0" />{t("waitingSync")}</p>}
+      {!sync.pending && used.length > 0 && <p className="flex items-center gap-2"><Icon name="check" className="h-4 w-4 shrink-0 text-leaf" />{t("profileApplied", { what: used.join(", ") })}</p>}
+      {!sync.pending && (sync.notApplied ?? []).map((n) => <p key={n} className="flex items-start gap-2"><Icon name="alert" className="mt-1 h-4 w-4 shrink-0 text-sun" />{n}</p>)}
+    </div>
+  ) : null;
 
   const taskRow = (x: Task, overdue = false) => (
     <li key={x.id} className="py-1">
@@ -90,6 +100,7 @@ export default function MyFarm() {
             {facts.map(([icon, label]) => <li key={icon} className="flex items-center gap-2"><Icon name={icon} className="h-5 w-5 text-muted" />{label}</li>)}
             <li><Link href="/?edit" className="inline-flex items-center gap-1 font-medium text-leaf underline underline-offset-4"><Icon name="pencil" className="h-4 w-4" />{t("edit")}</Link></li>
           </ul>
+          {engineNotes}
         </section>
 
         <FieldMap center={p?.lat !== undefined && p.lon !== undefined ? [p.lat, p.lon] : weather && weather !== "error" ? [weather.lat, weather.lon] : undefined} />
