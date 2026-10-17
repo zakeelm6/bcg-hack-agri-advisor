@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..db import models as m
 from ..processing import engine, geo
-from . import field as fld
+from . import activities, field as fld
 from .satellite_layer import anomalies_available
 from .common import as_dict, clean_lang, now_iso
 
@@ -19,7 +19,8 @@ def refresh_advice(db: Session, force_weather: bool = False) -> dict:
     layers = fld.layer_inputs(db)
     weather = geo.get_weather(db, field["lat"], field["lon"], force=force_weather)
     _, tasks, alerts = engine.build_advice(field, zones, layers["sensors"], weather, soil=fld.latest_soil(db),
-                                           bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"])
+                                           bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"],
+                                           waterings=activities.recent_waterings(db))
     now = now_iso()
     keys = [t["key"] for t in tasks]
     for t in tasks:
@@ -27,6 +28,8 @@ def refresh_advice(db: Session, force_weather: bool = False) -> dict:
         if row is None:
             row = m.Task(key=t["key"], field_id=1)
             db.add(row)
+        elif row.status in ("done", "skipped") and row.when_date < t["when_date"]:
+            row.status = "open"   # the same need came back on a later day: it is a new occasion, not the answer already given
         row.zone_code, row.updated_at = t["zone"], now
         for k in TASK_FIELDS:
             setattr(row, k, t[k])
@@ -54,7 +57,8 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
         weather = geo.get_weather(db, field["lat"], field["lon"])
     soil = fld.latest_soil(db)
     est, tasks_l, alerts_l = engine.build_advice(field, zones, sensors, weather, soil=soil, lang=lang,
-                                                 bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"])
+                                                 bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"],
+                                                 waterings=activities.recent_waterings(db))
     has_sensor = {d["zone_code"] for d in sensor_detail}
     for z in zones:
         e = est[z["code"]]

@@ -251,3 +251,17 @@ class FarmerOut(Loose):
 class PlaceOut(Loose):
     """The town name at a position, or null when the name service did not answer."""
     place: str | None = None
+
+
+class ActivityOut(Loose):
+    client_id: str
+    type: str
+    date: str
+    note: str = ""
+    cost: float | None = None
+    zone: str | None = None
+    amount_mm: float | None = None
+
+
+class ActivitiesOut(Loose):
+    activities: list[ActivityOut]

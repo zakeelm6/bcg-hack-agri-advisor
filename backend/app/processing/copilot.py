@@ -37,6 +37,10 @@ VISION_SYSTEM = (
 
 CT = {
     "en": {
+        "spend_one": "You recorded {total} in spending, one entry: \"{top}\".",
+        "spend_has": "You recorded {total} in spending ({n} times). The biggest was \"{top}\" ({top_cost}).",
+        "spend_none": "You have not recorded any spending yet. Record each purchase in Activities so I can follow your costs.",
+        "spend_top_unnamed": "unnamed",
         "diagnose": "I cannot diagnose a disease or a pest. What I can do: help you check the zone, and describe what is visible on a photo you add after a task. If you see a problem, ask a field agent to visit.",
         "insp_btn": "Open the inspection task", "soil_btn": "Add a soil test", "tasks_btn": "See tasks", "field_btn": "See the field",
         "wi": "If you wait {d} day{s}: about {rain} mm of rain is forecast and {et0} mm of water is lost to evaporation, so topsoil moisture changes by {pct}%.",
@@ -54,6 +58,10 @@ CT = {
         "conf_name": {"High": "High", "Medium": "Medium", "Low": "Low"},
     },
     "fr": {
+        "spend_one": "Vous avez noté {total} de dépenses, une seule entrée : « {top} ».",
+        "spend_has": "Vous avez noté {total} de dépenses ({n} fois). La plus grosse : « {top} » ({top_cost}).",
+        "spend_none": "Vous n'avez encore noté aucune dépense. Notez chaque achat dans Activités pour que je suive vos coûts.",
+        "spend_top_unnamed": "sans nom",
         "diagnose": "Je ne peux pas diagnostiquer une maladie ni un ravageur. Ce que je peux faire : vous aider à vérifier la zone et décrire ce qui est visible sur une photo ajoutée après une tâche. Si vous voyez un problème, demandez la visite d'un agent de terrain.",
         "insp_btn": "Ouvrir la tâche d'inspection", "soil_btn": "Ajouter une analyse de sol", "tasks_btn": "Voir les tâches", "field_btn": "Voir le champ",
         "wi": "Si vous attendez {d} jour{s} : environ {rain} mm de pluie sont prévus et {et0} mm d'eau s'évaporent, donc l'humidité du sol en surface varie de {pct} %.",
@@ -71,6 +79,10 @@ CT = {
         "conf_name": {"High": "élevée", "Medium": "moyenne", "Low": "faible"},
     },
     "ar": {
+        "spend_one": "سجّلتَ {total} من المصاريف، مدخلًا واحدًا: «{top}».",
+        "spend_has": "سجّلتَ {total} من المصاريف ({n} مرات). أكبرها «{top}» ({top_cost}).",
+        "spend_none": "لم تسجّل أي مصروف بعد. سجّل كل شراء في الأنشطة حتى أتابع تكاليفك.",
+        "spend_top_unnamed": "بدون اسم",
         "diagnose": "لا أستطيع تشخيص مرض أو آفة. ما أستطيعه: مساعدتك على فحص المنطقة ووصف ما يظهر في صورة تضيفها بعد مهمة. إن رأيت مشكلة، اطلب زيارة من مرشد ميداني.",
         "insp_btn": "افتح مهمة التفقد", "soil_btn": "أضف تحليل تربة", "tasks_btn": "المهام", "field_btn": "الحقل",
         "wi": "إذا انتظرت {d} {unit}: المتوقع حوالي {rain} مم من المطر وتتبخر {et0} مم من الماء، فتتغير رطوبة التربة السطحية بـ {pct}%.",
@@ -88,6 +100,10 @@ CT = {
         "conf_name": {"High": "عالية", "Medium": "متوسطة", "Low": "ضعيفة"},
     },
     "ary": {   # Darija (Moroccan Arabic) in Arabic script. Needs a native speaker's review before real use.
+        "spend_one": "سجلتي {total} ديال المصاريف، مرة وحدة: «{top}».",
+        "spend_has": "سجلتي {total} ديال المصاريف ({n} مرات). الكبر هو «{top}» ({top_cost}).",
+        "spend_none": "باقي ما سجلتي حتى مصروف. سجل كل شرا فالأنشطة باش نتبع ليك التكاليف.",
+        "spend_top_unnamed": "بلا سمية",
         "diagnose": "ما نقدرش نشخص مرض ولا حشرة. اللي نقدر ندير: نعاونك تشوف المنطقة ونوصف اللي كيبان فصورة كتزيدها من بعد مهمة. إلا شفتي مشكل، طلب زيارة من مرشد ميداني.",
         "insp_btn": "حل مهمة الفحص", "soil_btn": "زيد تحليل تربة", "tasks_btn": "المهام", "field_btn": "الحقل",
         "wi": "إلا تسنيتي {d} {unit}: المتوقع تقريبا {rain} مم ديال الشتا وكيتبخر {et0} مم ديال الما، وكتبدل رطوبة التربة من فوق ب {pct}%.",
@@ -148,6 +164,7 @@ def make_facts(state):
                         "moisture_pct": None if t["moisture"] is None else round(t["moisture"] * 100), "age_days": t["age_days"]}
                        for t in state.get("soil_tests", [])],
         "counts": {"open_tasks": len(tasks)},
+        "spending": state.get("spending") or {"total": 0, "n": 0, "top_note": None, "top_cost": None},
     }
 
 
@@ -158,6 +175,9 @@ def _has(q, words):
 def detect(question):
     """Very small intent detector (English and French keywords). Returns (intent, extra)."""
     q = question.lower()
+    if _has(q, ["my costs", "my cost", "my spending", "my expenses", "expenses", "spent", "spending", "how much did i spend", "mes coûts", "mes couts", "mes dépenses",
+                "mes depenses", "dépensé", "depense", "mes frais", "مصاريف", "مصروف", "صرفت", "صرفتي", "ميزانية"]):
+        return "spend", None
     if _has(q, ["مرض", "آفة", "افة", "حشرة", "فطر", "بياض", "مريض", "مريضة", "حشرات", "دودة", "كتصفار", "صفرا"]):
         return "diagnose", None
     if _has(q, ["ماذا لو", "لو انتظرت", "انتظر", "تأجيل", "أجّل", "اجل", "نتسنى", "تسنى", "نأخر", "نأجل"]):
@@ -258,6 +278,13 @@ def engine_answer(intent, extra, facts, task_id, whatif, lang="en"):
         return ct(lang, "planb", t=title, p=t["plan_b"]), []
     if intent == "when":
         return ct(lang, "when", t=title, w=t["when"]), []
+    if intent == "spend":
+        sp = facts.get("spending") or {}
+        if not sp.get("n"):
+            return ct(lang, "spend_none"), [{"label": ct(lang, "tasks_btn"), "go": "#/tasks"}]
+        if sp["n"] == 1:
+            return ct(lang, "spend_one", total=f"{sp['total']:g}", top=sp.get("top_note") or ct(lang, "spend_top_unnamed")), []
+        return ct(lang, "spend_has", total=f"{sp['total']:g}", n=sp["n"], top=sp.get("top_note") or ct(lang, "spend_top_unnamed"), top_cost=f"{sp['top_cost']:g}"), []
     if intent == "cost":
         return ct(lang, "cost", t=title, c=t["cost"]), []
     if intent == "confidence":

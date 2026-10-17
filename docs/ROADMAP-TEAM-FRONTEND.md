@@ -54,7 +54,7 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - Done links to his **Activities**: marking an irrigation task done adds a "Watered" activity automatically; the farmer only confirms the amount.
 - Done when: a farmer can do their day without opening the Co-Pilot, and what they did shows in Activities.
 
-### Step 3: his Activities teach the engine (M)
+### Step 3: his Activities teach the engine (M) - DONE on branch `step3/activities-teach-engine` (see section 9)
 - Send the activities that matter to the engine (watered, sprayed, fertilised, spent) with a small additive contract change (`POST /api/activities`; ask before changing `docs/API_CONTRACT.md`).
 - The engine uses real watering records instead of guessing the last irrigation; "Costs" questions in the Co-Pilot use the real list.
 - Done when: after recording "watered 20 mm", the engine no longer asks to irrigate the same day.
@@ -173,3 +173,21 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
   (server: skipped), the hero moving to the next task each time, an answer given while the server was stopped (queued, then delivered after the `online` event, queue empty), a reload with the server down
   (cached advice and the "saved advice" note), and Darija right to left. TypeScript, the Darija check, a production build and the backend tests pass.
 - Not done: a task answered on one phone is not shown on another (Step 8); no automated front-end tests yet (Step 11); the activity entry keeps the language the task title had when it was done.
+
+### Step 3 done: his Activities teach the engine
+- Every entry the farmer records in Activities (watered, sprayed, planted, spent money, other work), and the entries the "Done" button of the card creates, is sent to the backend
+  (`POST /api/activities`, through the same offline queue as the task answers, `lib/queue.ts`), with its own id so a retry never duplicates it and "Undo" removes it on the server too.
+  Entries written before the backend existed are sent once.
+- **The engine uses real watering instead of guessing.** A watering recorded in the last 2 days (for one zone, or for the whole field when the farmer did not say which) makes the engine
+  wait for that zone, and the card says so ("Watering recorded. You recorded watering on Saturday. No new watering is advised for 2 days, so the soil has time to show it."), in four languages.
+  Undoing the entry brings the advice back.
+- **A related bug fixed:** a task the farmer had marked done or skipped never came back, because the same task key kept its old answer forever. Now, when the same need returns on a later
+  day, it is a new occasion and the task opens again (same day: the answer already given stays).
+- **The Copilot answers "How are my costs looking?" from the farmer's real list** (total, number of entries, the biggest one), with the number check; a question about what a task costs is still
+  a task question. The farmer's amounts have no currency (the app does not ask for one), so none is shown.
+- New: `activities` table and migration `0004`; routes `GET/POST /api/activities`, `DELETE /api/activities/{client_id}`; sync actions `activity` and `activity_remove`;
+  `backend/tests/test_activities.py` (10 tests); test fixture that resets the rate limits (110 tests in all).
+- Checked in a browser against the running backend: the card asked to water zone D; after "Watered" was tapped in Activities the card dropped the irrigation and showed the watering note;
+  "Spent money 300" reached the server and the Co-Pilot answered with that real figure.
+- Not done: the farmer cannot say how many millimetres they watered (the form has no such field; the card's "Done" does not know it either); an entry edited on one phone is not seen on another (Step 8);
+  the engine does not turn recorded watering into a moisture estimate, it only waits.

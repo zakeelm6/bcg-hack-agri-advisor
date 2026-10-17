@@ -45,7 +45,7 @@ export default function EngineCard() {
   function done(task: EngineTask) {
     answer(task, "done");
     const kind = ACTIVITY[task.type as keyof typeof ACTIVITY];
-    const activity = kind ? logActivity({ type: kind, date: today(), note: task.title }) : undefined; // the Activities list follows by itself
+    const activity = kind ? logActivity({ type: kind, date: today(), note: task.title, ...(kind === "irrigation" ? { zone: task.zone_code } : {}) }) : undefined; // the Activities list follows by itself
     clearTimeout(timer.current);
     setLast({ task, activity });
     timer.current = setTimeout(() => setLast(undefined), 6000);
@@ -142,6 +142,9 @@ export default function EngineCard() {
           <button type="button" className="font-semibold underline underline-offset-4" onClick={undo}>{t("undo")}</button>
         </div>
       )}
+      {state?.alerts.filter((a) => a.kind === "water").map((a) => (
+        <p key={a.key} className="mt-3 flex items-start gap-2 text-lg"><Icon name="drip" className="mt-1 h-5 w-5 shrink-0 text-leaf" /><span><b>{a.title}.</b> {a.body}</span></p>
+      ))}
       {state && (
         <p className="mt-3 flex items-start gap-2 text-base text-muted">
           <Icon name="alert" className="mt-1 h-4 w-4 shrink-0 text-sun" />

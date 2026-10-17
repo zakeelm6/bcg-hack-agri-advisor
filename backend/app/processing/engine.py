@@ -25,6 +25,8 @@ WEEKDAYS = {"en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satu
 # Texts shown to the farmer, in English (reference) and French. Numbers are never in the catalogue: they are inserted.
 TEXTS = {
     "en": {
+        "watered_title": "Watering recorded", "watered_some": "watering",
+        "watered_body": "You recorded {what} on {day}. No new watering is advised for {days} days, so the soil has time to show it.",
         "today": "Today", "tomorrow": "Tomorrow", "morning": "morning", "before_rain": "before the rain",
         "r_sensor": "A sensor in this zone measures it.", "r_sample": "Measured from the soil sample you entered.",
         "r_none": "No sensor data yet.", "k_sensor": "sensor in zone {z}", "k_sample": "soil sample in zone {z}", "and": " and ",
@@ -68,6 +70,8 @@ TEXTS = {
         "wi_short": "The forecast is too short to look that far ahead.",
     },
     "fr": {
+        "watered_title": "Arrosage noté", "watered_some": "un arrosage",
+        "watered_body": "Vous avez noté {what} le {day}. Aucun nouvel arrosage n'est conseillé pendant {days} jours, le temps que le sol le montre.",
         "today": "Aujourd'hui", "tomorrow": "Demain", "morning": "matin", "before_rain": "avant la pluie",
         "r_sensor": "Un capteur de cette zone la mesure.", "r_sample": "Mesurée d'après l'échantillon de sol que vous avez saisi.",
         "r_none": "Pas encore de données de capteur.", "k_sensor": "du capteur de la zone {z}", "k_sample": "de l'échantillon de sol de la zone {z}", "and": " et ",
@@ -111,6 +115,8 @@ TEXTS = {
         "wi_short": "Les prévisions sont trop courtes pour regarder si loin.",
     },
     "ar": {
+        "watered_title": "تم تسجيل السقي", "watered_some": "سقيًا",
+        "watered_body": "سجّلتَ {what} يوم {day}. لا يُنصح بسقي جديد في الأيام القليلة القادمة ليظهر أثره في التربة.",
         "today": "اليوم", "tomorrow": "غدًا", "morning": "صباحًا", "before_rain": "قبل المطر",
         "r_sensor": "يقيسها مستشعر في هذه المنطقة.", "r_sample": "مقيسة من عيّنة التربة التي أدخلتها.",
         "r_none": "لا توجد بيانات مستشعر بعد.", "k_sensor": "مستشعر المنطقة {z}", "k_sample": "عيّنة تربة المنطقة {z}", "and": " و",
@@ -154,6 +160,8 @@ TEXTS = {
         "wi_short": "التوقعات قصيرة جدًا للنظر إلى هذا المدى.",
     },
     "ary": {   # Darija (Moroccan Arabic) in Arabic script. Needs a native speaker's review before real use.
+        "watered_title": "تسجل السقي", "watered_some": "شي سقي",
+        "watered_body": "سجلتي {what} نهار {day}. ما غاديش نقترحو سقي جديد فالأيام الجايين باش التربة تبين.",
         "today": "اليوم", "tomorrow": "غدا", "morning": "الصباح", "before_rain": "قبل الشتا",
         "r_sensor": "كاين مستشعر فهاد المنطقة كيقيسها.", "r_sample": "تقاسات من عينة التربة اللي دخلتي.",
         "r_none": "ما كايناش بيانات من المستشعر دابا.", "k_sensor": "مستشعر المنطقة {z}", "k_sample": "عينة تربة المنطقة {z}", "and": " و",
@@ -274,7 +282,10 @@ def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=
     return out
 
 
-def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en", bad_sensors=None, offsets=None, anomalies=None):
+RECENT_WATERING_DAYS = 2   # after the farmer recorded watering, wait this long before advising it again
+
+
+def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en", bad_sensors=None, offsets=None, anomalies=None, waterings=None):
     """Returns (zone_estimates, tasks, alerts). Pure function: easy to test.
     `lang` only changes the wording; every number and decision is identical in every language.
     Phase 2 inputs (all optional): bad_sensors {zone: [flags]} from the quality checks, offsets {zone: {...}} learned per plot,
@@ -283,6 +294,7 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
     soil = soil or {}   # {zone_code: {ph, om_pct, moisture, age_days}} latest soil test per zone
     bad_sensors = bad_sensors or {}
     anomalies = anomalies or []
+    waterings = waterings or []   # [{date, zone (None = whole field), mm}] recorded by the farmer in the last days
     days = weather["days"]
     today = date.fromisoformat(days[0]["date"])
     manual = {c: t["moisture"] for c, t in soil.items()
@@ -295,13 +307,20 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
     go_word = tr(lang, "today" if go_date == today else "tomorrow")
     morning = f"{go_word} {tr(lang, 'morning')}"
     rain_txt = (tr(lang, "rain_next", mm=f"{nr['rain']:.0f}", day=_wd(nr["date"], lang)) if nr else tr(lang, "rain_none"))
-    tasks, alerts = [], []
+    tasks, alerts, watered_note = [], [], None
 
     # --- Irrigation (water balance rule) ---
     for z in zones:
         e = est[z["code"]]
         m = e["moisture"]
         if m is None or m >= TRIGGER_MOISTURE or rain3 >= 5:
+            continue
+        seen = [w for w in waterings if w.get("zone") in (None, "", z["code"]) and 0 <= (today - date.fromisoformat(w["date"])).days <= RECENT_WATERING_DAYS]
+        if seen:   # the farmer watered this zone a moment ago: wait, and say why
+            w = max(seen, key=lambda x: x["date"])
+            what = f"{w['mm']:g} mm" if w.get("mm") else tr(lang, "watered_some")
+            watered_note = {"key": "watered", "kind": "water", "title": tr(lang, "watered_title"),
+                            "body": tr(lang, "watered_body", what=what, day=_wd(w["date"], lang), days=RECENT_WATERING_DAYS)}
             continue
         mm = int(min(MAX_IRRIGATION_MM, max(5, round((TARGET_MOISTURE - m) * ROOT_DEPTH_MM / 5) * 5)))
         m3 = round(mm * z["area_ha"] * 10)
@@ -319,6 +338,9 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
         if e["confidence"] != "High":   # only ask for a sample when the zone has no measurement
             alerts.append({"key": f"sample:{z['code']}", "kind": "data", "title": tr(lang, "sample_title", z=z["code"]),
                            "body": tr(lang, "sample_body")})
+
+    if watered_note:
+        alerts.append(watered_note)
 
     # --- Fertilizer (nitrogen from vigor gap), only if no heavy rain would wash it away ---
     for z in zones:

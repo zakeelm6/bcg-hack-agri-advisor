@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { API, post, unreachable } from "./api";
+import { enqueue, flush } from "./queue";
 import { tr, tx, type Key, type Lang, type Text } from "./i18n";
 
 export type Challenge = "water" | "crop health" | "costs" | "yield";
@@ -18,7 +19,7 @@ export type Profile = {
 };
 export type Task = { id: string; title: Text; due: string; done: boolean };
 export type ActivityType = "irrigation" | "treatment" | "planting" | "expense" | "other";
-export type Activity = { id: string; type: ActivityType; date: string; note: string; cost?: number };
+export type Activity = { id: string; type: ActivityType; date: string; note: string; cost?: number; zone?: string; mm?: number }; // zone: only that part of the field (none = all of it); mm: water applied
 export type Advice = { recommendation: Text; why: Text; steps: Text[]; missing: Text[]; icons?: string[] }; // icons[i] pictures steps[i]
 // What the engine did with the profile the last time it was sent. `pending`: still to send (offline, server down).
 export type ProfileSync = { pending: boolean; applied?: Record<string, unknown>; notApplied?: string[] };
@@ -26,12 +27,16 @@ export type Message =
   | { id: string; role: "user"; text: string; photo?: string }
   | { id: string; role: "ai"; text?: string; advice?: Advice };
 
-type State = { lang: Lang; profile: Profile | null; sync?: ProfileSync; tasks: Task[]; activities: Activity[]; messages: Message[] };
+type State = { lang: Lang; profile: Profile | null; sync?: ProfileSync; activitiesSent?: boolean; tasks: Task[]; activities: Activity[]; messages: Message[] };
 const empty: State = { lang: "en", profile: null, tasks: [], activities: [], messages: [] };
 const browserLang = (): Lang => (["ar", "fr"] as const).find((l) => navigator.language.startsWith(l)) ?? "en";
 const KEY = "growmate";
 
 export const uid = () => crypto.randomUUID();
+const activityAction = (a: Activity) => ({
+  type: "activity",
+  payload: { client_id: a.id, type: a.type, date: a.date, note: a.note.slice(0, 200), cost: a.cost ?? null, zone: a.zone ?? null, amount_mm: a.mm ?? null },
+});
 export const today = () => new Date().toISOString().slice(0, 10);
 export const daysSince = (d: string) => Math.floor((Date.parse(today()) - Date.parse(d)) / 864e5);
 
@@ -45,7 +50,9 @@ function useFarmState() {
     try {
       const saved = { ...empty, lang: browserLang(), ...JSON.parse(localStorage.getItem(KEY) ?? "{}") } as State;
       // A profile saved before the backend existed has never reached the engine: send it once.
-      setState(saved.profile && !saved.sync && API ? { ...saved, sync: { pending: true } } : saved);
+      const first = !!API && !saved.activitiesSent;   // activities written before the backend existed are sent once
+      if (first) { enqueue(...saved.activities.map(activityAction)); flush(); }
+      setState({ ...(saved.profile && !saved.sync && API ? { ...saved, sync: { pending: true } } : saved), ...(API ? { activitiesSent: true } : {}) });
     } catch {
       setState(empty);
     }
@@ -63,7 +70,8 @@ function useFarmState() {
 
   // Send the profile to the engine when it changed (or when the connection is back).
   useEffect(() => {
-    const online = () => setRetry((n) => n + 1);
+    flush();   // anything left from the last visit
+    const online = () => { setRetry((n) => n + 1); flush(); };
     window.addEventListener("online", online);
     return () => window.removeEventListener("online", online);
   }, []);
@@ -98,9 +106,13 @@ function useFarmState() {
     logActivity: (a: Omit<Activity, "id">) => {
       const id = uid();
       set({ activities: [{ ...a, id }, ...s.activities].sort((x, y) => y.date.localeCompare(x.date)) });
+      enqueue(activityAction({ ...a, id })); flush(); // the engine learns from it (recorded watering, spending) when the server can be reached
       return id; // lets the UI offer Undo
     },
-    removeActivity: (id: string) => set({ activities: s.activities.filter((a) => a.id !== id) }),
+    removeActivity: (id: string) => {
+      set({ activities: s.activities.filter((a) => a.id !== id) });
+      enqueue({ type: "activity_remove", payload: { client_id: id } }); flush();
+    },
     addMessages: (...m: Message[]) => setState((prev) => ({ ...(prev ?? empty), messages: [...(prev ?? empty).messages, ...m] })),
     clearMessages: () => set({ messages: [] }),
     reset: () => setState(empty),

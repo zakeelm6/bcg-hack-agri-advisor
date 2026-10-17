@@ -1,4 +1,6 @@
 """What the API accepts. Class names are part of the public contract (openapi.json)."""
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -70,3 +72,14 @@ class ChatBody(BaseModel):
     photo: str | None = None
     context: dict = {}
     lang: str = "en"             # en, fr or ar
+
+
+class ActivityBody(BaseModel):
+    """One entry of the farmer's Activities list (watered, sprayed, planted, spent money, other work)."""
+    client_id: str = Field(min_length=8, max_length=64)           # the app's own id: sending the same entry twice is harmless
+    type: Literal["irrigation", "treatment", "planting", "expense", "other"]
+    date: str                                                      # ISO date the work was done
+    note: str = Field("", max_length=200)
+    cost: float | None = Field(None, ge=0, le=10_000_000)
+    zone: str | None = Field(None, max_length=4)                   # null = the whole field
+    amount_mm: float | None = Field(None, gt=0, le=300)            # water applied, when known

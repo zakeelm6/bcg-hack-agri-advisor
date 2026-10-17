@@ -184,3 +184,19 @@ class Farmer(Base):
     lon: Mapped[float | None] = mapped_column(Float, nullable=True)
     lang: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[str] = mapped_column(Text)
+
+
+class Activity(Base):
+    """What the farmer did (watered, sprayed, planted, spent money), as recorded in the app.
+    `client_id` is the app's own id for the entry: sending the same entry twice (a retry after a network error) is harmless."""
+    __tablename__ = "activities"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[str] = mapped_column(Text, unique=True)
+    field_id: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    type: Mapped[str] = mapped_column(Text)                      # irrigation, treatment, planting, expense, other
+    date: Mapped[str] = mapped_column(Text)                      # ISO date the work was done
+    note: Mapped[str] = mapped_column(Text, default="", server_default="")
+    cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    zone_code: Mapped[str | None] = mapped_column(Text, nullable=True)   # null = the whole field
+    amount_mm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    created_at: Mapped[str] = mapped_column(Text)
