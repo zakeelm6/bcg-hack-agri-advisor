@@ -20,7 +20,7 @@ This file is written so that another coding agent (opencode) or a person can tak
 | 5 | Calm data alerts, honest data lines, soil test form | Done on branch `step6/voice` (commit `663b9aa`), not pushed |
 | 6 | Voice: Azure server voice first, browser fallback, talk mode, spoken orders | Done on branch `step6/voice` (commit `133fb40`), not pushed |
 | 7 | Offline and weak network (service worker, banner) | Done on branch `step7/offline` (stacked on `step6/voice`), not pushed |
-| 8 | One farmer, one field, one phone (device token) | **To do** (needed before anything public) |
+| 8 | One farmer, one field, one phone (device token) | **Started, not finished**, local branch `step8/devices-wip` (not pushed): see section 6, Step 8 |
 | 9 | Professional polish in his identity | **To do** |
 | 10 | Deploy on Azure | **To do** (runbook in section 7) |
 | 11 | Harden: end-to-end tests, real phones, native Darija review, privacy page | **To do** |
@@ -79,6 +79,10 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8010/api node_modules/.bin/next dev -p 3002
 - Done when: in airplane mode the farmer opens the app, sees the saved advice, marks a task done, and it reaches the server when the network returns. Test it by hand and write a Playwright test in Step 11.
 
 ### Step 8: one farmer, one field, one phone
+**State of the work (branch `step8/devices-wip`, local, not pushed, 135 of 136 backend tests pass).** Already written: migration `0007` (devices table, `field_id` on alerts, offers and copilot_log, unique keys per field; tested up and down on SQLite, not on PostgreSQL), `app/db/scope.py` (token to field, `fid(db)`, limits `FA_REQUIRE_DEVICE`, `FA_MAX_DEVICES`, `FA_NEW_DEVICES_PER_MINUTE`), every service filtered by `fid(db)`, per-field satellite folders, `tests/test_devices.py` (10 tests). The session reads the `X-Device` header in `get_db`.
+**Left to do:** (1) the failing test `test_a_phone_cannot_touch_the_tasks_sensors_or_offers_of_another`: a new phone's `/api/state` returns no tasks because a new field has no advice until `refresh_advice` runs; call it when a device is registered (in `scope.resolve`, after `seed_field`) and re-run the tests. (2) Regenerate `backend/openapi.json` and describe the `X-Device` header in `docs/API_CONTRACT.md`. (3) Frontend: create a random token (at least 22 URL-safe characters, for example `crypto.randomUUID()` without dashes twice) in `localStorage` on first launch and send it as `X-Device` in `lib/api.ts` on every request, also on the `/tts` and `/stt` calls in `lib/voice.ts`. (4) Check `FA_REQUIRE_DEVICE=1` blocks the legacy routes the app does not use, and think about the voice and places routes, which do not use the database. (5) Test migration `0007` on PostgreSQL. (6) Log the step in section 9 of the roadmap.
+The test suite now uses its own temporary database (set at the top of `tests/conftest.py`) and no live weather: before, it used the development database `backend/farm_advisor.db` and the real forecast, so results depended on both.
+Original plan:
 - Today the server holds one farmer and one field (`fields.id = 1`, `field_id=1` appears in services). Introduce `farmers` and key `fields`, `tasks`, `activities`, `soil_tests`, `observations`, `sensors` by a farmer id taken from an anonymous device token created on first launch (store in `localStorage`, send as `Authorization: Bearer` or `X-Device`). Alembic migration 0007 must move the existing demo row to a demo farmer.
 - Every route is scoped to the token. `own_field` output folders become per farmer (`backend/data/own/<farmer>/`). The demo field stays shared and read-only for farmers who have not given a position.
 - Rate limits per token. Later (not now): phone-number login, a cooperative agent role.

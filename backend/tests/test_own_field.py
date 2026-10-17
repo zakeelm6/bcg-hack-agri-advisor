@@ -58,7 +58,7 @@ def test_the_same_position_again_changes_nothing_and_a_move_starts_a_new_downloa
     jobs = []
     monkeypatch.setenv("FA_SATELLITE_JOBS", "1")
     monkeypatch.setattr(own_field, "satellite_python", lambda: "/fake/python")
-    monkeypatch.setattr(own_field, "start_job", lambda py, lat, lon, side: jobs.append((py, round(lat, 4), round(lon, 4), side)))
+    monkeypatch.setattr(own_field, "start_job", lambda py, lat, lon, side, field_id=1: jobs.append((py, round(lat, 4), round(lon, 4), side)))
     with client() as c:
         assert c.post("/api/farmer", json=PROFILE).json()["applied"]["position"]["satellite"] == "pending"
         assert c.post("/api/farmer", json=PROFILE).json()["applied"]["position"]["satellite"] == "pending"   # same place: no second job
@@ -127,7 +127,7 @@ def test_the_download_runs_in_the_satellite_environment_with_the_right_square(mo
         returncode, stdout, stderr = 0, "", ""
 
     monkeypatch.setattr(own_field.subprocess, "run", lambda cmd, **kw: (seen.update(cmd=cmd, kw=kw), Done())[1])
-    monkeypatch.setattr(own_field, "finish_job", lambda lat, lon, ok, note=None: seen.update(done=(round(lat, 4), ok)))
+    monkeypatch.setattr(own_field, "finish_job", lambda lat, lon, ok, note=None, field_id=1: seen.update(done=(round(lat, 4), ok)))
     own_field._run_job("/fake/python", LAT, LON, 200.0)
     cmd = seen["cmd"]
     assert cmd[0] == "/fake/python" and cmd[1].endswith("fetch_satellite.py")

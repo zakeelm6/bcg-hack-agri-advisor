@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import models as m
+from ..db.scope import fid
 from ..processing import copilot, engine, llm
 from ..schemas import requests as rq
 from . import activities, field as fld
@@ -14,7 +15,7 @@ from .common import as_dict, clean_lang, now_iso
 
 
 def log(db: Session, kind, question, answer, source, ok, note=None):
-    db.add(m.CopilotLog(ts=now_iso(), kind=kind, question=question, answer=answer, source=source, numbers_ok=1 if ok else 0, note=note))
+    db.add(m.CopilotLog(field_id=fid(db), ts=now_iso(), kind=kind, question=question, answer=answer, source=source, numbers_ok=1 if ok else 0, note=note))
     db.commit()
 
 
@@ -48,6 +49,6 @@ def vision(db: Session, b: rq.VisionBody) -> dict:
 
 
 def audit(db: Session) -> dict:
-    rows = db.scalars(select(m.CopilotLog).order_by(m.CopilotLog.id.desc()).limit(30))
+    rows = db.scalars(select(m.CopilotLog).where(m.CopilotLog.field_id == fid(db)).order_by(m.CopilotLog.id.desc()).limit(30))
     keep = ("ts", "kind", "question", "answer", "source", "numbers_ok", "note")
     return {"entries": [{k: v for k, v in as_dict(r).items() if k in keep} for r in rows]}

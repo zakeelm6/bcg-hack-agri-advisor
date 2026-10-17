@@ -76,7 +76,7 @@ class Task(Base):
     __tablename__ = "tasks"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     field_id: Mapped[int] = mapped_column(Integer)
-    key: Mapped[str] = mapped_column(Text, unique=True)
+    key: Mapped[str] = mapped_column(Text)
     type: Mapped[str] = mapped_column(Text)
     zone_code: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(Text)
@@ -94,17 +94,20 @@ class Task(Base):
     x: Mapped[float] = mapped_column(Float)
     y: Mapped[float] = mapped_column(Float)
     updated_at: Mapped[str] = mapped_column(Text)
+    __table_args__ = (UniqueConstraint("field_id", "key", name="uq_tasks_field_key"),)
 
 
 class Alert(Base):
     __tablename__ = "alerts"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    key: Mapped[str] = mapped_column(Text, unique=True)
+    field_id: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    key: Mapped[str] = mapped_column(Text)
     kind: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(Text)
     body: Mapped[str] = mapped_column(Text)
     unread: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     ts: Mapped[str] = mapped_column(Text)
+    __table_args__ = (UniqueConstraint("field_id", "key", name="uq_alerts_field_key"),)
 
 
 class Observation(Base):
@@ -131,6 +134,7 @@ class Listing(Base):
 class Offer(Base):
     __tablename__ = "offers"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    field_id: Mapped[int] = mapped_column(Integer, default=1, server_default="1")   # each farmer has their own copy of the (simulated) offers
     buyer: Mapped[str] = mapped_column(Text)
     kind: Mapped[str] = mapped_column(Text)
     price_mad_kg: Mapped[float] = mapped_column(Float)
@@ -163,6 +167,7 @@ class SoilTest(Base):
 class CopilotLog(Base):
     __tablename__ = "copilot_log"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    field_id: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     ts: Mapped[str] = mapped_column(Text)
     kind: Mapped[str] = mapped_column(Text)
     question: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -180,7 +185,7 @@ class Cache(Base):
 
 
 class Farmer(Base):
-    """The farmer's own answers (onboarding). One farmer for now (id 1). What the engine can use is copied to the field."""
+    """The farmer's own answers (onboarding). One farmer per field, with the same id as the field. What the engine can use is copied to the field."""
     __tablename__ = "farmers"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     location: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -200,7 +205,7 @@ class Activity(Base):
     `client_id` is the app's own id for the entry: sending the same entry twice (a retry after a network error) is harmless."""
     __tablename__ = "activities"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    client_id: Mapped[str] = mapped_column(Text, unique=True)
+    client_id: Mapped[str] = mapped_column(Text)
     field_id: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     type: Mapped[str] = mapped_column(Text)                      # irrigation, treatment, planting, expense, other
     date: Mapped[str] = mapped_column(Text)                      # ISO date the work was done
@@ -209,3 +214,14 @@ class Activity(Base):
     zone_code: Mapped[str | None] = mapped_column(Text, nullable=True)   # null = the whole field
     amount_mm: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[str] = mapped_column(Text)
+    __table_args__ = (UniqueConstraint("field_id", "client_id", name="uq_activities_field_client"),)
+
+
+class Device(Base):
+    """A phone. The app makes a random token on first launch and sends it with every request; only its hash is kept here.
+    A device owns one field (and the farmer with the same id). Nothing else identifies a farmer: there is no login yet."""
+    __tablename__ = "devices"
+    token_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    field_id: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[str] = mapped_column(Text)
+    last_seen: Mapped[str] = mapped_column(Text)

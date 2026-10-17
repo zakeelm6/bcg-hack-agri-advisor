@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..db import models as m
+from ..db.scope import fid
 from ..processing import engine, geo
 from . import activities, field as fld
 from .satellite_layer import anomalies_available
@@ -36,24 +37,24 @@ def refresh_advice(db: Session, force_weather: bool = False) -> dict:
     now = now_iso()
     keys = [t["key"] for t in tasks]
     for t in tasks:
-        row = db.scalars(select(m.Task).where(m.Task.key == t["key"])).first()
+        row = db.scalars(select(m.Task).where(m.Task.field_id == fid(db), m.Task.key == t["key"])).first()
         if row is None:
-            row = m.Task(key=t["key"], field_id=1)
+            row = m.Task(key=t["key"], field_id=fid(db))
             db.add(row)
         elif row.status in ("done", "skipped") and row.when_date < t["when_date"]:
             row.status = "open"   # the same need came back on a later day: it is a new occasion, not the answer already given
         row.zone_code, row.updated_at = t["zone"], now
         for k in TASK_FIELDS:
             setattr(row, k, t.get(k))   # qty and unit exist for irrigation and fertilizer only
-    stale = delete(m.Task).where(m.Task.status == "open")
+    stale = delete(m.Task).where(m.Task.field_id == fid(db), m.Task.status == "open")
     db.execute(stale.where(m.Task.key.notin_(keys)) if keys else stale)
     for a in alerts:
-        row = db.scalars(select(m.Alert).where(m.Alert.key == a["key"])).first()
+        row = db.scalars(select(m.Alert).where(m.Alert.field_id == fid(db), m.Alert.key == a["key"])).first()
         if row is None:
-            db.add(m.Alert(key=a["key"], kind=a["kind"], title=a["title"], body=a["body"], ts=now))
+            db.add(m.Alert(field_id=fid(db), key=a["key"], kind=a["kind"], title=a["title"], body=a["body"], ts=now))
         else:
             row.title, row.body = a["title"], a["body"]
-    db.execute(delete(m.Alert).where(m.Alert.key.notin_([a["key"] for a in alerts])))
+    db.execute(delete(m.Alert).where(m.Alert.field_id == fid(db), m.Alert.key.notin_([a["key"] for a in alerts])))
     db.commit()
     return weather
 
@@ -78,8 +79,8 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
         z.update({"moisture": e["moisture"], "moisture_source": e["source"], "confidence": e["confidence"], "conf_reason": e["reason"],
                   "has_sensor": z["code"] in has_sensor, "sensor_quality": next((d["quality"] for d in sensor_detail if d["zone_code"] == z["code"]), None),
                   "offset": layers["offsets"].get(z["code"]), "soil_test": soil.get(z["code"])})
-    tasks = [as_dict(t) for t in db.scalars(select(m.Task).where(m.Task.field_id == 1).order_by(m.Task.when_date, m.Task.id))]
-    alerts = [as_dict(a) for a in db.scalars(select(m.Alert).order_by(m.Alert.unread.desc(), m.Alert.id))]
+    tasks = [as_dict(t) for t in db.scalars(select(m.Task).where(m.Task.field_id == fid(db)).order_by(m.Task.when_date, m.Task.id))]
+    alerts = [as_dict(a) for a in db.scalars(select(m.Alert).where(m.Alert.field_id == fid(db)).order_by(m.Alert.unread.desc(), m.Alert.id))]
     if lang != "en":   # same tasks, same numbers, wording in the farmer's language (stored rows are English)
         loc = {t["key"]: t for t in tasks_l}
         for t in tasks:
@@ -96,4 +97,4 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
             "soil_tests": sorted(soil.values(), key=lambda t: t["zone_code"]),
             "generated_at": datetime.utcnow().isoformat(timespec="seconds"),
             "data_notes": {"vigor": zones[0]["ndvi_source"] if zones else "none", "sensors": "simulated",
-                           "anomalies": "sentinel-2 pixels" if layers["anomalies"] is not None and anomalies_available() else "not available"}}
+                           "anomalies": "sentinel-2 pixels" if layers["anomalies"] is not None and anomalies_available(field) else "not available"}}

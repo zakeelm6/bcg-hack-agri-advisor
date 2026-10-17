@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"                # comma separated, for the React app in development
     currency: str = "MAD"                                       # shown with the farmer's spending (the app's amounts have no currency of their own)
     max_photo_chars: int = 400_000
+    require_device: bool = False                                 # True on a public server: every request must carry a device token (X-Device), else 401
+    max_devices: int = Field(5000, ge=1)                         # most phones this server will register
+    new_devices_per_minute: int = Field(20, ge=1)                # brake on registering phones (each one creates a field)
     copilot_calls_per_minute: int = Field(30, ge=1)              # brake that protects a paid model key
     voice_calls_per_minute: int = Field(60, ge=1)
 

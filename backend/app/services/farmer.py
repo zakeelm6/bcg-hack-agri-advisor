@@ -9,6 +9,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..db import models as m
+from ..db.scope import fid
 from ..schemas import requests as rq
 from . import own_field
 from .common import ar_fallback, as_dict, now_iso
@@ -27,20 +28,20 @@ NOT_APPLIED = {
 
 
 def get(db: Session) -> dict | None:
-    f = db.get(m.Farmer, 1)
+    f = db.get(m.Farmer, fid(db))
     return as_dict(f) if f else None
 
 
 def save(db: Session, b: rq.FarmerBody) -> dict:
-    row = db.get(m.Farmer, 1)
+    row = db.get(m.Farmer, fid(db))
     if row is None:
-        row = m.Farmer(id=1)
+        row = m.Farmer(id=fid(db))
         db.add(row)
     for k in ("location", "crop", "planted_on", "area_ha", "irrigation", "challenge", "lat", "lon", "lang"):
         setattr(row, k, getattr(b, k))
     row.updated_at = now_iso()
     lang = ar_fallback(b.lang) if ar_fallback(b.lang) in NOT_APPLIED else "en"
-    field = db.get(m.Field, 1)
+    field = db.get(m.Field, fid(db))
     applied, not_applied = {}, []
     if b.crop:
         key = b.crop.strip().lower()
@@ -61,13 +62,13 @@ def save(db: Session, b: rq.FarmerBody) -> dict:
     if b.area_ha:
         if field.area_ha != round(b.area_ha, 2) or "position" not in applied:   # the field of a farmer who gave a position was sized above
             field.area_ha = round(b.area_ha, 2)
-            zones = db.scalars(select(m.Zone).where(m.Zone.field_id == 1)).all()
+            zones = db.scalars(select(m.Zone).where(m.Zone.field_id == fid(db))).all()
             for z in zones:
                 z.area_ha = round(b.area_ha / len(zones), 3)
         applied["area_ha"] = field.area_ha
     if b.irrigation or b.challenge:
         not_applied.append(NOT_APPLIED[lang]["irr"])
-    db.execute(delete(m.Task).where(m.Task.status == "open"))   # the advice is rebuilt on the new field facts
+    db.execute(delete(m.Task).where(m.Task.field_id == fid(db), m.Task.status == "open"))   # the advice is rebuilt on the new field facts
     db.commit()
     from .advice import refresh_advice
     refresh_advice(db)

@@ -21,8 +21,8 @@ from sqlalchemy.orm import Session
 
 from ..core.config import BACKEND_DIR
 from ..db import models as m
+from ..db.scope import fid
 from ..db.session import session_scope
-from . import satellite_layer
 from .common import as_dict
 
 OWN_DIR = os.path.join(BACKEND_DIR, "data", "own")          # ndvi.json (pixels per date), land.png and land.json (the picture)
@@ -59,33 +59,40 @@ def satellite_python() -> str | None:
     return sys.executable if find_spec("rasterio") and find_spec("pystac_client") else None
 
 
-def _picture_meta() -> dict | None:
+def own_dir(field_id: int) -> str:
+    """Where the satellite files of one field live. The first field keeps the folder itself (older installs), the others a folder of their own."""
+    return OWN_DIR if field_id == 1 else os.path.join(OWN_DIR, str(field_id))
+
+
+def ndvi_path(field_id: int) -> str:
+    return os.path.join(own_dir(field_id), "ndvi.json")
+
+
+def _picture_meta(field_id: int) -> dict | None:
     try:
-        with open(os.path.join(OWN_DIR, "land.json"), encoding="utf-8") as f:
+        with open(os.path.join(own_dir(field_id), "land.json"), encoding="utf-8") as f:
             return json.load(f)
     except (OSError, ValueError):
         return None
 
 
-def picture_path() -> str | None:
-    p = os.path.join(OWN_DIR, "land.png")
+def picture_path(field_id: int = 1) -> str | None:
+    p = os.path.join(own_dir(field_id), "land.png")
     return p if os.path.exists(p) else None
 
 
 def describe(db: Session) -> dict:
-    f = db.get(m.Field, 1)
+    f = db.get(m.Field, fid(db))
     return {"source": f.source, "satellite_status": f.satellite_status, "satellite_note": f.satellite_note, "lat": f.lat, "lon": f.lon,
             "area_ha": f.area_ha, "side_m": f.side_m, "boundary": json.loads(f.boundary) if f.boundary else None,
-            "picture": _picture_meta() if f.source == "own" and picture_path() else None}
+            "picture": _picture_meta(f.id) if f.source == "own" and picture_path(f.id) else None}
 
 
 def activate(db: Session):
-    """At start-up: read the pixels of the farmer's field when there is one."""
-    f = db.get(m.Field, 1)
-    satellite_layer.use_cache(os.path.join(OWN_DIR, "ndvi.json") if f.source == "own" else None)
-    if f.source == "own" and f.satellite_status == "pending":   # the server stopped in the middle of a download
+    """At start-up: a download that was running when the server stopped will never finish, say so."""
+    for f in db.scalars(select(m.Field).where(m.Field.source == "own", m.Field.satellite_status == "pending")):
         f.satellite_status, f.satellite_note = "failed", "The download was interrupted when the server stopped. Try again."
-        db.commit()
+    db.commit()
 
 
 def needs_move(f: m.Field, lat: float, lon: float, area_ha: float | None, boundary) -> bool:
@@ -100,25 +107,23 @@ def needs_move(f: m.Field, lat: float, lon: float, area_ha: float | None, bounda
 
 def set_field(db: Session, lat: float, lon: float, area_ha: float | None = None, boundary: list[list[float]] | None = None) -> dict:
     """Move the engine to the farmer's own field. Returns describe(). Starts the satellite download when it can."""
-    f = db.get(m.Field, 1)
+    f = db.get(m.Field, fid(db))
     if boundary and len(boundary) >= 3:
         lat, lon = centroid(boundary)
     area = round(area_ha or f.area_ha or 1.0, 2)
     side = side_for(area)
     f.source, f.lat, f.lon, f.area_ha, f.side_m = "own", lat, lon, area, side
     f.boundary = json.dumps(boundary) if boundary else None
-    zones = db.scalars(select(m.Zone).where(m.Zone.field_id == 1)).all()
+    zones = db.scalars(select(m.Zone).where(m.Zone.field_id == fid(db))).all()
     for z in zones:                                            # the demo zones' vigor belongs to the demo parcel: forget it
         z.area_ha, z.ndvi, z.ndvi_hist, z.ndvi_source = round(area / len(zones), 3), None, "[]", "none"
-    db.execute(delete(m.NdviObs).where(m.NdviObs.field_id == 1))
-    db.execute(delete(m.Cache).where(m.Cache.key.like("wx:%")))   # the weather follows the new position
-    db.execute(delete(m.Task).where(m.Task.status == "open"))
+    db.execute(delete(m.NdviObs).where(m.NdviObs.field_id == fid(db)))
+    db.execute(delete(m.Task).where(m.Task.field_id == fid(db), m.Task.status == "open"))
     for name in ("land.png", "land.json", "ndvi.json"):          # nothing of a former field survives
         try:
-            os.remove(os.path.join(OWN_DIR, name))
+            os.remove(os.path.join(own_dir(f.id), name))
         except OSError:
             pass
-    satellite_layer.use_cache(os.path.join(OWN_DIR, "ndvi.json"))
     py = satellite_python() if jobs_enabled() else None
     if py is None:
         f.satellite_status = "none"
@@ -128,33 +133,33 @@ def set_field(db: Session, lat: float, lon: float, area_ha: float | None = None,
         f.satellite_status, f.satellite_note = "pending", "Getting the Sentinel-2 pictures of your field. This takes a few minutes."
     db.commit()
     if py is not None:
-        start_job(py, lat, lon, side)
+        start_job(py, lat, lon, side, f.id)
     return describe(db)
 
 
 def retry(db: Session) -> dict:
-    f = db.get(m.Field, 1)
+    f = db.get(m.Field, fid(db))
     py = satellite_python() if jobs_enabled() else None
     if f.source != "own" or py is None or f.satellite_status == "pending":
         return describe(db)
     f.satellite_status, f.satellite_note = "pending", "Getting the Sentinel-2 pictures of your field. This takes a few minutes."
     db.commit()
-    start_job(py, f.lat, f.lon, f.side_m or side_for(f.area_ha))
+    start_job(py, f.lat, f.lon, f.side_m or side_for(f.area_ha), f.id)
     return describe(db)
 
 
-def start_job(py: str, lat: float, lon: float, side: float):
-    threading.Thread(target=_run_job, args=(py, lat, lon, side), daemon=True).start()
+def start_job(py: str, lat: float, lon: float, side: float, field_id: int = 1):
+    threading.Thread(target=_run_job, args=(py, lat, lon, side, field_id), daemon=True).start()
 
 
-def _run_job(py: str, lat: float, lon: float, side: float):
+def _run_job(py: str, lat: float, lon: float, side: float, field_id: int = 1):
     """Download in a separate process (it needs libraries the API does not), then read the result into the database."""
     ok, note = False, None
     with _lock:
         try:
-            os.makedirs(OWN_DIR, exist_ok=True)
+            os.makedirs(own_dir(field_id), exist_ok=True)
             r = subprocess.run([py, os.path.join(BACKEND_DIR, "scripts", "fetch_satellite.py"), "--lat", str(lat), "--lon", str(lon), "--side", str(side),
-                                "--out-dir", OWN_DIR], capture_output=True, text=True, timeout=JOB_TIMEOUT_S, cwd=BACKEND_DIR)
+                                "--out-dir", own_dir(field_id)], capture_output=True, text=True, timeout=JOB_TIMEOUT_S, cwd=BACKEND_DIR)
             ok = r.returncode == 0
             if not ok:
                 note = ((r.stdout + r.stderr).strip().splitlines() or ["The download failed."])[-1][:200]
@@ -162,12 +167,13 @@ def _run_job(py: str, lat: float, lon: float, side: float):
             note = "The download took too long. Try again later."
         except Exception as e:  # never let a job kill the server
             note = f"The download could not start ({type(e).__name__})."
-    finish_job(lat, lon, ok, note)
+    finish_job(lat, lon, ok, note, field_id)
 
 
-def finish_job(lat: float, lon: float, ok: bool, note: str | None = None):
+def finish_job(lat: float, lon: float, ok: bool, note: str | None = None, field_id: int = 1):
     with session_scope() as db:
-        f = db.get(m.Field, 1)
+        db.info["field_id"] = field_id
+        f = db.get(m.Field, field_id)
         if f.source != "own" or abs(f.lat - lat) > 1e-6 or abs(f.lon - lon) > 1e-6:
             return                                            # the farmer moved the field meanwhile: this result is for the old one
         if ok:
@@ -184,17 +190,17 @@ def finish_job(lat: float, lon: float, ok: bool, note: str | None = None):
 def apply_cache(db: Session) -> dict:
     """Read the downloaded pixels: zone vigor (the last four clear dates) and the vigor-over-time series. Returns {zone: latest date}."""
     try:
-        with open(os.path.join(OWN_DIR, "ndvi.json"), encoding="utf-8") as fh:
+        with open(ndvi_path(fid(db)), encoding="utf-8") as fh:
             data = json.load(fh)
     except (OSError, ValueError):
         return {}
-    db.execute(delete(m.NdviObs).where(m.NdviObs.field_id == 1))
+    db.execute(delete(m.NdviObs).where(m.NdviObs.field_id == fid(db)))
     for r in data.get("rows", []):
         for code, v in r.get("zones", {}).items():
             if v is not None:
-                db.add(m.NdviObs(field_id=1, date=r["date"], zone_code=code, ndvi=v, clear_share=r.get("clear_pixel_share")))
+                db.add(m.NdviObs(field_id=fid(db), date=r["date"], zone_code=code, ndvi=v, clear_share=r.get("clear_pixel_share")))
     updated = {}
-    for z in db.scalars(select(m.Zone).where(m.Zone.field_id == 1)).all():
+    for z in db.scalars(select(m.Zone).where(m.Zone.field_id == fid(db))).all():
         series = [(r["date"], r["zones"].get(z.code)) for r in data.get("rows", []) if r.get("zones", {}).get(z.code) is not None][-4:]
         if series:
             hist = [round(v, 3) for _, v in series]

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..core.config import settings
 from ..db import models as m
+from ..db.scope import fid
 from ..schemas import requests as rq
 from .common import as_dict, now_iso
 
@@ -24,11 +25,11 @@ def save(db: Session, b: rq.ActivityBody) -> dict:
         raise HTTPException(422, "date must be an ISO date (YYYY-MM-DD)")
     if d > date.today() + timedelta(days=1):
         raise HTTPException(422, "the date cannot be in the future")
-    if b.zone and db.scalars(select(m.Zone).where(m.Zone.field_id == 1, m.Zone.code == b.zone)).first() is None:
+    if b.zone and db.scalars(select(m.Zone).where(m.Zone.field_id == fid(db), m.Zone.code == b.zone)).first() is None:
         raise HTTPException(404, "unknown zone")
-    row = db.scalars(select(m.Activity).where(m.Activity.client_id == b.client_id)).first()
+    row = db.scalars(select(m.Activity).where(m.Activity.field_id == fid(db), m.Activity.client_id == b.client_id)).first()
     if row is None:
-        row = m.Activity(client_id=b.client_id, field_id=1, created_at=now_iso())
+        row = m.Activity(client_id=b.client_id, field_id=fid(db), created_at=now_iso())
         db.add(row)
     row.type, row.date, row.note, row.cost, row.zone_code, row.amount_mm = b.type, b.date, b.note, b.cost, b.zone, b.amount_mm
     db.commit()
@@ -38,7 +39,7 @@ def save(db: Session, b: rq.ActivityBody) -> dict:
 
 
 def remove(db: Session, client_id: str) -> bool:
-    row = db.scalars(select(m.Activity).where(m.Activity.client_id == client_id)).first()
+    row = db.scalars(select(m.Activity).where(m.Activity.field_id == fid(db), m.Activity.client_id == client_id)).first()
     if row is None:
         return False                      # already gone (undo sent twice): fine
     db.delete(row)
@@ -49,7 +50,7 @@ def remove(db: Session, client_id: str) -> bool:
 
 
 def listing(db: Session) -> list[dict]:
-    rows = db.scalars(select(m.Activity).order_by(m.Activity.date.desc(), m.Activity.id.desc())).all()
+    rows = db.scalars(select(m.Activity).where(m.Activity.field_id == fid(db)).order_by(m.Activity.date.desc(), m.Activity.id.desc())).all()
     return [_to_out(r) for r in rows]
 
 
@@ -57,13 +58,13 @@ def recent_waterings(db: Session, today: date | None = None) -> list[dict]:
     """Irrigation entries of the last days, in the form the engine takes: {date, zone, mm}. Entries dated after today are ignored."""
     today = today or datetime.utcnow().date()
     since = (today - timedelta(days=WATERING_LOOKBACK_DAYS)).isoformat()
-    rows = db.scalars(select(m.Activity).where(m.Activity.type == "irrigation", m.Activity.date >= since, m.Activity.date <= today.isoformat())).all()
+    rows = db.scalars(select(m.Activity).where(m.Activity.field_id == fid(db), m.Activity.type == "irrigation", m.Activity.date >= since, m.Activity.date <= today.isoformat())).all()
     return [{"date": r.date, "zone": r.zone_code, "mm": r.amount_mm} for r in rows]
 
 
 def spending(db: Session) -> dict:
     """What the farmer recorded spending: total, number of entries and the biggest one. Numbers only, for the Copilot's facts."""
-    rows = [a for a in db.scalars(select(m.Activity)).all() if a.cost]
+    rows = [a for a in db.scalars(select(m.Activity).where(m.Activity.field_id == fid(db))).all() if a.cost]
     if not rows:
         return {"total": 0, "n": 0, "top_note": None, "top_cost": None, "currency": settings.currency}
     top = max(rows, key=lambda a: a.cost)
