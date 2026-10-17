@@ -21,17 +21,18 @@ Each image is tagged with the commit id (`farm-final-web:<commit>`), so Azure al
 
 GitHub gives each deploy job a one-time identity token. Azure trusts it only if it comes from this repository **and** this GitHub environment (`production`). This was prepared in the resource group `CASA-team-2`: the identity `growmate-github` has a federated credential `github-production` for `repo:zakeelm6/bcg-hack-agri-advisor:environment:production` (checked). That is why the job declares `environment: production` and why the repository must be `zakeelm6/bcg-hack-agri-advisor`: pushed anywhere else, Azure refuses the login.
 
-## 3. What is in place and what is missing (state on 17 October 2026)
+## 3. What is in place and what is missing (checked on 17 October 2026, run #39022297222)
 
 | Item | State |
 |---|---|
-| The workflow `deploy.yml` | written, **never run yet** |
-| Trust between GitHub (environment `production`) and the identity `growmate-github` | exists |
-| **Rights of that identity** (push images, update the two apps) | **missing: no role is assigned to it yet** |
-| GitHub environment `production` and its variables | to create (section 4) |
-| The apps `farm-final-api` and `farm-final-web`, the registry `growmateacr2026` | exist |
+| The workflow `deploy.yml` | runs on every push to `main` / `final-project`. Last run: **`test` green, `deploy` red at "Log in to Azure"** |
+| Trust between GitHub (environment `production`) and the identity `growmate-github` | exists (federated credential `github-production`) |
+| GitHub environment `production` and its 9 variables | **missing: this is why the login fails** (no identifiers to present). Step 4a, by you |
+| **Rights of the identity** (push images, update the two apps) | **missing**. The team account cannot grant them (`AuthorizationFailed`, verified). Step 4b, by an Azure **Owner**: Andres Badilla, Gustavo Iglesias or Karsten Bruhns (BCG) |
+| The apps `farm-final-api` and `farm-final-web`, the registry `growmateacr2026` | exist, currently running images `:2` (the version before the landing page and the simple mode) |
 
-Until the roles are assigned the first run goes green on tests, then fails at "Log in to the registry" or "Roll out": this is expected, not a bug in the workflow.
+The workflow now checks the variables first ("Preflight") and says exactly which one is missing, so the red step is never a mystery.
+Until both steps are done, deploy by hand with `scripts/deploy-now.sh` (section 4d): same images, same tags, no extra right needed.
 
 ## 4. One-time setup
 
@@ -72,8 +73,17 @@ done
 ```
 Why these three and not more: `AcrPush` lets the job push images to the registry; `Container Apps Contributor` on each app lets it change that app's image. It cannot touch the team's own `frontend` app, the Speech resource or anything else. The images are built on the GitHub runner (not with `az acr build`), so no wider registry right is needed.
 
+Shortcut for 4a: `gh auth login` then `scripts/github-env.sh`. Shortcut for 4b, for the owner: `scripts/azure-grant.sh`.
+
 ### 4c. First run
 Push to `final-project`, or Actions, deploy, "Run workflow". Watch the two jobs. Green means Azure runs your commit.
+
+### 4d. Until the pipeline is allowed: deploy by hand
+```bash
+az login                     # the team account
+scripts/deploy-now.sh        # builds both images tagged with the commit, updates the two apps, checks /api/health
+```
+About 10 minutes. The result is identical to what the pipeline will do.
 
 ## 5. How to check that the display really changed
 
