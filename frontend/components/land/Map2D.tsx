@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/farm";
 import { IMAGERY, IMAGERY_ATTR, type LatLng } from "@/lib/map";
+import { Button } from "@/components/ui";
 
 type Api = { start: () => void; done: () => void; cancel: () => void };
 
@@ -37,10 +38,10 @@ export default function Map2D({ center, boundary, onSave }: { center: LatLng; bo
 
       map = L.map(el.current).setView(center, 15);
       L.tileLayer(IMAGERY, { maxZoom: 19, attribution: IMAGERY_ATTR }).addTo(map);
-      const field = L.polygon(boundary ?? [], { color: "#facc15", weight: 3, fillOpacity: 0.15 }).addTo(map);
+      const field = L.polygon(boundary ?? [], { color: "#E09A2E", weight: 3, fillOpacity: 0.2 }).addTo(map);
       if (boundary?.length) map.fitBounds(field.getBounds(), { padding: [24, 24] });
 
-      const measure = new M({ primaryAreaUnit: "hectares", activeColor: "#facc15", completedColor: "#facc15" }).addTo(map);
+      const measure = new M({ primaryAreaUnit: "hectares", activeColor: "#E09A2E", completedColor: "#E09A2E" }).addTo(map);
       let keep = false;
       map.on("measurefinish", (m: any) => {
         setDrawing(false);
@@ -69,16 +70,14 @@ export default function Map2D({ center, boundary, onSave }: { center: LatLng; bo
     <div className="relative h-full w-full">
       <div ref={el} className="h-full w-full [&_.leaflet-control-measure]:hidden" />
       <div className="absolute inset-x-3 bottom-3 z-[1000] flex flex-col gap-2">
-        {drawing && <p className="rounded-xl bg-card/95 px-3 py-2 text-center font-medium">{tooFew ? t("drawMore") : t("drawHelp")}</p>}
+        {drawing && <p className="rounded-lg bg-surface/95 px-3 py-2 text-center text-sm font-medium">{tooFew ? t("drawMore") : t("drawHelp")}</p>}
         {drawing ? (
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" className="btn-ghost" onClick={() => api.current?.cancel()}>{t("cancel")}</button>
-            <button type="button" className="btn" onClick={() => api.current?.done()}>{t("done")}</button>
+            <Button variant="secondary" onClick={() => api.current?.cancel()}>{t("cancel")}</Button>
+            <Button variant="accent" icon="check" onClick={() => api.current?.done()}>{t("done")}</Button>
           </div>
         ) : (
-          <button type="button" className="btn shadow-lg" onClick={() => api.current?.start()}>
-            {boundary?.length ? t("redrawField") : t("drawField")}
-          </button>
+          <Button variant="accent" icon="walk" className="shadow-2" onClick={() => api.current?.start()}>{boundary?.length ? t("redrawField") : t("drawField")}</Button>
         )}
       </div>
     </div>

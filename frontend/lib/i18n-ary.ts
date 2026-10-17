@@ -422,4 +422,8 @@ export const ARY: Partial<Record<Key, string>> = {
   noAlertsBody: "كنعلموك هنا ملي الجو ولا الزرع ولا المعطيات كيحتاجو الانتباه ديالك.",
   secYou: "نتا",
   secData: "المعطيات",
+  outlineUsed: "الحدود رسمتيها نتا. المساحة ديالها كتمشي لمحرك النصايح.",
+  answerByVoice: "جاوب بالصوت",
+  answerHint: "قول الجواب ديالك، ولا ضغط على صورة.",
+  notUnderstood: "ما فهمتش. عاود قولها ولا ضغط على صورة.",
 };

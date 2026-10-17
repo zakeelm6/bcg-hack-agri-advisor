@@ -35,8 +35,8 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "_archive-team",
     "node_modules",
-    "**/*.check.ts"
+    "**/*.check.ts",
+    "_archive-team"
   ]
 }

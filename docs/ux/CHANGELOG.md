@@ -189,6 +189,15 @@ living page `/design`, screenshots in `pro/design-system/`. After screenshots: `
   unread as dot + weight. **Me** (ME1): You / Data / Find your field, About in a sheet. **Onboarding** (ON1): photo with the headline on it, progress bar
   with count, one amber Next, skip always visible. **Offline** (OF1): neutral banner, never amber.
 
+## Kept from the team's app, now wired (17 October, later the same day)
+- **Onboarding answered by voice.** Every question is read through the server voice (Azure, Arabic and Darija included) with the browser as
+  fallback; a voice bar under the question listens and matches what was said to the pictures in the four languages (`lib/voiceAnswers.ts`:
+  normalised labels, shared words, loose Arabic letters; numbers in digits or words for the area). Checked with real Azure speech: "Des pommes de
+  terre." → potatoes, "Goutte à goutte." → drip, "3 hectares et demi." → 3.5, "كنزرع. مطيش." → tomatoes. A real person speaking: not tested.
+- **The team's land maps are back** (3zden): photo with outline, measure by finger (Leaflet), 3D terrain (MapLibre), in Me → Find your field,
+  restyled on the system; a drawn outline saves the area to the farmer profile so the engine uses the real surface. Libraries load only when
+  their tab opens.
+
 ## Still open
 - Real phone, real microphone in noise, screen-reader run, native Darija reader (the Darija strings are AI-written).
 - Performance on Sell and Me sits at 84–88 on the throttled mobile profile (shared bundle ~160 kB); a lighter query layer or route-level code

@@ -39,8 +39,8 @@ export default function Map3D({ center, boundary }: { center: LatLng; boundary?:
       if (!boundary?.length) return;
       const ring = [...boundary, boundary[0]].map(([lat, lng]) => [lng, lat]);
       map.addSource("field", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } } });
-      map.addLayer({ id: "field-fill", type: "fill", source: "field", paint: { "fill-color": "#facc15", "fill-opacity": 0.25 } });
-      map.addLayer({ id: "field-line", type: "line", source: "field", paint: { "line-color": "#facc15", "line-width": 3 } });
+      map.addLayer({ id: "field-fill", type: "fill", source: "field", paint: { "fill-color": "#E09A2E", "fill-opacity": 0.25 } });
+      map.addLayer({ id: "field-line", type: "line", source: "field", paint: { "line-color": "#E09A2E", "line-width": 3 } });
       const lngs = ring.map((p) => p[0]), lats = ring.map((p) => p[1]);
       map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 60, pitch: 65, bearing: -20 });
     });

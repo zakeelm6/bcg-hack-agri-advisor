@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "types": "openapi-typescript ../backend/openapi.json -o lib/api-types.d.ts",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "predev": "cp node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs public/",
+    "prebuild": "cp node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs public/"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.3",

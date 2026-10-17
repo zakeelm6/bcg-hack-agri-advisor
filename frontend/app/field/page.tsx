@@ -38,6 +38,7 @@ export default function Field() {
         <Button href={`/field/soil/${unsureZone?.code ?? "A"}`} variant={unsureZone ? "accent" : "secondary"} icon="flask" className="mt-3" full>{t("addSoilTest")}</Button>
         {unsureZone && <p className="mt-2 text-xs text-text-3">{t("soilHint", { z: unsureZone.code })}</p>}
       </Card>
+      <Button href="/me#land" variant="secondary" icon="walk" full>{t("drawField")}</Button>
       <Card>
         <Label end={wx.fallback ? <Badge tone="simulated">{t("weatherFallback")}</Badge> : <Badge icon="cloud">Open-Meteo</Badge>}>{t("weather")}</Label>
         <div className="mt-3 grid grid-cols-5 gap-1.5">

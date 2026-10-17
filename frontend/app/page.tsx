@@ -6,8 +6,10 @@ import { useFarm, useT, type Profile } from "@/lib/farm";
 import { useActions } from "@/lib/data";
 import { challenges, cropName, crops, irrigations, langs, plantedChoices, tr, type Key } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
-import { speak } from "@/lib/voice";
-import { Button } from "@/components/ui";
+import { useVoice } from "@/lib/useVoice";
+import { useOffline } from "@/lib/data";
+import { Button, Icon as UiIcon } from "@/components/ui";
+import { matchAnswer, parseArea, type Choice } from "@/lib/voiceAnswers";
 
 const blank: Profile = { location: "", crop: "", plantedOn: "", area: "", irrigation: "", challenge: "" };
 const weeksAgo = (w: number) => new Date(Date.now() - w * 7 * 864e5).toISOString().slice(0, 10);
@@ -27,6 +29,10 @@ function Onboarding() {
   const edit = useSearchParams().has("edit");
   const [step, setStep] = useState(edit ? 0 : -1); // -1 = welcome screen
   const [locating, setLocating] = useState<"" | "busy" | "failed">("");
+  const offline = useOffline();
+  const voice = useVoice(lang, offline);           // server voice (Azure) first, the browser as fallback
+  const [heard, setHeard] = useState<string | null>(null);      // what the farmer said, shown under the question
+  const [notUnderstood, setNotUnderstood] = useState(false);
 
   // Returning farmers land on My Farm; the welcome + questions are for new users or ?edit.
   useEffect(() => { if (profile && !edit) router.replace("/home"); }, [profile, edit, router]);
@@ -49,8 +55,32 @@ function Onboarding() {
   ];
   const last = step === steps.length - 1;
 
-  // Read each question aloud: the farmer doesn't have to read it.
-  useEffect(() => { if (step >= 0) speak(t(steps[step].q), lang); }, [step, lang]);
+  // Read each question aloud: the farmer doesn't have to read it. Azure when configured (Arabic and Darija included), else the browser.
+  useEffect(() => { if (step >= 0) { setHeard(null); setNotUnderstood(false); voice.speak(t(steps[step].q)); } return () => voice.stopSpeaking(); }, [step, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The farmer answers by voice: what was heard is matched to the pictures of the current question.
+  const choicesFor = (i: number): Choice[] => {
+    const L = (k: Key) => [tr("en", k), tr("fr", k), tr("ar", k), tr("ary", k)];
+    if (i === 1) return crops.map((c) => ({ id: c.id, labels: [cropName("en", c.id), cropName("fr", c.id), cropName("ar", c.id), cropName("ary", c.id)] }));
+    if (i === 2) return [...plantedChoices.map((c) => ({ id: weeksAgo(c.weeks), labels: L(c.key) })), { id: "unknown", labels: L("planted_unknown") }];
+    if (i === 4) return irrigations.map((c) => ({ id: c.id, labels: L(c.key) }));
+    if (i === 5) return challenges.map((c) => ({ id: c.id, labels: L(c.key) }));
+    return [];
+  };
+  async function answerByVoice() {
+    setNotUnderstood(false);
+    const text = await voice.listen();
+    if (!text) return;
+    setHeard(text);
+    if (step === 0) return setP({ ...p, location: text, lat: undefined, lon: undefined });
+    if (step === 3) { const ha = parseArea(text); if (ha == null) return setNotUnderstood(true); return setP({ ...p, area: `${ha} ha` }); }
+    const id = matchAnswer(text, choicesFor(step));
+    if (!id) { if (step === 1) { setP({ ...p, crop: text }); return; } return setNotUnderstood(true); }
+    if (step === 1) pick({ crop: id });
+    else if (step === 2) pick({ plantedOn: id === "unknown" ? "" : id });
+    else if (step === 4) pick({ irrigation: id });
+    else pick({ challenge: id as Profile["challenge"] });
+  }
 
   if (profile && !edit) return null;
 
@@ -122,7 +152,7 @@ function Onboarding() {
       </ul>
       <div role="group" aria-label={t("chooseLang")} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {langs.map((l) => (
-          <button key={l.id} type="button" lang={l.id} aria-pressed={lang === l.id} onClick={() => { setLang(l.id); speak(tr(l.id, "headline"), l.id); }}
+          <button key={l.id} type="button" lang={l.id} aria-pressed={lang === l.id} onClick={() => setLang(l.id)}
             className={`pressable min-h-12 rounded-lg border text-base font-semibold transition-colors ${lang === l.id ? "border-brand bg-brand-soft text-brand" : "border-line bg-surface hover:bg-surface-2"}`}>{l.name}</button>
         ))}
       </div>
@@ -145,9 +175,22 @@ function Onboarding() {
       <form key={step} className="anim-fade-up mt-6 flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
         <div className="flex items-start gap-3">
           <h1 className="font-display flex-1 text-3xl leading-tight">{t(steps[step].q)}</h1>
-          <Button variant="secondary" size="sm" icon="speaker" iconOnly onClick={() => speak(t(steps[step].q), lang)}>{t("listen")}</Button>
+          <Button variant="secondary" size="sm" icon="speaker" iconOnly onClick={() => voice.speak(t(steps[step].q))}>{t("listen")}</Button>
         </div>
-        <div className="mt-6">{steps[step].body}</div>
+        {voice.hasVoice && !offline && (
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-line bg-surface p-3">
+            <button type="button" onClick={voice.state === "listening" ? voice.stopListening : answerByVoice} disabled={voice.state === "speaking"} aria-label={voice.state === "listening" ? t("stop") : t("answerByVoice")}
+              className={`pressable grid h-14 w-14 flex-none place-items-center rounded-full transition-[background-color,box-shadow] disabled:opacity-50 ${voice.state === "listening" ? "bg-danger text-white" : "bg-accent text-on-accent"}`}
+              style={voice.state === "listening" ? { boxShadow: `0 0 0 ${4 + Math.round(voice.level * 12)}px rgb(178 58 42 / .25)` } : undefined}>
+              <UiIcon name={voice.state === "listening" ? "stop" : "mic"} size={26} />
+            </button>
+            <div className="min-w-0 flex-1 text-sm">
+              <b className="block">{voice.state === "listening" ? t("stListening") : t("answerByVoice")}</b>
+              <span className={`block truncate ${notUnderstood ? "text-danger" : "text-text-2"}`}>{voice.message ? t(voice.message as Key) : notUnderstood ? t("notUnderstood") : heard ? `“${heard}”` : t("answerHint")}</span>
+            </div>
+          </div>
+        )}
+        <div className="mt-5">{steps[step].body}</div>
         <div className="mt-auto flex items-center gap-3 pt-8">
           <Button variant="ghost" onClick={() => next()}>{t("skip")}</Button>
           {!steps[step].pick && <Button type="submit" variant="accent" size="lg" className="flex-1" iconEnd={last ? "check" : "chev"}>{last ? t("start") : t("next")}</Button>}

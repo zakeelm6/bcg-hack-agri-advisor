@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FieldFinder } from "@/components/FieldFinder";
+import FieldMap from "@/components/land/FieldMap";
 import { LANG_NATIVE } from "@/components/LangControl";
 import { PageSkeleton, PageTitle, TwoCol, useFmt } from "@/components/common";
 import { Badge, Button, Card, Icon, Label, ListItem, Segmented, Sheet, Stat, useToast } from "@/components/ui";
@@ -60,7 +61,10 @@ export default function Me() {
         </Card>
         {offline && <p className="text-center text-xs text-text-3">{t("offlineSaved")}</p>}
       </Section>
-      <Section title={t("findField")}><FieldFinder field={s.field} /></Section>
+      <Section title={t("findField")}>
+        <FieldMap center={profile?.lat !== undefined && profile?.lon !== undefined ? [profile.lat, profile.lon] : [s.field.lat, s.field.lon]} fallbackHa={s.field.area_ha} />
+        <FieldFinder field={s.field} />
+      </Section>
     </>} />
     <Sheet open={about} onClose={() => setAbout(false)} title={t("about")} closeLabel={t("close")}>
       <div className="space-y-3 pb-2 text-sm">

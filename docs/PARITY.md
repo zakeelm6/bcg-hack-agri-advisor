@@ -6,7 +6,8 @@ State on 17 October 2026, checked with headless Chromium at 390 px and 1440 px (
 
 | Screen or behaviour | Legacy | React | State |
 |---|---|---|---|
-| Onboarding with picture choices (language, location, crop, planting, area, irrigation, worry), skip to the demo field | no (About page only) | `/` | done (answers stay on the phone, not used by the engine yet) |
+| Onboarding with picture choices (language, location, crop, planting, area, irrigation, worry), skip to the demo field; each question read aloud (Azure when configured) and **answered by voice** (the answer is matched to the pictures in the four languages) | no (About page only) | `/` | done; answers reach the engine through `/api/farmer` |
+| Team's land maps: satellite photo with the outline, measure by finger (Leaflet), 3D terrain (MapLibre); a drawn outline sends its area to the engine | no | Me → Find your field | done |
 | Home: "Do this now" card with confidence and "+N more", "All good" empty state | yes | `/home` | done |
 | Land view: Sentinel-2 picture, 4 zones, layers vigor / moisture / soil / trust, values top-end, task pins (links, 44 px+), sensor dots, unreliable-sensor marker, satellite anomaly cells, legend, honest labels | yes | `components/Land.tsx` | done |
 | Copilot docked on Home, floating elsewhere, hidden where the page has its own button; phone button scrolls to the dock | yes | `components/Copilot.tsx` | done |
@@ -28,7 +29,7 @@ State on 17 October 2026, checked with headless Chromium at 390 px and 1440 px (
 | Served from the API at `/` | yes | no (own server, port 3000) | by design: Phase 6 puts both behind one URL |
 
 ## Open before removing the legacy app
-1. Port GPS, "walk the field edge" and village search (About page) into `/me` or the onboarding.
-2. Farmer profile endpoint (`GET/POST /api/farmer`) and the engine reading it instead of the demo field (roadmap Phase 3 step 6, contract addition).
+1. ~~Port GPS, "walk the field edge" and village search~~ done (Me → Find your field).
+2. ~~Farmer profile endpoint~~ done (`/api/farmer`); the position still stays the demo parcel until its satellite data is downloaded.
 3. A real phone run (Android Chrome, HTTPS) of the voice and the camera.
 4. Native Arabic review of the new strings.
