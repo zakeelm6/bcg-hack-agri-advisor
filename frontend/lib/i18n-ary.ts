@@ -408,4 +408,7 @@ export const ARY: Partial<Record<Key, string>> = {
   fromRules: "من القواعد",
   fromModel: "جواب النموذج، تراجع",
   fromPhone: "محفوظ فالتيليفون ديالك",
+  tasksSub: "{n} محلولة",
+  doneSection: "لي تدارت ولا تعدات",
+  followNote: "جوابك كيحسن النصيحة الجاية.",
 };

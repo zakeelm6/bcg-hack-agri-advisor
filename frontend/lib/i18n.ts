@@ -325,6 +325,8 @@ const S = {
   offsetNote: ["Gap learned from {n} soil samples against the shared sensor in zone {s}.", "Écart appris sur {n} échantillons de sol par rapport au capteur partagé de la zone {s}.", "فارق متعلَّم من {n} عيّنات تربة مقارنة بالمستشعر المشترك في المنطقة {s}."],
   talk: ["Talk", "Parler", "محادثة"], copilotIntro: ["I explain the advice. I never invent a number.", "J'explique les conseils. Je n'invente jamais un chiffre.", "أشرح النصيحة. لا أخترع رقمًا أبدًا."],
   fromRules: ["From the rules", "D'après les règles", "من القواعد"], fromModel: ["Model answer, checked", "Réponse du modèle, contrôlée", "جواب النموذج، مُراجَع"], fromPhone: ["Saved on your phone", "Enregistré sur votre téléphone", "محفوظ على هاتفك"],
+  tasksSub: ["{n} open", "{n} ouverte(s)", "{n} مفتوحة"], doneSection: ["Done or skipped", "Faites ou ignorées", "منجزة أو متخطاة"],
+  followNote: ["Your answer sharpens the next advice.", "Votre réponse affine le prochain conseil.", "جوابك يحسّن النصيحة القادمة."],
   close: ["Close", "Fermer", "إغلاق"], theme: ["Appearance", "Apparence", "المظهر"], themeAuto: ["Automatic", "Automatique", "تلقائي"], themeLight: ["Light", "Clair", "فاتح"], themeDark: ["Dark", "Sombre", "داكن"],
   highContrast: ["High contrast for sunlight", "Contraste élevé pour le soleil", "تباين عالٍ لضوء الشمس"],
   darijaNote: ["Darija was written by an AI model and awaits a native review.", "La darija a été écrite par un modèle d'IA et attend une relecture native.", "الدارجة كتبها نموذج ذكاء اصطناعي وتنتظر مراجعة ناطق أصلي."],

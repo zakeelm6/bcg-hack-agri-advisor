@@ -1,43 +1,48 @@
 "use client";
-// Pieces shared by several screens: page title with optional back arrow, task card, the loading skeleton, date helpers.
-import Link from "next/link";
+// Page templates shared by the screens: title row with an optional back link, the two-column layout, formatting helpers.
 import type { TaskOut } from "@/lib/api";
 import { useFarm, useT } from "@/lib/farm";
 import type { Lang } from "@/lib/i18n";
-import { Circle, Ic, Meter, Skeleton, taskIcon } from "./legacy-ui";
+import { Badge, Button, ConfidenceMeter, ListItem, Skeleton, SkeletonCard, taskIcon } from "./ui";
 
-export const locale = (lang: Lang) => ((lang === "ar" || lang === "ary") ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB");
+export const locale = (lang: Lang) => (lang === "ar" || lang === "ary" ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB");
 export const useFmt = () => {
   const { lang } = useFarm();
-  return { date: (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString(locale(lang), { day: "numeric", month: "short" }), num: (n: number, d = 0) => Number(n).toLocaleString(locale(lang), { minimumFractionDigits: d, maximumFractionDigits: d }) };
+  const t = useT();
+  const loc = locale(lang);
+  return {
+    date: (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString(loc, { day: "numeric", month: "short" }),
+    dateLong: (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString(loc, { weekday: "long", day: "numeric", month: "long" }),
+    /** today / tomorrow / weekday for the next 6 days / short date */
+    dayWord: (iso: string) => { const d = new Date(iso + "T12:00:00"), now = new Date(); now.setHours(12, 0, 0, 0); const diff = Math.round((d.getTime() - now.getTime()) / 864e5); return diff === 0 ? t("today") : diff === 1 ? t("tomorrow") : diff === -1 ? t("yesterday") : diff > 1 && diff < 7 ? d.toLocaleDateString(loc, { weekday: "long" }) : d.toLocaleDateString(loc, { day: "numeric", month: "short" }); },
+    num: (n: number, d = 0) => Number(n).toLocaleString(loc, { minimumFractionDigits: d, maximumFractionDigits: d }),
+  };
 };
 
-export function PageTitle({ title, back }: { title: string; back?: string }) {
+export function PageTitle({ title, back, end, sub }: { title: string; back?: string; end?: React.ReactNode; sub?: React.ReactNode }) {
   const t = useT();
-  if (!back) return <h1 className="pagetitle">{title}</h1>;
   return (
-    <div className="mb-3 flex items-center gap-2">
-      <Link href={back} aria-label={t("back")} className="grid h-12 w-12 flex-none place-items-center rounded-full bg-surface text-leaf"><Ic name="chev" size={26} className="scale-x-[-1] rtl:scale-x-100" /></Link>
-      <h1 className="pagetitle !mb-0">{title}</h1>
+    <div className="mb-4 flex items-center gap-2">
+      {back && <Button href={back} variant="ghost" size="sm" icon="chev" iconOnly className="-ms-2 [&_svg]:-scale-x-100 rtl:[&_svg]:scale-x-100">{t("back")}</Button>}
+      <div className="min-w-0 flex-1"><h1 className="font-display text-2xl leading-tight md:text-3xl">{title}</h1>{sub && <p className="mt-0.5 text-sm text-text-2">{sub}</p>}</div>
+      {end}
     </div>
   );
+}
+
+/** Two columns on wide screens: the main column (list, land) and a side column (detail, summary). Phones stack them. */
+export function TwoCol({ main, side, sideFirst }: { main: React.ReactNode; side: React.ReactNode; sideFirst?: boolean }) {
+  return <div className="md:grid md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:items-start md:gap-6"><div className={sideFirst ? "md:order-2" : ""}>{main}</div><div className={`mt-4 md:mt-0 ${sideFirst ? "md:order-1" : ""}`}>{side}</div></div>;
 }
 
 export function TaskCard({ t: task }: { t: TaskOut }) {
   const t = useT();
   const off = task.status !== "open";
   return (
-    <Link href={`/tasks/${task.id}`} className="card flex w-full items-center gap-3 text-start hover:shadow-md">
-      <span className={off ? "opacity-60" : ""}><Circle tone={task.type === "irrigate" ? "amber" : "soft"}><Ic name={taskIcon(task.type)} size={28} /></Circle></span>
-      <div className="min-w-0 flex-1">
-        <div className={`text-lg font-bold leading-tight ${off ? "opacity-60" : ""}`}>{task.title}</div>
-        <div className="sub inline-flex items-center gap-1"><Ic name="clock" size={14} /> {task.when_text}</div>
-        {!off && <div className="mt-1.5"><Meter conf={task.confidence} small /></div>}
-      </div>
-      {task.status === "done" && <span className="pill pill-dk gap-1"><Ic name="check" size={16} w={3} />{t("done")}</span>}
-      {task.status === "skipped" && <span className="pill pill-ol">{t("skipped")}</span>}
-    </Link>
+    <ListItem href={`/tasks/${task.id}`} icon={taskIcon(task.type)} iconTone={off ? "neutral" : task.type === "irrigate" ? "accent" : "neutral"} muted={off} title={task.title} sub={task.when_text}
+      meta={!off ? <ConfidenceMeter conf={task.confidence} size="sm" /> : undefined}
+      end={task.status === "done" ? <Badge tone="success" icon="check">{t("done")}</Badge> : task.status === "skipped" ? <Badge tone="outline">{t("skipped")}</Badge> : undefined} chevron={!off} className="mb-2.5" />
   );
 }
 
-export const PageSkeleton = () => <div role="status"><Skeleton className="mb-4 h-8 w-2/5" /><Skeleton className="mb-3 h-20" /><Skeleton className="mb-3 h-20" /><Skeleton className="h-20" /></div>;
+export const PageSkeleton = () => <div role="status" className="space-y-3"><Skeleton className="mb-5 h-9 w-2/5" /><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>;

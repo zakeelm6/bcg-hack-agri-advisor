@@ -1,12 +1,12 @@
 "use client";
-// Shell: brand, language switch, five-tab navigation (bottom bar on phones, inline on wide screens), offline banner.
-// Semantic colours live in globals.css; logical properties keep Arabic right-to-left correct.
+// Shell: brand, language control, six-tab navigation (bottom bar on phones with safe-area inset, inline on wide screens),
+// offline status. Content is centred at 1200 px so a wide screen is a considered layout, not a stretched phone.
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Banner } from "@/components/Banner";
 import { LangControl } from "@/components/LangControl";
-import { Ic } from "@/components/legacy-ui";
+import { Icon } from "@/components/ui";
 import { useAppState, unreadCount } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 import { isRtl } from "@/lib/i18n";
@@ -22,6 +22,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname() ?? "/";
   const router = useRouter();
   const onboarding = path === "/";
+  const design = path === "/design";
   const { data: s } = useAppState();
 
   useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = isRtl(lang) ? "rtl" : "ltr"; }, [lang]);
@@ -30,38 +31,45 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   if (!ready) return null;
   const unread = unreadCount(s);
-  const active = (href: string) => path === href || (href !== "/home" && path.startsWith(href + "/")) || (href === "/tasks" && path.startsWith("/tasks"));
+  const active = (href: string) => path === href || path.startsWith(href + "/");
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-surface">
-      <header className="flex min-h-16 items-center gap-2 rounded-b-3xl bg-leaf px-3 py-1.5 text-paper md:gap-3 md:px-4">
-        <Link href={onboarding ? "/" : "/home"} className="inline-flex min-h-12 items-center gap-2.5 whitespace-nowrap pe-2 text-base font-bold md:text-lg"><Ic name="leaf" size={26} /><span>{t("appName")}</span></Link>
-        {!onboarding && (
-          <nav aria-label="Main" className="ms-auto hidden gap-2 md:flex">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} aria-current={active(n.href) ? "page" : undefined} className={`relative rounded-full px-4 py-2.5 font-semibold ${active(n.href) ? "bg-paper text-leaf" : "opacity-85 hover:bg-white/10"}`}>
-                {t(n.key)}{n.key === "navAlerts" && unread > 0 && <i className="absolute top-1.5 end-2.5 h-2.5 w-2.5 rounded-full bg-sun" />}
-              </Link>
-            ))}
-          </nav>
-        )}
-        <span className={`inline-flex items-center gap-2 ${onboarding ? "ms-auto" : "ms-auto md:ms-0"}`}>
-          <LangControl onDark />
-        </span>
+    <div className="flex min-h-dvh w-full flex-col bg-bg">
+      <header className="sticky top-0 z-30 bg-brand-strong text-on-brand shadow-1">
+        <div className="mx-auto flex min-h-16 w-full max-w-[1200px] items-center gap-2 px-3 py-2 md:gap-3 md:px-6">
+          <Link href={onboarding ? "/" : "/home"} className="inline-flex min-h-12 items-center gap-2.5 whitespace-nowrap pe-2 font-display text-lg md:text-xl">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-white/12"><Icon name="leaf" size={22} /></span><span>{t("appName")}</span>
+          </Link>
+          {!onboarding && (
+            <nav aria-label="Main" className="ms-auto hidden gap-1 md:flex">
+              {NAV.map((n) => (
+                <Link key={n.href} href={n.href} aria-current={active(n.href) ? "page" : undefined} className={`relative inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold transition-colors ${active(n.href) ? "bg-surface text-brand" : "opacity-90 hover:bg-white/10"}`}>
+                  {t(n.key)}{n.key === "navAlerts" && unread > 0 && <i aria-hidden className="absolute top-1.5 end-2 h-2 w-2 rounded-full bg-accent" />}
+                </Link>
+              ))}
+            </nav>
+          )}
+          <span className={`inline-flex items-center gap-2 ${onboarding ? "ms-auto" : "ms-auto md:ms-0"}`}><LangControl onDark /></span>
+        </div>
       </header>
-      <main className={`m-3 flex-1 rounded-3xl bg-page p-3 md:m-4 md:mx-[clamp(16px,2.5vw,48px)] md:p-7 ${onboarding ? "" : "pb-28 md:pb-8"}`}>
+      <main className={`mx-auto w-full max-w-[1200px] flex-1 px-3 pt-3 md:px-6 md:pt-5 ${onboarding || design ? "pb-8" : "pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-10"}`}>
         {!onboarding && <Banner />}
         {children}
       </main>
       {!onboarding && (
-        <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 grid h-[78px] grid-cols-6 rounded-t-3xl bg-leaf text-paper md:hidden">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} aria-current={active(n.href) ? "page" : undefined} className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active(n.href) ? "font-bold opacity-100" : "opacity-80"}`}>
-              <Ic name={n.icon} size={26} /><span>{t(n.key)}</span>
-              {active(n.href) && <i className="absolute bottom-1.5 h-1 w-5 rounded-full bg-sun" />}
-              {n.key === "navAlerts" && unread > 0 && <i className="absolute top-3 end-[calc(50%-20px)] h-2.5 w-2.5 rounded-full bg-sun" />}
-            </Link>
-          ))}
+        <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+          <div className="grid h-[72px] grid-cols-6">
+            {NAV.map((n) => {
+              const on = active(n.href);
+              return (
+                <Link key={n.href} href={n.href} aria-current={on ? "page" : undefined} className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${on ? "text-brand" : "text-text-3"}`}>
+                  <span className={`grid h-8 w-12 place-items-center rounded-full transition-colors ${on ? "bg-brand-soft" : ""}`}><Icon name={n.icon} size={24} /></span>
+                  <span>{t(n.key)}</span>
+                  {n.key === "navAlerts" && unread > 0 && <i aria-hidden className="absolute top-2 end-[calc(50%-14px)] h-2 w-2 rounded-full bg-accent ring-2 ring-surface" />}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
       )}
     </div>
