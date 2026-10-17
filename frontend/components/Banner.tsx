@@ -2,7 +2,7 @@
 // Offline banner: calm, says how old the saved advice is and that actions are kept on the phone.
 import { useActions, useAppState, useOffline } from "@/lib/data";
 import { useT } from "@/lib/farm";
-import { Ic } from "./ui";
+import { Ic } from "./legacy-ui";
 
 export function agoKey(t: (k: "justNow" | "minAgo" | "hAgo" | "daysAgo", v?: Record<string, number>) => string, iso?: string | null) {
   if (!iso) return "";

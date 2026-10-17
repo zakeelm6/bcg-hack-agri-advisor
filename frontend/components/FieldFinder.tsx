@@ -4,7 +4,7 @@
 import { useState } from "react";
 import type { StateOut } from "@/lib/api";
 import { useT } from "@/lib/farm";
-import { Circle, Ic } from "./ui";
+import { Circle, Ic } from "./legacy-ui";
 
 type Pt = { lat: number; lon: number; acc: number };
 const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => { const R = 6371, r = (x: number) => (x * Math.PI) / 180; const dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon); const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };

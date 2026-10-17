@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { TaskOut } from "@/lib/api";
 import { useFarm, useT } from "@/lib/farm";
 import type { Lang } from "@/lib/i18n";
-import { Circle, Ic, Meter, Skeleton, taskIcon } from "./ui";
+import { Circle, Ic, Meter, Skeleton, taskIcon } from "./legacy-ui";
 
 export const locale = (lang: Lang) => ((lang === "ar" || lang === "ary") ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB");
 export const useFmt = () => {

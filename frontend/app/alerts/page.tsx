@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageSkeleton, PageTitle } from "@/components/common";
-import { Circle, Ic } from "@/components/ui";
+import { Circle, Ic } from "@/components/legacy-ui";
 import { writeCache, type StateOut } from "@/lib/api";
 import { stateKey, useAppState } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";

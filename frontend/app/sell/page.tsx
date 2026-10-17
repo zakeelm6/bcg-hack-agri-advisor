@@ -2,7 +2,7 @@
 // Sell: the harvest estimate (not validated, says so), a sale offer, simulated buyers. Every number comes from the server.
 import { useState } from "react";
 import { PageSkeleton, PageTitle, useFmt } from "@/components/common";
-import { Circle, Ic, Tag, useToast } from "@/components/ui";
+import { Circle, Ic, Tag, useToast } from "@/components/legacy-ui";
 import { useActions, useForecast, useOffers } from "@/lib/data";
 import { useT } from "@/lib/farm";
 

@@ -9,7 +9,7 @@ import { useAppState, useOffline } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 import type { Key } from "@/lib/i18n";
 import { useVoice } from "@/lib/useVoice";
-import { Ic } from "./ui";
+import { Ic } from "./legacy-ui";
 
 type Msg = { role: "user"; text: string } | { role: "bot"; text: string; source?: string; note?: string | null; actions?: { label: string; go: string }[] };
 

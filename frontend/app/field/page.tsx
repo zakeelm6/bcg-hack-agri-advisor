@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { LandCard } from "@/components/Land";
 import { PageSkeleton, PageTitle, useFmt } from "@/components/common";
-import { Ic, Skeleton } from "@/components/ui";
+import { Ic, Skeleton } from "@/components/legacy-ui";
 import { openTasks, useAnomalies, useAppState, useLand, useSeries } from "@/lib/data";
 import { useT } from "@/lib/farm";
 import { SoilLine } from "@/components/SoilLine";

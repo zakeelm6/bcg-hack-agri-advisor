@@ -389,4 +389,13 @@ export const ARY: Partial<Record<Key, string>> = {
   noNetRetry: "ما كاين الأنترنت. عاود ملي يجي.",
   search: "قلب",
   profileApplied: "النصايح كتستعمل: {what}.",
+
+  // language control and theme
+  close: "سد",
+  theme: "الشكل",
+  themeAuto: "أوتوماتيك",
+  themeLight: "فاتح",
+  themeDark: "غامق",
+  highContrast: "تباين قوي للشمس",
+  darijaNote: "الدارجة كتبها نموذج ذكاء اصطناعي وكتسنى مراجعة واحد كيهضر بيها.",
 };

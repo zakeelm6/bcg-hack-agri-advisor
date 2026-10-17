@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PageSkeleton, PageTitle, TaskCard } from "@/components/common";
-import { Ic } from "@/components/ui";
+import { Ic } from "@/components/legacy-ui";
 import { useAppState } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 

@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { PageSkeleton, PageTitle } from "@/components/common";
-import { Ic, useToast } from "@/components/ui";
+import { Ic, useToast } from "@/components/legacy-ui";
 import { useActions, useAppState, useOffline } from "@/lib/data";
 import { useT } from "@/lib/farm";
 import { SoilLine, type Test } from "@/components/SoilLine";

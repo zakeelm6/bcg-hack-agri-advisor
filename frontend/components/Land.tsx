@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { API, type AnomaliesOut, type StateOut, type ZoneOut } from "@/lib/api";
 import { useFarm, useT } from "@/lib/farm";
-import { Ic, ICONS, Tag, taskIcon } from "./ui";
+import { Ic, ICONS, Tag, taskIcon } from "./legacy-ui";
 
 export type Layer = "vigor" | "moisture" | "soil" | "trust";
 const ND = { low: "#D9A64C", mid: "#9CCC6B", high: "#4C8A3A" };

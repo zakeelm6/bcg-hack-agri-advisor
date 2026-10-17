@@ -321,6 +321,9 @@ const S = {
   found: ["Found: {p}", "Trouvé : {p}", "وُجد: {p}"], notFound: ["No place found with that name.", "Aucun lieu trouvé avec ce nom.", "لم يُعثر على مكان بهذا الاسم."],
   noNetRetry: ["No connection. Try again when you are online.", "Pas de connexion. Réessayez une fois en ligne.", "لا اتصال. حاول مجددًا عند الاتصال."], search: ["Search", "Rechercher", "بحث"],
   profileApplied: ["Used by the advice: {what}.", "Utilisé par les conseils : {what}.", "تستخدمه النصائح: {what}."],
+  close: ["Close", "Fermer", "إغلاق"], theme: ["Appearance", "Apparence", "المظهر"], themeAuto: ["Automatic", "Automatique", "تلقائي"], themeLight: ["Light", "Clair", "فاتح"], themeDark: ["Dark", "Sombre", "داكن"],
+  highContrast: ["High contrast for sunlight", "Contraste élevé pour le soleil", "تباين عالٍ لضوء الشمس"],
+  darijaNote: ["Darija was written by an AI model and awaits a native review.", "La darija a été écrite par un modèle d'IA et attend une relecture native.", "الدارجة كتبها نموذج ذكاء اصطناعي وتنتظر مراجعة ناطق أصلي."],
   skipToHome: ["Skip, show me the demo field", "Passer, voir le champ de démonstration", "تخطَّ وأرني الحقل التجريبي"],
   profileNote: ["Crop, planting date and area are sent to the advice engine. The position stays the demo parcel until its satellite data is downloaded.", "Culture, date de plantation et surface sont envoyées au moteur de conseil. La position reste la parcelle de démonstration tant que ses données satellite ne sont pas téléchargées.", "المحصول وتاريخ الزراعة والمساحة تُرسل إلى محرك النصائح. يبقى الموقع هو القطعة التجريبية حتى تُحمَّل بيانات القمر الصناعي."],
 } satisfies Record<string, [string, string, string]>;

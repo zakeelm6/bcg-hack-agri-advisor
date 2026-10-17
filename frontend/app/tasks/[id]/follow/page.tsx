@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { PageSkeleton, PageTitle } from "@/components/common";
-import { Circle, Ic, Skeleton, useToast } from "@/components/ui";
+import { Circle, Ic, Skeleton, useToast } from "@/components/legacy-ui";
 import { fetchJson, type VisionOut } from "@/lib/api";
 import { useActions, useAppState, useOffline } from "@/lib/data";
 import { useT } from "@/lib/farm";

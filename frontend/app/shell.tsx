@@ -5,10 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Banner } from "@/components/Banner";
-import { Ic } from "@/components/ui";
+import { LangControl } from "@/components/LangControl";
+import { Ic } from "@/components/legacy-ui";
 import { useAppState, unreadCount } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
-import { isRtl, langs } from "@/lib/i18n";
+import { isRtl } from "@/lib/i18n";
 
 const NAV = [
   { href: "/home", key: "navHome", icon: "home" }, { href: "/field", key: "navField", icon: "leaf" }, { href: "/tasks", key: "navTasks", icon: "tasks" },
@@ -16,7 +17,7 @@ const NAV = [
 ] as const;
 
 export default function Shell({ children }: { children: React.ReactNode }) {
-  const { ready, profile, lang, setLang } = useFarm();
+  const { ready, profile, lang } = useFarm();
   const t = useT();
   const path = usePathname() ?? "/";
   const router = useRouter();
@@ -45,10 +46,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </nav>
         )}
         <span className={`inline-flex items-center gap-2 ${onboarding ? "ms-auto" : "ms-auto md:ms-0"}`}>
-          <span role="group" aria-label={t("chooseLang")} className="inline-flex overflow-hidden rounded-full border-[1.5px] border-current text-[11px] font-bold md:text-xs">
-            {langs.map((l) => <button key={l.id} type="button" lang={l.id} onClick={() => setLang(l.id)} aria-pressed={lang === l.id} title={l.name} className={`min-h-12 min-w-[46px] px-1.5 md:min-w-12 md:px-3 ${lang === l.id ? "bg-paper text-leaf" : "opacity-80"}`}>{{ ar: "عربي", ary: "دارجة", fr: "FR", en: "EN" }[l.id]}</button>)}
-          </span>
-          {!onboarding && <Link href="/me#about" aria-label={t("about")} className="grid h-12 w-12 place-items-center rounded-full hover:bg-white/15"><Ic name="info" size={22} /></Link>}
+          <LangControl onDark />
         </span>
       </header>
       <main className={`m-3 flex-1 rounded-3xl bg-page p-3 md:m-4 md:mx-[clamp(16px,2.5vw,48px)] md:p-7 ${onboarding ? "" : "pb-28 md:pb-8"}`}>

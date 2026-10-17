@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCopilot } from "@/components/Copilot";
 import { PageSkeleton, PageTitle } from "@/components/common";
-import { Circle, Ic, Meter, taskIcon, useToast } from "@/components/ui";
+import { Circle, Ic, Meter, taskIcon, useToast } from "@/components/legacy-ui";
 import { useActions, useAppState } from "@/lib/data";
 import { useT } from "@/lib/farm";
 

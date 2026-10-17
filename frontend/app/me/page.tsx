@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageSkeleton, PageTitle, useFmt } from "@/components/common";
-import { Circle, Ic, useToast } from "@/components/ui";
+import { Circle, Ic, useToast } from "@/components/legacy-ui";
 import { cachedGet, fetchJson, type CopilotStatusOut, type SpeechStatusOut, type StateOut } from "@/lib/api";
 import { stateKey, useActions, useAppState, useOffline } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CopilotDock } from "@/components/Copilot";
 import { LandCard } from "@/components/Land";
 import { PageSkeleton, useFmt } from "@/components/common";
-import { Circle, Ic, Meter, taskIcon } from "@/components/ui";
+import { Circle, Ic, Meter, taskIcon } from "@/components/legacy-ui";
 import { openTasks, useAnomalies, useAppState, useLand } from "@/lib/data";
 import { useT } from "@/lib/farm";
 
