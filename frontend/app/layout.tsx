@@ -10,8 +10,8 @@ import "./globals.css";
 
 // Self-hosted by next/font (font-display: swap). Geist for the interface, Fraunces for titles, Noto Naskh for Arabic and Darija.
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
-const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], axes: ["opsz"] });
-const naskh = Noto_Naskh_Arabic({ variable: "--font-naskh", subsets: ["arabic"], weight: ["400", "500", "600", "700"] });
+const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], weight: ["600"] });
+const naskh = Noto_Naskh_Arabic({ variable: "--font-naskh", subsets: ["arabic"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
   title: "Farm Advisor - AI advice from your field data",

@@ -1,10 +1,12 @@
 "use client";
-// Offline banner: calm, says how old the saved advice is and that actions are kept on the phone.
+// Offline status: calm and neutral. Says what is shown (advice saved X ago) and that actions are kept on the phone. Never amber:
+// amber is the action colour of the screen.
 import { useActions, useAppState, useOffline } from "@/lib/data";
 import { useT } from "@/lib/farm";
-import { Ic } from "./legacy-ui";
+import type { Key } from "@/lib/i18n";
+import { Banner as UiBanner } from "./ui";
 
-export function agoKey(t: (k: "justNow" | "minAgo" | "hAgo" | "daysAgo", v?: Record<string, number>) => string, iso?: string | null) {
+export function agoKey(t: (k: Key, v?: Record<string, number>) => string, iso?: string | null) {
   if (!iso) return "";
   const min = Math.max(0, Math.round((Date.now() - new Date(iso + (iso.endsWith("Z") ? "" : "Z")).getTime()) / 60000));
   if (min < 2) return t("justNow");
@@ -20,13 +22,9 @@ export function Banner() {
   const { data: s } = useAppState();
   if (!offline && !queued) return null;
   return (
-    <div role="status" className="mb-3 flex items-center gap-3 rounded-2xl bg-sun px-4 py-3 text-amber-950">
-      <Ic name="cloudoff" size={26} />
-      <div>
-        <b className="block">{offline ? t("offline") : t("sending")}</b>
-        {offline && s?.generated_at && <span className="block text-xs">{t("offlineAdvice", { age: agoKey(t, s.generated_at) })}</span>}
-        {queued > 0 && <span className="block text-xs">{t("willSync", { n: queued, when: offline ? t("whenOnline") : t("now") })}</span>}
-      </div>
-    </div>
+    <UiBanner tone="info" icon={offline ? "cloudoff" : "refresh"} title={offline ? t("offline") : t("sending")} className="anim-fade-in mb-3">
+      {offline && s?.generated_at && <span className="block">{t("offlineAdvice", { age: agoKey(t, s.generated_at) })}</span>}
+      {queued > 0 && <span className="block">{t("willSync", { n: queued, when: offline ? t("whenOnline") : t("now") })}</span>}
+    </UiBanner>
   );
 }

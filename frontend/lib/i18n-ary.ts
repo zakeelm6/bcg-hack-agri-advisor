@@ -398,4 +398,14 @@ export const ARY: Partial<Record<Key, string>> = {
   themeDark: "غامق",
   highContrast: "تباين قوي للشمس",
   darijaNote: "الدارجة كتبها نموذج ذكاء اصطناعي وكتسنى مراجعة واحد كيهضر بيها.",
+
+  // land view and Copilot (pro polish)
+  zone: "المنطقة {z}",
+  dataSources: "منين جايين المعطيات",
+  offsetNote: "الفرق تعلمناه من {n} عينات ديال التربة مقارنة مع المستشعر المشترك فالمنطقة {s}.",
+  talk: "هضرة",
+  copilotIntro: "كنشرح النصيحة. عمري ما نخترع رقم.",
+  fromRules: "من القواعد",
+  fromModel: "جواب النموذج، تراجع",
+  fromPhone: "محفوظ فالتيليفون ديالك",
 };

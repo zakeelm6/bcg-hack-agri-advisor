@@ -13,7 +13,7 @@ export function LangControl({ onDark }: { onDark?: boolean }) {
   const { lang, setLang } = useFarm();
   const [open, setOpen] = useState(false);
   return (<>
-    <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label={t("chooseLang")} lang={lang}
+    <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label={`${t("chooseLang")}: ${SHORT[lang]}`} lang={lang}
       className={`pressable inline-flex min-h-12 items-center gap-1.5 rounded-full border px-3 text-sm font-bold ${onDark ? "border-on-brand/40 text-on-brand hover:bg-white/10" : "border-line-strong bg-surface text-text hover:bg-surface-2"}`}>
       <Icon name="globe" size={18} /><span>{SHORT[lang]}</span><Icon name="chevdown" size={14} />
     </button>

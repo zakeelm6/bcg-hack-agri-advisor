@@ -1,6 +1,8 @@
 "use client";
 // The Copilot: chat with the engine-based Copilot of the API, voice in and out through useVoice, fixed answers offline.
-// It explains and never invents a number: every answer comes from /api/copilot (or from the saved advice when offline).
+// It explains and never invents a number: every answer comes from /api/copilot (or from the advice saved on the phone).
+// Voice is the first interface: one large control whose state is always visible (idle, listening with a live level,
+// thinking, speaking with Stop, blocked, no voice, offline), a talk-mode toggle with a clear on state.
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,28 +11,28 @@ import { useAppState, useOffline } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 import type { Key } from "@/lib/i18n";
 import { useVoice } from "@/lib/useVoice";
-import { Ic } from "./legacy-ui";
+import { Badge, Button, Icon } from "./ui";
 
 type Msg = { role: "user"; text: string } | { role: "bot"; text: string; source?: string; note?: string | null; actions?: { label: string; go: string }[] };
 
-const CMD_STOP = /^\s*(stop|be quiet|silence|arr[eê]te|tais[- ]toi|توقف|اسكت|قف)/i;
-const CMD_REPEAT = /(repeat|say (it )?again|r[ée]p[èe]te|encore une fois|أعد|كرر)/i;
-const CMD_TASKS = /(read|list|tell).*(task|to ?do)|my tasks|mes t[âa]ches|lis.*t[âa]ches|اقرأ.*مهام|مهامي/i;
+const CMD_STOP = /^\s*(stop|be quiet|silence|arr[eê]te|tais[- ]toi|توقف|اسكت|قف|بركا|صافي)/i;
+const CMD_REPEAT = /(repeat|say (it )?again|r[ée]p[èe]te|encore une fois|أعد|كرر|عاود)/i;
+const CMD_TASKS = /(read|list|tell).*(task|to ?do)|my tasks|mes t[âa]ches|lis.*t[âa]ches|اقرأ.*مهام|مهامي|قرا.*المهام/i;
 
-/** Offline Copilot: the fixed questions answered from the advice saved on the device. */
+/** Offline Copilot: the fixed questions answered from the advice saved on the phone. */
 function localAnswer(t: (k: Key, v?: Record<string, string | number>) => string, s: StateOut | null | undefined, q: string, taskId: number | null): Msg {
   const open = (s?.tasks ?? []).filter((x) => x.status === "open");
   const task = open.find((x) => x.id === taskId) ?? open[0], l = q.toLowerCase();
   const say = (text: string): Msg => ({ role: "bot", text, source: "saved" });
   const conf = (c: string) => (c === "High" ? t("confHigh") : c === "Medium" ? t("confMedium") : t("confLow"));
-  if (/plan|today|summary|to do|tasks|resume|résumé|aujourd|tâches|taches|اليوم|مهام|خطتي/.test(l) && !/plan b|بديل/.test(l))
+  if (/plan|today|summary|to do|tasks|resume|résumé|aujourd|tâches|taches|اليوم|مهام|خطتي|نهاري/.test(l) && !/plan b|بديل/.test(l))
     return say(open.length ? t("openTasksN", { n: open.length }) + open.map((x) => `${x.title} (${x.when_text})`).join("; ") + "." : t("noOpenTask"));
   if (!task) return say(t("noTaskToTalk"));
   if (/plan b|cannot|can't|alternative|instead|sinon|بديل/.test(l)) return say(t("planBFor", { t: task.title, p: task.plan_b }));
   if (/sure|confiden|certain|reliable|accurate|confiance|fiable|ثقة|متأكد/.test(l)) return say(t("confFor", { t: task.title, c: conf(task.confidence), r: task.conf_reason }));
-  if (/cost|price|how much|coût|cout|combien|prix|كم|تكلفة|سعر/.test(l)) return say(t("costFor", { t: task.title, c: task.cost }));
-  if (/when|what time|date|quand|متى|موعد/.test(l)) return say(t("costFor", { t: task.title, c: task.when_text }));
-  if (/why|reason|explain|pourquoi|raison|لماذا|ليش|سبب/.test(l)) return say(t("whyFor", { t: task.title, w: task.why, c: conf(task.confidence), r: task.conf_reason }));
+  if (/cost|price|how much|coût|cout|combien|prix|كم|تكلفة|سعر|شحال/.test(l)) return say(t("costFor", { t: task.title, c: task.cost }));
+  if (/when|what time|date|quand|متى|موعد|فوقاش/.test(l)) return say(t("costFor", { t: task.title, c: task.when_text }));
+  if (/why|reason|explain|pourquoi|raison|لماذا|ليش|سبب|علاش/.test(l)) return say(t("whyFor", { t: task.title, w: task.why, c: conf(task.confidence), r: task.conf_reason }));
   return say(t("needConnection"));
 }
 
@@ -47,6 +49,20 @@ export function CopilotProvider({ children }: { children: React.ReactNode }) {
       {children}
       <CopilotPanel speakRef={speakRef} />
     </Ctx.Provider>
+  );
+}
+
+/** The voice control: the state is the design. 72 px, thumb-sized, with a live ring while listening and a breathing ring while speaking. */
+function MicControl({ state, level, busy, onPress, label }: { state: string; level: number; busy: boolean; onPress: () => void; label: string }) {
+  const listening = state === "listening", speaking = state === "speaking";
+  const disabled = !listening && !speaking && (busy || state === "offline" || state === "blocked" || state === "novoice");
+  const ring = listening ? `0 0 0 ${4 + Math.round(level * 14)}px rgb(178 58 42 / .25)` : speaking ? "0 0 0 6px var(--color-brand-soft)" : "var(--shadow-2)";
+  const bg = listening ? "bg-danger text-white" : speaking ? "bg-brand-strong text-on-brand" : busy ? "bg-surface-3 text-text-3" : disabled ? "bg-surface-3 text-text-3" : "bg-accent text-on-accent";
+  return (
+    <button type="button" onClick={onPress} disabled={disabled} aria-label={label}
+      className={`pressable grid h-[72px] w-[72px] flex-none place-items-center rounded-full transition-[background-color,box-shadow] duration-150 ${bg} disabled:cursor-not-allowed`} style={{ boxShadow: ring, ["--ring" as string]: "var(--color-brand-soft)", animation: speaking ? "breathe 1.6s ease-in-out infinite" : undefined }}>
+      {busy && !listening && !speaking ? <span aria-hidden className="h-7 w-7 animate-spin rounded-full border-[3px] border-current border-t-transparent" /> : <Icon name={listening || speaking ? "stop" : disabled ? "keyboard" : "mic"} size={32} />}
+    </button>
   );
 }
 
@@ -67,6 +83,7 @@ function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: Ta
   const [talk, setTalk] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [dockVisible, setDockVisible] = useState(false);
   const talkRef = useRef(false), silentRef = useRef(0), box = useRef<HTMLDivElement>(null);
   talkRef.current = talk;
   const taskId = (() => { const m = /^\/tasks\/(\d+)/.exec(path ?? ""); return m ? +m[1] : null; })();
@@ -74,8 +91,11 @@ function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: Ta
 
   useEffect(() => { fetchJson<CopilotStatusOut>("/api/copilot/status").then(setStatus).catch(() => setStatus(null)); }, []);
   useEffect(() => { try { setReadAloud(JSON.parse(localStorage.getItem("fa_speak") ?? "false")); } catch { /* none */ } }, []);
-  useEffect(() => { box.current?.scrollTo(0, box.current.scrollHeight); }, [msgs, busy]);
+  useEffect(() => { box.current?.scrollTo({ top: box.current.scrollHeight, behavior: "smooth" }); }, [msgs, busy]);
   useEffect(() => { if (!note) return; const h = setTimeout(() => setNote(null), 3500); return () => clearTimeout(h); }, [note]);
+  useEffect(() => {   // on phones the floating button hides once the docked panel is on screen
+    if (!slot) return; const io = new IntersectionObserver(([e]) => setDockVisible(e.isIntersecting), { threshold: 0.2 }); io.observe(slot); return () => io.disconnect();
+  }, [slot]);
 
   const listenAgain = useCallback(() => { if (talkRef.current) setTimeout(() => void micTurn(), 250); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -114,82 +134,90 @@ function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: Ta
   };
   speakRef.current = (tk) => voice.speak(`${tk.title}. ${tk.when_text}. ${tk.why}`);
 
-  const stateText = (): { icon: string; text: string; cls: string } => {
-    if (voice.message) return { icon: "info", text: t(voice.message as Key), cls: "text-red-800" };
-    if (note) return { icon: "info", text: note, cls: "text-violet" };
-    if (voice.state === "listening") return { icon: "mic", text: t("stListening"), cls: "text-red-700" };
-    if (busy) return { icon: "clock", text: t("stThinking"), cls: "text-muted" };
-    if (voice.state === "speaking") return { icon: "speaker", text: t("stSpeaking"), cls: "text-leaf" };
-    if (offline) return { icon: "cloudoff", text: t("stOffline"), cls: "text-muted" };
-    if (voice.state === "blocked") return { icon: "keyboard", text: t("stBlocked"), cls: "text-muted" };
-    if (voice.state === "novoice") return { icon: "keyboard", text: t("stNoVoice"), cls: "text-muted" };
-    if (talk) return { icon: "chat", text: t("stTalk"), cls: "text-violet" };
-    return { icon: "mic", text: t("stTap"), cls: "text-violet" };
-  };
-  const st = stateText();
-  const micDisabled = offline || voice.state === "blocked" || voice.state === "novoice" || busy;
+  const st = ((): { icon: string; text: string; cls: string } => {
+    if (voice.message) return { icon: "info", text: t(voice.message as Key), cls: "text-danger" };
+    if (note) return { icon: "info", text: note, cls: "text-brand" };
+    if (voice.state === "listening") return { icon: "mic", text: t("stListening"), cls: "text-danger" };
+    if (busy) return { icon: "clock", text: t("stThinking"), cls: "text-text-2" };
+    if (voice.state === "speaking") return { icon: "speaker", text: t("stSpeaking"), cls: "text-brand" };
+    if (offline) return { icon: "cloudoff", text: t("stOffline"), cls: "text-text-2" };
+    if (voice.state === "blocked") return { icon: "keyboard", text: t("stBlocked"), cls: "text-text-2" };
+    if (voice.state === "novoice") return { icon: "keyboard", text: t("stNoVoice"), cls: "text-text-2" };
+    if (talk) return { icon: "chat", text: t("stTalk"), cls: "text-brand" };
+    return { icon: "mic", text: t("stTap"), cls: "text-text-2" };
+  })();
   const micStop = voice.state === "speaking" || voice.state === "listening";
+  // the chips send the farmer's own language: the Copilot detects intents in the four languages
   const chips: [string, Key][] = [["speaker", "readTasks"], ["chat", "why"], ["shield", "planBQ"], ["clock", "waitQ"], ["tasks", "planToday"]];
-  const srcLabel = (m: Msg) => m.role === "bot" ? ({ engine: t("ruleEngine"), model: t("modelChecked"), saved: t("fromSaved") } as Record<string, string>)[m.source ?? ""] ?? "" : "";
-
+  const src = (m: Msg) => m.role === "bot" ? ({ engine: ["fromRules", "shield"], model: ["fromModel", "sparkle"], saved: ["fromPhone", "cloudoff"] } as Record<string, [Key, string]>)[m.source ?? ""] : undefined;
+  const canTalk = voice.hasVoice && !offline;
   const hasOwnButton = /^\/tasks\/\d+/.test(path ?? "");
+
   const panel = (
-    <section aria-label={t("copilot")} className={`flex flex-col overflow-hidden bg-card ${docked ? "min-h-[520px] rounded-3xl md:h-full" : "fixed inset-x-0 bottom-0 z-50 mx-auto h-[80vh] w-full max-w-md rounded-t-3xl shadow-2xl md:inset-x-auto md:end-7 md:bottom-7 md:h-[min(660px,84vh)] md:w-[420px] md:rounded-3xl"}`}>
-      <header className="flex items-start justify-between bg-violet px-4 pb-2.5 pt-4 text-white">
-        <div><b className="flex items-center gap-1.5 text-lg"><Ic name="bulb" size={18} /> {t("copilot")}</b><small className="block min-h-4 text-xs opacity-85">{offline ? t("offline") : status ? (status.mode === "model" ? t("modelChecked") : t("ruleEngine")) : ""}</small></div>
-        <span className="inline-flex gap-1">
-          <button type="button" onClick={onTalk} aria-pressed={talk} aria-label={t("talkMode")} title={talk ? t("talkOn") : t("talkMode")} className={`grid h-11 w-11 place-items-center rounded-full ${talk ? "bg-white/25" : "opacity-80"}`}><Ic name="chat" size={20} /></button>
-          <button type="button" onClick={() => { const v = !readAloud; setReadAloud(v); localStorage.setItem("fa_speak", JSON.stringify(v)); if (!v) voice.stopSpeaking(); setNote(t(v ? "readOn" : "readOff")); }} aria-pressed={readAloud} aria-label={t("readAnswers")} title={t(readAloud ? "readOn" : "readOff")} className={`grid h-11 w-11 place-items-center rounded-full ${readAloud ? "bg-white/25" : "opacity-80"}`}><Ic name={readAloud ? "speaker" : "mute"} size={20} /></button>
-          {!docked && <button type="button" onClick={() => { setOpen(false); voice.stopSpeaking(); }} aria-label={t("closeCopilot")} className="grid h-11 w-11 place-items-center rounded-full opacity-80"><Ic name="x" size={20} /></button>}
-        </span>
+    <section aria-label={t("copilot")} className={`flex flex-col overflow-hidden bg-surface ${docked ? "min-h-[560px] rounded-xl border border-line md:h-full" : "fixed inset-x-0 bottom-0 z-50 mx-auto h-[82dvh] w-full max-w-md rounded-t-2xl shadow-3 md:inset-x-auto md:end-7 md:bottom-7 md:h-[min(680px,84vh)] md:w-[420px] md:rounded-2xl"}`} style={!docked ? { animation: "sheet-up var(--duration-slow) var(--ease-out)" } : undefined}>
+      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-brand-soft text-brand"><Icon name="bulb" size={20} /></span>
+          <div className="min-w-0"><b className="block font-display text-lg leading-tight">{t("copilot")}</b>
+            <span className="block truncate text-xs text-text-2">{offline ? t("offline") : status ? (status.mode === "model" ? t("fromModel") : t("fromRules")) : "\u00a0"}</span></div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button type="button" onClick={onTalk} aria-pressed={talk} disabled={!canTalk} title={t("talkMode")} className={`pressable inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${talk ? "border-brand bg-brand-strong text-on-brand" : "border-line-strong text-text-2 hover:bg-surface-2"}`}>
+            <span className={`h-2 w-2 rounded-full ${talk ? "bg-accent" : "bg-line-strong"}`} aria-hidden /><Icon name="chat" size={16} />{t("talk")}
+          </button>
+          <Button variant="ghost" size="sm" icon={readAloud ? "speaker" : "mute"} iconOnly aria-pressed={readAloud} title={t(readAloud ? "readOn" : "readOff")} onClick={() => { const v = !readAloud; setReadAloud(v); localStorage.setItem("fa_speak", JSON.stringify(v)); if (!v) voice.stopSpeaking(); setNote(t(v ? "readOn" : "readOff")); }}>{t("readAnswers")}</Button>
+          {!docked && <Button variant="ghost" size="sm" icon="x" iconOnly onClick={() => { setOpen(false); voice.stopSpeaking(); }}>{t("closeCopilot")}</Button>}
+        </div>
       </header>
-      {task && <div className="bg-violet-soft px-4 py-2 text-xs font-bold text-violet">{task.title}</div>}
-      <div ref={box} aria-live="polite" className="flex min-h-40 flex-1 flex-col gap-2.5 overflow-y-auto p-4">
+      {task && <div className="flex items-center gap-2 bg-brand-soft px-4 py-2 text-xs font-semibold text-brand"><Icon name="tasks" size={14} /><span className="truncate">{task.title}</span></div>}
+      <div ref={box} aria-live="polite" className="flex min-h-40 flex-1 flex-col gap-3 overflow-y-auto p-4">
         {!msgs.length && !busy && (
-          <div className="m-auto flex flex-col items-center gap-3 p-5 text-center">
-            {voice.hasVoice && !offline ? <button type="button" onClick={onMic} aria-label={t("speak")} className="grid h-[72px] w-[72px] place-items-center rounded-full bg-violet-soft text-violet"><Ic name="mic" size={34} /></button> : <span className="grid h-[72px] w-[72px] place-items-center rounded-full bg-violet-soft text-violet"><Ic name="keyboard" size={34} /></span>}
-            <p className="font-semibold text-muted">{voice.hasVoice && !offline ? t("askField") : t("typeQuestion")}</p>
+          <div className="anim-fade-in m-auto flex max-w-xs flex-col items-center gap-3 py-6 text-center">
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-soft text-brand"><Icon name={canTalk ? "mic" : "keyboard"} size={30} /></span>
+            <p className="font-display text-xl">{canTalk ? t("askField") : t("typeQuestion")}</p>
+            <p className="text-sm text-text-2">{t("copilotIntro")}</p>
           </div>
         )}
-        {msgs.map((m, i) => (
-          <div key={i} className={`max-w-[90%] ${m.role === "user" ? "self-end" : "self-start"}`}>
-            <div className={`whitespace-pre-wrap rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-leaf text-paper" : "border border-line bg-white dark:bg-card"}`}>{m.text}</div>
-            {m.role === "bot" && (<>
-              <div className="mx-2 mt-1 text-xs text-muted">{srcLabel(m)}{m.note && <><br /><span className="text-amber-800">{m.note}</span></>}</div>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <button type="button" onClick={() => voice.speak(m.text)} aria-label={t("readAloud")} className="grid h-11 w-11 place-items-center rounded-full border-2 border-violet text-violet"><Ic name="speaker" size={16} /></button>
-                {(m.actions ?? []).map((a) => <button key={a.go} type="button" onClick={() => { if (!docked) setOpen(false); router.push(a.go.replace(/^#\/soil\//, "/field/soil/").replace(/^#\/task\//, "/tasks/").replace(/^#\//, "/")); }} className="min-h-11 rounded-full border-2 border-violet px-3.5 text-sm font-semibold text-violet">{a.label}</button>)}
-              </div>
-            </>)}
-          </div>
-        ))}
-        {busy && <div className="self-start rounded-2xl border border-line bg-white px-4 py-3 tracking-[4px] opacity-60 dark:bg-card">...</div>}
+        {msgs.map((m, i) => {
+          const sb = src(m);
+          return (
+            <div key={i} className={`anim-fade-up max-w-[88%] ${m.role === "user" ? "self-end" : "self-start"}`}>
+              <div className={`whitespace-pre-wrap rounded-2xl px-4 py-3 leading-relaxed ${m.role === "user" ? "rounded-ee-md bg-brand-strong text-on-brand" : "rounded-es-md border border-line bg-surface-2"}`}>{m.text}</div>
+              {m.role === "bot" && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 ps-1">
+                  {sb && <Badge icon={sb[1]}>{t(sb[0])}</Badge>}
+                  {m.note && <Badge tone="warning" icon="warning">{m.note}</Badge>}
+                  <Button variant="ghost" size="sm" icon="speaker" iconOnly onClick={() => voice.speak(m.text)}>{t("readAloud")}</Button>
+                  {(m.actions ?? []).map((a) => <Button key={a.go} variant="secondary" size="sm" iconEnd="chev" onClick={() => { if (!docked) setOpen(false); router.push(a.go.replace(/^#\/soil\//, "/field/soil/").replace(/^#\/task\//, "/tasks/").replace(/^#\//, "/")); }}>{a.label}</Button>)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {busy && <div className="anim-fade-up flex items-center gap-1.5 self-start rounded-2xl rounded-es-md border border-line bg-surface-2 px-4 py-4" aria-hidden>{[0, 1, 2].map((i) => <i key={i} className="h-2 w-2 animate-bounce rounded-full bg-text-3" style={{ animationDelay: `${i * 120}ms` }} />)}</div>}
       </div>
-      <div className="flex gap-2 overflow-x-auto px-4 pb-2.5 pt-1 [mask-image:linear-gradient(to_right,#000_calc(100%-40px),transparent)] md:flex-wrap md:[mask-image:none] rtl:[mask-image:linear-gradient(to_left,#000_calc(100%-40px),transparent)]" style={{ scrollbarWidth: "none" }}>
-        {chips.map(([icon, key]) => <button key={key} type="button" onClick={() => void send(key === "why" ? "Why?" : key === "planBQ" ? "Plan B?" : key === "waitQ" ? "What if I wait 2 days?" : key === "planToday" ? "My plan for today" : "Read my tasks")} className="inline-flex min-h-12 flex-none items-center gap-1.5 whitespace-nowrap rounded-full bg-violet-soft px-4 text-sm font-semibold text-violet"><Ic name={icon} size={16} />{t(key)}</button>)}
+      <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2 pt-1 [mask-image:linear-gradient(to_right,#000_calc(100%-32px),transparent)] rtl:[mask-image:linear-gradient(to_left,#000_calc(100%-32px),transparent)] md:flex-wrap md:[mask-image:none]">
+        {chips.map(([icon, key]) => <button key={key} type="button" onClick={() => void send(t(key))} className="pressable inline-flex min-h-11 flex-none items-center gap-1.5 whitespace-nowrap rounded-full border border-line-strong bg-surface px-3.5 text-sm font-semibold text-brand hover:bg-surface-2"><Icon name={icon} size={16} />{t(key)}</button>)}
       </div>
-      <div className="flex items-center gap-2.5 px-4 pb-1.5 pt-2">
-        <button type="button" onClick={onMic} disabled={micDisabled && !micStop} aria-label={micStop ? t("stop") : t("speak")}
-          className={`grid h-16 w-16 flex-none place-items-center rounded-full text-white shadow-lg disabled:opacity-40 disabled:shadow-none ${voice.state === "listening" ? "animate-pulse bg-red-700" : voice.state === "speaking" ? "bg-leaf ring-4 ring-leaf/25" : busy ? "bg-muted" : "bg-violet"}`}>
-          <Ic name={micStop ? "stop" : "mic"} size={30} />
-        </button>
-        <form className="flex min-w-0 flex-1 gap-2" onSubmit={(e) => { e.preventDefault(); const v = input; setInput(""); void send(v); }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={400} placeholder={t("ask")} aria-label={t("ask")} className="min-w-0 flex-1 rounded-full border-2 border-violet-line bg-white px-4 py-3.5 dark:bg-card" />
-          <button type="submit" aria-label={t("send")} className="grid h-12 w-12 flex-none place-items-center rounded-full bg-violet text-white"><Ic name="send" size={22} /></button>
-        </form>
+      <div className="flex items-center gap-3 border-t border-line px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
+        <MicControl state={voice.state} level={voice.level} busy={busy} onPress={onMic} label={micStop ? t("stop") : t("speak")} />
+        <div className="min-w-0 flex-1">
+          <form className="flex min-w-0 gap-2" onSubmit={(e) => { e.preventDefault(); const v = input; setInput(""); void send(v); }}>
+            <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={400} placeholder={t("ask")} aria-label={t("ask")} className="min-h-12 min-w-0 flex-1 rounded-full border-2 border-line bg-surface px-4 text-base outline-none focus:border-brand" />
+            <Button type="submit" variant="primary" size="sm" icon="send" iconOnly disabled={!input.trim()}>{t("send")}</Button>
+          </form>
+          <p aria-live="polite" className={`mt-1.5 flex min-h-5 items-center gap-1.5 ps-1 text-sm font-semibold ${st.cls}`}><Icon name={st.icon} size={15} /><span className="truncate">{st.text}</span></p>
+        </div>
       </div>
-      {voice.state === "listening" && <div aria-hidden className="mx-4 h-1.5 overflow-hidden rounded-full bg-violet-soft"><i className="block h-full bg-red-700 transition-[width] duration-75" style={{ width: `${Math.round(voice.level * 100)}%` }} /></div>}
-      <p aria-live="polite" className={`m-0 flex min-h-8 items-center justify-center gap-1.5 px-4 pb-3 pt-1 text-center text-sm font-semibold ${st.cls}`}><Ic name={st.icon} size={16} /><span>{st.text}</span></p>
     </section>
   );
 
   if (docked) return (<>
     {createPortal(panel, slot!)}
-    {/* phones: the docked panel sits below the land, so a floating button brings the mic within thumb reach */}
-    <button type="button" onClick={() => slot!.scrollIntoView({ behavior: "smooth", block: "start" })} aria-label={t("openCopilot")} className="fixed bottom-24 end-4 z-40 inline-flex h-[60px] items-center gap-2 rounded-full bg-violet px-5 font-bold text-white shadow-2xl md:hidden"><Ic name="mic" size={24} /><span>{t("copilot")}</span></button>
+    {!dockVisible && <Button variant="accent" size="lg" icon="mic" className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] end-4 z-40 shadow-3 md:hidden" onClick={() => slot!.scrollIntoView({ behavior: "smooth", block: "start" })}>{t("copilot")}</Button>}
   </>);
   return (<>
-    {!open && !hasOwnButton && <button type="button" onClick={() => setOpen(true)} aria-label={t("openCopilot")} className="fixed bottom-24 end-4 z-40 inline-flex h-[60px] items-center gap-2 rounded-full bg-violet px-5 font-bold text-white shadow-2xl md:bottom-7 md:end-7"><Ic name="mic" size={24} /><span>{t("copilot")}</span></button>}
+    {!open && !hasOwnButton && <Button variant="accent" size="lg" icon="mic" className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] end-4 z-40 shadow-3 md:bottom-7 md:end-7" onClick={() => setOpen(true)}>{t("copilot")}</Button>}
     {open && panel}
   </>);
 }

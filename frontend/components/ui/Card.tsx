@@ -11,6 +11,6 @@ export function Card({ tone = "default", interactive, href, className = "", chil
 }
 
 /** Section title inside a card or a page: small caps label with an optional trailing element. */
-export function Label({ children, end, className = "" }: { children: React.ReactNode; end?: React.ReactNode; className?: string }) {
-  return <div className={`flex items-center justify-between gap-2 ${className}`}><span className="text-xs font-bold uppercase tracking-[.08em] text-text-3">{children}</span>{end}</div>;
+export function Label({ children, end, className = "", inherit }: { children: React.ReactNode; end?: React.ReactNode; className?: string; inherit?: boolean }) {
+  return <div className={`flex items-center justify-between gap-2 ${className}`}><span className={`text-xs font-bold uppercase tracking-[.08em] ${inherit ? "text-current" : "text-text-3"}`}>{children}</span>{end}</div>;
 }
