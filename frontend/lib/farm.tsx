@@ -87,6 +87,7 @@ function useFarmState() {
       challenge: p.challenge || null,
       lat: p.lat ?? null,
       lon: p.lon ?? null,
+      boundary: p.boundary ?? null,   // the corners the farmer drew: the engine centres its field on them
       lang: state.lang,
     }).then(
       (r) => setState((prev) => (prev && prev.profile === p ? { ...prev, sync: { pending: false, applied: r.applied ?? {}, notApplied: r.not_applied ?? [] } } : prev)),

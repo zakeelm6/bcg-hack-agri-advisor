@@ -3,6 +3,7 @@
 | Read this | To know |
 |---|---|
 | [ROADMAP-TEAM-FRONTEND.md](ROADMAP-TEAM-FRONTEND.md) | The plan, step by step, to bring the engine, sensors, voice and polish to the team's web app, and the log of what is done |
+| [HANDOFF.md](HANDOFF.md) | **Start here to continue the work**: state, rules, how to run, what remains, the Azure deployment runbook |
 | [INTEGRATION.md](INTEGRATION.md) | What was connected between the web app and the engine, how to run both, known gaps |
 | [API_CONTRACT.md](API_CONTRACT.md) | The API between the web app and the backend, and the rules for changing it (the machine-readable file is `backend/openapi.json`) |
 | [SENSORS.md](SENSORS.md) | The sensor node, what each sensor is for, and what is deliberately not measured |

@@ -59,20 +59,20 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - The engine uses real watering records instead of guessing the last irrigation; "Costs" questions in the Co-Pilot use the real list.
 - Done when: after recording "watered 20 mm", the engine no longer asks to irrigate the same day.
 
-### Step 4: "My land" becomes the engine's field (L)
+### Step 4: "My land" becomes the engine's field (L) - DONE on branch `step4/own-field` for the zones and the pictures (see section 9)
 - Keep his three views (Photo, Measure, 3D) and add a fourth, **Zones**: the Sentinel-2 picture with the vigor of each part of the field and the persistent anomalies, built from our land view, in his visual style (big, few words, honest "real / simulated" label).
 - The field the engine uses becomes the farmer's: the boundary drawn in Measure (or a square from the GPS and area) is sent to the backend, which splits it into zones.
 - Backend work: create a field and zones from a polygon (today they are a fixed 2 by 2 grid); fetch Sentinel-2 pixels for that polygon on demand (a background job, cached, a few minutes the first time); until it finishes the engine answers from weather and soil tests only and says so.
 - Be honest about cost and limits: free Sentinel-2 data, cloud cover leaves gaps, one clear date may take days.
 - Done when: a new farmer outlines their field and, after the job, sees real zones for that field.
 
-### Step 5: confidence and data quality, shown his way (M)
+### Step 5: confidence and data quality, shown his way (M) - DONE on branch `step6/voice` (see section 9)
 - The three-step "how sure" meter and one honest line wherever advice appears ("based on the satellite only", "a soil test would make this surer").
 - "Sensor unreliable" and "satellite alert" become calm alerts with a picture and one action ("Add a soil test", "Go and look at this spot").
 - The soil test is a picture-first form in Activities (pH, organic matter, moisture), reusing his stepper style.
 - Done when: a faulty simulated sensor produces a clear "not sure, please test" instead of a dose.
 
-### Step 6: voice, his way plus ours (M)
+### Step 6: voice, his way plus ours (M) - DONE on branch `step6/voice` (see section 9)
 - Keep his behaviour (each question read aloud, big "Tap and speak").
 - Replace his browser-only voice with our `useVoice` hook: Azure server voice first (works in any browser, Arabic and Darija included), browser as fallback, visible states, talk mode, voice commands ("read my tasks", "repeat", "stop").
 - Make every new screen of Steps 2 to 5 readable aloud with one button.
@@ -205,3 +205,41 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
   20 mm reaching the server, zone D going from 21% to 27.7%, the irrigation task gone, the note with the estimate, and "MAD 300" in the history.
 - Honest limits of the estimate: it is a one-layer bucket model with typical constants (300 mm root layer, forecast evapotranspiration), not a calibrated soil model; infiltration, runoff,
   drip losses and rain since the watering are not modelled. It is meant to stop the engine from asking for water that was just given, and to say how it reasoned, not to replace a sensor.
+
+### Step 4 done: "My land" becomes the engine's field
+- **The engine now works on the farmer's own field.** When the farmer gives a position (GPS, or the outline drawn in Measure) and a size, the backend replaces the demo parcel by a square of that area centred on it,
+  cut into the four zones A B / C D. The weather follows the position at once (it used to stay on the demo parcel). A zone has no vigor (`ndvi` null) until a satellite picture of *this* field has been read,
+  and the engine then runs no vigor rule (no fertilizer or "inspect" task from vigor) and says so instead of using the demo parcel's numbers.
+- **Satellite pictures on demand.** A background job runs `scripts/fetch_satellite.py --side ... --out-dir backend/data/own` in the satellite environment (`backend/.venv-sat`, or `FA_SAT_PYTHON`; `requirements-sat.txt`),
+  reads the pixels of that square from the free Sentinel-2 catalog (only the field's pixels), drops clouds and shadows, and the API reads the result into the zones, the vigor-over-time series and the problem-spot detector.
+  `GET /api/field` reports `pending`, `ready`, `failed` or `none` (not set up on this server) with a plain note, `POST /api/field/satellite` tries again, `GET /api/field/picture` serves the true-colour picture.
+  A job survives only as long as the server: after a restart a download that was running is marked failed ("interrupted") and can be retried.
+- **A new view in "My land": Zones.** The picture around the field, zoomed to it, with the four zones coloured by vigor, each with its letter, number and a word (strong, medium, weak: never colour alone), the persistent problem
+  spots as dashed squares, the picture date, and honest messages: demo parcel, getting the pictures (minutes), failed with "Try again", not set up. It keeps the last view on the phone when offline.
+  The "do this now" card's note follows whose field it is. "Used by the advice" now lists the field position.
+- **Checked for real, not only in tests.** With the satellite environment and the network, a farmer at 33.2716, -7.5819 with 2.4 ha got their own field: the job took about five minutes, read 16 dates, the picture of 23 August and
+  the zones A 0.23, B 0.20, C 0.62, D 0.37 (a mostly bare field: not the irrigated demo parcel's 0.8), and the engine answered with "Inspect point P" for it; the Zones view in the browser shows exactly this over the picture.
+  Backend: 126 tests (10 new in `test_own_field.py`, the download itself is faked in them); TypeScript, the Darija check and a production build pass.
+- **Honest limits.** The outline gives the centre and the size only: pixels outside the outline are not masked and the square, not the polygon, is analysed. The zones are always a 2 x 2 grid. The first picture takes minutes and
+  needs clear dates in the last months (cloud cover can leave nothing). One field per server (Step 8 for one per phone). The soil-moisture sensors are still the two simulated ones of the demo, now attached to zones A and B of the farmer's field.
+  Crop type is still not read from the satellite. A field outside the satellite's reach (offline server, no environment) works on weather and sensors only and says so.
+
+### Step 6 done: voice, his way plus ours
+- **One voice layer for every screen** (`frontend/lib/voice.ts`). Every existing button (onboarding questions, "Listen" on the card, Co-Pilot answers) now uses the server voice first (Azure, `/api/tts` and `/api/stt`) and the browser voice as a fallback,
+  so a phone with no Arabic voice still hears Arabic and Darija (Darija uses `ar-MA`, the Jamal voice). The server says whether it has a voice (`/api/speech/status`); without it, or offline, the browser voice is used and the app behaves as before.
+- **Speaking:** text is cut at sentence ends, the next piece is fetched while the current one plays, a stop cancels what plays and what is queued, and a failure in the middle is finished by the browser voice (never silence).
+- **Listening:** the page records a 16 kHz WAV, stops by itself 1.4 s after the farmer stops talking (6 s with no speech, 20 s at most), a second tap sends what was said so far. Chrome, Safari and Firefox work because the browser only records.
+- **Talk mode and spoken orders in the Co-Pilot:** a "Talk mode" button (listen, answer aloud, listen again; ends on "stop", a tap, an error, or two silences) and a "Read my tasks" button that reads the engine's open tasks.
+  Orders understood on the phone in four languages: read my tasks, repeat, stop. A long sentence is never taken for an order.
+- **Calm messages** under the mic: blocked microphone, nothing heard, needs https, needs a connection, did not work (four languages).
+- **Checked:** TypeScript, Darija check, `node lib/voice.check.mjs` (cutting, WAV header and resampling, orders), and for real the Azure voice from the running API: a Darija sentence came back as 24 kHz MP3 and the CORS preflight for the recording route passes.
+- **Not verified:** a real microphone in a browser and on a phone (recording, silence threshold in noise), Safari autoplay, and a native Darija listener on the voice. The recording uses a script processor node (deprecated but works everywhere).
+
+### Step 5 done: confidence and data quality, shown his way
+- **Calm alert cards under the "do this now" card** ("Also worth knowing"): each has an icon, a title, one sentence and one action. A sensor or sample alert offers "Add a soil test" (opens the form on that zone), a vigor alert offers "See the zones", weather alerts have no button.
+  A vigor alert that already is an open task is not said twice.
+- **One honest line per data source** under the card: the plant vigor of the demo field is simulated, the soil sensors are simulated, "based on the satellite only, a soil test would make it surer" for a real picture, "no satellite picture yet" for an own field without one.
+- **A picture-first soil test in Activities** (zone A to D chips, pH, organic matter, moisture, one value is enough), sent through the same offline queue as everything else (`soil_test` action). Checked for real: pH 6.8 and moisture 24 % for zone D removed
+  "Soil sample needed in zone D" and the estimated irrigation task from the engine's answer.
+- The three-step "how sure" meter and the reason were already on every task (Step 2); a faulty sensor gives "not sure, please test" and never a dose (backend rule, tested).
+- Not done: a history of soil tests in the app (the engine keeps them; the phone does not list them yet), editing or deleting a test.

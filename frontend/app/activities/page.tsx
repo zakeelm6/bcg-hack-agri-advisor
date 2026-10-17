@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { enqueue, flush } from "@/lib/queue";
 import { today, useFarm, useT, type ActivityType } from "@/lib/farm";
 import { activityTypes, intlLocale } from "@/lib/i18n";
 import { CURRENCY, money } from "@/lib/money";
@@ -17,6 +18,21 @@ function Activities() {
   const [asking, setAsking] = useState<ActivityType>(); // expense: ask the amount before saving; irrigation: ask how much water
   const [cost, setCost] = useState("");
   const [last, setLast] = useState<{ id: string; type: ActivityType }>();
+  const presetZone = useSearchParams().get("soil"); // "Add a soil test" from an alert opens the form on that zone
+  const [soil, setSoil] = useState<{ zone: string } | undefined>(presetZone ? { zone: presetZone } : undefined);
+  const [vals, setVals] = useState({ ph: "", om: "", moisture: "" });
+  const [soilMsg, setSoilMsg] = useState<string>();
+
+  // The soil test goes to the engine through the same queue as everything else: saved on the phone, sent when the connection is there.
+  function saveSoil(e: React.FormEvent) {
+    e.preventDefault();
+    const num = (v: string) => (v.trim() === "" || Number.isNaN(Number(v)) ? null : Number(v));
+    const ph = num(vals.ph), om = num(vals.om), mo = num(vals.moisture);
+    if (ph === null && om === null && mo === null) return setSoilMsg(t("soilNeedOne"));
+    enqueue({ type: "soil_test", payload: { zone_code: soil!.zone, ph, om_pct: om, moisture: mo === null ? null : mo / 100 } });
+    void flush();
+    setSoilMsg(t("soilSaved", { z: soil!.zone })); setSoil(undefined); setVals({ ph: "", om: "", moisture: "" });
+  }
 
   // One tap records it. Spending needs an amount, watering asks "how much?" with pictures (mm 0 = the farmer does not know).
   function record(type: ActivityType, amount?: number, mm?: number) {
@@ -53,6 +69,36 @@ function Activities() {
             </button>
           ))}
         </div>
+
+        <button type="button" onClick={() => { setSoil({ zone: soil?.zone ?? "A" }); setSoilMsg(undefined); }}
+          className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl border border-line bg-card py-4 text-lg font-medium active:scale-[.97]">
+          <Icon name="shovel" className="h-8 w-8 text-leaf" />{t("soilTest")}
+        </button>
+
+        {soil && (
+          <form className="mt-4 rounded-2xl border border-leaf bg-card p-4" onSubmit={saveSoil}>
+            <p className="text-lg font-medium">{t("soilWhichZone")}</p>
+            <div role="group" className="mt-2 grid grid-cols-4 gap-2">
+              {["A", "B", "C", "D"].map((z) => (
+                <button key={z} type="button" aria-pressed={soil.zone === z} onClick={() => setSoil({ zone: z })}
+                  className={`rounded-full border py-2.5 text-xl font-semibold ${soil.zone === z ? "border-leaf bg-leaf-soft text-leaf" : "border-line"}`}>{z}</button>
+              ))}
+            </div>
+            <p className="mt-3 text-muted">{t("soilHelp")}</p>
+            {([["ph", "soilPh", "7.0"], ["om", "soilOm", "2.0"], ["moisture", "soilMoisture", "25"]] as const).map(([k, label, ph]) => (
+              <label key={k} className="mt-3 block text-lg font-medium">{t(label)}
+                <input type="number" inputMode="decimal" min="0" step="any" placeholder={ph} value={vals[k]}
+                  onChange={(e) => setVals({ ...vals, [k]: e.target.value })} className="field mt-1 text-center text-2xl" />
+              </label>
+            ))}
+            {soilMsg && <p role="alert" className="mt-3 text-sun">{soilMsg}</p>}
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" className="btn-ghost" onClick={() => setSoil(undefined)}>{t("cancel")}</button>
+              <button className="btn">{t("save")}</button>
+            </div>
+          </form>
+        )}
+        {!soil && soilMsg && <p role="status" className="mt-4 rounded-2xl bg-leaf-soft px-4 py-3 text-lg text-leaf">{soilMsg}</p>}
 
         {asking === "irrigation" && (
           <div className="mt-4 rounded-2xl border border-leaf bg-card p-4">

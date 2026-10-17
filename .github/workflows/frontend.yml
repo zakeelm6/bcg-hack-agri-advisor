@@ -23,5 +23,7 @@ jobs:
         run: npx tsc --noEmit
       - name: The Darija texts match the main texts (keys and {placeholders})
         run: node lib/i18n.check.mjs
+      - name: Voice helpers (cutting text, WAV, spoken orders)
+        run: node lib/voice.check.mjs
       - name: Build
         run: npm run build

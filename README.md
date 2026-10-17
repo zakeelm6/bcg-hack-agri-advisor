@@ -123,7 +123,7 @@ a task or state a number that is not in the facts.
 | Team web app: onboarding (six picture questions), My Farm, land maps (photo, measure, 3D), Co-Pilot, Activities | **Built** |
 | Engine inside the web app: Co-Pilot answers, the "do this now" card with undo, the profile sent to the engine, answers kept offline | **Built** (branch work, see [the plan](docs/ROADMAP-TEAM-FRONTEND.md)) |
 | Languages: English, French, Arabic, Darija | **Built**; Darija and Arabic texts are not reviewed by a native speaker yet |
-| Voice | Browser voice in the web app; Azure speech (server side) tested in the backend; not in the web app yet |
+| Voice | Azure server voice first, browser voice as fallback, talk mode and spoken orders in the Co-Pilot; microphone not yet tested on a real phone |
 | Weather and 5-day forecast | **Real** (Open-Meteo, cached, with a labelled fallback) |
 | Field of the farmer | **Not yet**: the engine works on the demo parcel until the farmer's own field is processed |
 | Soil-moisture sensors, buyers, offers and prices | **Simulated** |

@@ -47,9 +47,10 @@ def run_migrations(url: str | None = None):
     names = set(inspect(eng).get_table_names())
     cfg = _alembic_config(url)
     if "fields" in names and "alembic_version" not in names:
-        # which revision does this unversioned schema already match? (plot_offsets arrived with 0002, farmers with 0003, activities with 0004, task quantities with 0005)
+        # which revision does this unversioned schema already match? (plot_offsets arrived with 0002, farmers with 0003, activities with 0004, task quantities with 0005, the farmer's own field with 0006)
         task_cols = {c["name"] for c in inspect(eng).get_columns("tasks")} if "tasks" in names else set()
-        command.stamp(cfg, "0005" if "qty" in task_cols else "0004" if "activities" in names else "0003" if "farmers" in names else "0002" if "plot_offsets" in names else "0001")
+        field_cols = {c["name"] for c in inspect(eng).get_columns("fields")}
+        command.stamp(cfg, "0006" if "source" in field_cols else "0005" if "qty" in task_cols else "0004" if "activities" in names else "0003" if "farmers" in names else "0002" if "plot_offsets" in names else "0001")
     command.upgrade(cfg, "head")
 
 

@@ -37,6 +37,9 @@ Language parameter: `lang` is `en`, `fr`, `ar` or `ary` (Darija, Moroccan Arabic
 | `POST /api/sync` | `{actions: [{type, payload}]}` where `type` is `task_status`, `observation`, `soil_test`, `listing`, `offer_accept`, `farmer`, `activity` or `activity_remove` | `results[]` | offline replay |
 | `GET /api/audit` | none | `entries[]` | audit view |
 | tasks in `GET /api/state` | | each task also has `qty` and `unit` (`mm`, `kg_n_ha`) when the engine decided an amount (added in Step 3) | the card, Activities |
+| `GET /api/field` | none | `source` (`demo` or `own`), `satellite_status` (`ready`, `pending`, `failed`, `none`), `satellite_note`, `lat`, `lon`, `area_ha`, `side_m`, `boundary`, `picture` (`date`, `side_m`, `field_side_m`) | the Zones view (Step 4) |
+| `POST /api/field/satellite` | none | the same | "Try again" after a failed or interrupted download |
+| `GET /api/field/picture` | none | PNG, true-colour Sentinel-2 around the field (404 until it exists) | the Zones view |
 | `GET /api/activities` | none | `activities[]` (`client_id`, `type`, `date`, `note`, `cost`, `zone`, `amount_mm`) | the farmer's list (added in Step 3) |
 | `POST /api/activities` | `{client_id, type (irrigation, treatment, planting, expense, other), date, note?, cost?, zone?, amount_mm?}` | the saved entry | Activities; same `client_id` sent twice updates, never duplicates; recorded irrigation makes the engine wait 2 days for that zone (whole field when no zone) |
 | `DELETE /api/activities/{client_id}` | none | `ok` | undo (safe to send twice) |
@@ -59,3 +62,10 @@ Added in Phase 2 (additive): `GET /api/zones/anomalies`; in `GET /api/state`, `s
 
 ## Planned additions (not frozen yet)
 `GET/POST /api/farmer` (profile), authentication routes.
+
+## Step 4: the farmer's own field
+`POST /api/farmer` now also takes `boundary` (the corners `[lat, lng]` the farmer drew). **A position moves the engine to the farmer's own field**: the field becomes a square of the
+farmer's area (90 to 400 m a side) centred on the position or on the outline, cut into the four zones A B / C D, the weather follows at once, and a background job downloads the Sentinel-2
+pixels of that square (`satellite_status` is `pending`, then `ready`, or `failed`, or `none` when the server cannot do it). Until then zones have `ndvi: null` and `ndvi_source: "none"`:
+no vigor rule runs, and the advice says so. The same position again changes nothing; a move of more than 100 m or an area change of more than 5 % starts a new download. A town name
+without a position does not move the field. Zones in `GET /api/state` have `ndvi` nullable (it was never null before).

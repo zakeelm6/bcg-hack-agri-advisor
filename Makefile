@@ -17,4 +17,4 @@ test:
 
 check: test
 	cd backend && python scripts/export_openapi.py && git diff --exit-code openapi.json
-	cd frontend && npx tsc --noEmit && node lib/i18n.check.mjs && npm run build
+	cd frontend && npx tsc --noEmit && node lib/i18n.check.mjs && node lib/voice.check.mjs && npm run build

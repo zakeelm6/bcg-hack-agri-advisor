@@ -19,6 +19,10 @@ class FieldOut(Loose):
     lon: float
     sowing_date: str
     cycle_days: int
+    source: str = "demo"                 # demo parcel or the farmer's own field
+    satellite_status: str = "ready"      # ready, pending, failed or none
+    satellite_note: str | None = None
+    side_m: float | None = None
 
 
 class ZoneOut(Loose):
@@ -28,7 +32,7 @@ class ZoneOut(Loose):
     col: int
     row: int
     area_ha: float
-    ndvi: float
+    ndvi: float | None = None      # null until a satellite picture of the farmer's own field has been read
     ndvi_hist: list[float]
     ndvi_source: str
     moisture: float | None = None
@@ -267,3 +271,23 @@ class ActivityOut(Loose):
 
 class ActivitiesOut(Loose):
     activities: list[ActivityOut]
+
+
+class PictureOut(Loose):
+    date: str
+    side_m: float                 # side of the picture, metres
+    field_side_m: float           # side of the field square inside it, metres
+
+
+class FieldInfoOut(Loose):
+    """Whose field the engine works on. `source` is "demo" (the parcel the satellite data was made for) or "own" (the farmer's).
+    `satellite_status`: ready, pending (a download is running), failed or none (not set up on this server)."""
+    source: str
+    satellite_status: str
+    satellite_note: str | None = None
+    lat: float
+    lon: float
+    area_ha: float
+    side_m: float | None = None
+    boundary: list[list[float]] | None = None
+    picture: PictureOut | None = None
