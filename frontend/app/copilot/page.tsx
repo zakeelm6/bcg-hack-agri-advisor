@@ -6,7 +6,11 @@ import { askCopilot } from "@/lib/copilot";
 import { today, uid, useFarm, useT, useTx, type Advice } from "@/lib/farm";
 import { Icon } from "@/lib/icons";
 import { PhotoCardBody, photoCard, starters } from "@/lib/starters";
-import { canListen, canSpeak, listen, speak, stopSpeaking } from "@/lib/voice";
+import { openTasks, useEngine } from "@/lib/engine";
+import { canListen, canSpeak, listen, speak, stopSpeaking, useVoiceReady, voiceCommand, type ListenError, type Listening } from "@/lib/voice";
+
+const VOICE_MSG: Record<ListenError, "voiceFailed" | "voiceBlocked" | "voiceNothing" | "voiceInsecure" | "voiceOffline"> =
+  { blocked: "voiceBlocked", nothing: "voiceNothing", insecure: "voiceInsecure", offline: "voiceOffline", failed: "voiceFailed", unsupported: "voiceFailed" };
 
 export default function Page() {
   return <Suspense><CoPilot /></Suspense>;
@@ -15,6 +19,9 @@ export default function Page() {
 function CoPilot() {
   const farm = useFarm();
   const t = useT();
+  const x = useTx();
+  useVoiceReady();
+  const { state: engine } = useEngine(farm.lang);
   const params = useSearchParams();
   const prefill = params.get("q") ?? ""; // from shortcuts on other pages
   const autoAsk = params.has("ask"); // My Farm photo cards: send straight away
@@ -25,16 +32,24 @@ function CoPilot() {
   const [error, setError] = useState(false);
   const [listening, setListening] = useState(false);
   const [fresh, setFresh] = useState<string>(); // newest answer: read aloud automatically
+  const [voiceMsg, setVoiceMsg] = useState<string>(); // one calm line under the mic: what went wrong or what mode we are in
+  const [talking, setTalking] = useState(false);       // talk mode: listen, answer aloud, listen again
+  const talkRef = useRef(false);
+  const lastSpoken = useRef("");
+  const session = useRef<Listening>(undefined);
+  const silences = useRef(0);
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [farm.messages.length, busy]);
-  useEffect(() => stopSpeaking, []);
+  useEffect(() => () => { talkRef.current = false; session.current?.stop(); stopSpeaking(); }, []);
+  const micOk = canListen();
+  useEffect(() => { if (micOk && !prefill) setTyping(false); }, [micOk]); // eslint-disable-line react-hooks/exhaustive-deps
   const asked = useRef(false); // guards the double effect run in dev
   useEffect(() => {
     if (autoAsk && prefill && !asked.current) { asked.current = true; send(prefill); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function send(q = text) {
+  async function send(q = text): Promise<string | undefined> {
     if ((!q.trim() && !photo) || busy) return;
     const question = q.trim() || t("photoQ");
     farm.addMessages({ id: uid(), role: "user", text: question, photo });
@@ -43,7 +58,8 @@ function CoPilot() {
       const advice = await askCopilot(question, photo, { profile: farm.profile!, activities: farm.activities, tasks: farm.tasks }, farm.lang);
       const id = uid();
       farm.addMessages({ id, role: "ai", advice });
-      setFresh(id);
+      if (!talkRef.current) setFresh(id);   // in talk mode the loop reads it, once
+      return [advice.recommendation, ...advice.steps.slice(0, 3)].map(x).join(". ");
     } catch {
       setError(true);
     } finally {
@@ -66,10 +82,42 @@ function CoPilot() {
     img.src = URL.createObjectURL(file);
   }
 
+  function oneTask() {
+    const tasks = engine ? openTasks(engine.tasks) : [];
+    return tasks.length ? tasks.map((k) => `${k.title}. ${k.when_text}.`).join(" ") : t("noTasksToRead");
+  }
+
+  /** One turn of listening. A spoken order ("read my tasks", "repeat", "stop") is handled here; anything else is a question. */
   function talk() {
-    setListening(true);
-    // Spoken question goes straight out: no reading or typing needed.
-    listen(farm.lang, (said) => send(said), () => setListening(false));
+    if (listening) { session.current?.stop(); return; }   // a second tap sends what was said so far
+    setListening(true); setVoiceMsg(undefined);
+    let handled = false;
+    session.current = listen(farm.lang, (said) => { handled = true; silences.current = 0; void turn(said); }, () => {
+      setListening(false);
+      if (!handled && talkRef.current) { if (++silences.current >= 2) endTalk(); else talk(); }   // two silences in a row end talk mode
+    }, (e) => { if (e === "nothing" && talkRef.current) return; setVoiceMsg(t(VOICE_MSG[e])); if (e !== "nothing") endTalk(); });
+  }
+
+  async function turn(said: string) {
+    const cmd = voiceCommand(said);
+    let reply: string | undefined;
+    if (cmd === "stop") { endTalk(); stopSpeaking(); return; }
+    else if (cmd === "repeat") reply = lastSpoken.current || undefined;
+    else if (cmd === "read") reply = oneTask();
+    else reply = await send(said);
+    if (!reply) { if (talkRef.current) talk(); return; }
+    lastSpoken.current = reply;
+    speak(reply, farm.lang, () => { if (talkRef.current) talk(); });
+  }
+
+  function endTalk() {
+    if (talkRef.current) setVoiceMsg(t("talkOff"));
+    talkRef.current = false; setTalking(false); silences.current = 0;
+  }
+  function toggleTalk() {
+    if (talkRef.current) { endTalk(); session.current?.stop(); stopSpeaking(); return; }
+    talkRef.current = true; setTalking(true); silences.current = 0; setVoiceMsg(t("talkOn"));
+    talk();
   }
 
   return (
@@ -114,12 +162,25 @@ function CoPilot() {
             <button type="button" onClick={() => setPhoto(undefined)} className="px-3 text-xl text-muted" aria-label={t("removePhoto")}>×</button>
           </div>
         )}
+        {(voiceMsg || (!typing && micOk)) && (
+          <div className="mb-2 flex items-center justify-between gap-2 text-base text-muted">
+            <p role="status" aria-live="polite" className="min-w-0 flex-1">{voiceMsg}</p>
+            {!typing && micOk && (
+              <span className="flex shrink-0 gap-2">
+                <button type="button" onClick={() => { stopSpeaking(); const r = oneTask(); lastSpoken.current = r; speak(r, farm.lang); }}
+                  className="rounded-full border border-line bg-card px-3 py-1.5 text-leaf">{t("readTasks")}</button>
+                <button type="button" onClick={toggleTalk} aria-pressed={talking}
+                  className={`rounded-full border px-3 py-1.5 ${talking ? "border-leaf bg-leaf text-white" : "border-line bg-card text-leaf"}`}>{t("talkMode")}</button>
+              </span>
+            )}
+          </div>
+        )}
         {typing ? (
           <div className="flex items-center gap-1 rounded-2xl border border-line bg-card p-1.5 shadow-sm">
             <PhotoButton label={t("takePhoto")} onPick={pickPhoto} small />
             <input value={text} onChange={(e) => setText(e.target.value)} placeholder={t("typeHere")} autoFocus
               className="min-w-0 flex-1 bg-transparent px-1 py-2 text-lg outline-none" aria-label={t("typeHere")} />
-            {canListen() && (
+            {micOk && (
               <button type="button" onClick={() => setTyping(false)} aria-label={t("tapSpeak")} className="rounded-xl p-2.5 text-muted hover:bg-paper">
                 <Svg d={MIC} />
               </button>
@@ -131,7 +192,7 @@ function CoPilot() {
         ) : (
           <div className="flex items-center gap-2">
             <PhotoButton label={t("takePhoto")} onPick={pickPhoto} />
-            <button type="button" onClick={talk} disabled={busy || listening} aria-live="polite"
+            <button type="button" onClick={talk} disabled={busy} aria-live="polite"
               className={`flex h-16 flex-1 items-center justify-center gap-3 rounded-full text-lg font-semibold text-white shadow-lg ${listening ? "animate-pulse bg-red-600" : "bg-leaf"} disabled:opacity-80`}>
               <Svg d={MIC} big />{listening ? t("listening") : t("tapSpeak")}
             </button>

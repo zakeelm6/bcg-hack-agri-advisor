@@ -72,7 +72,7 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - The soil test is a picture-first form in Activities (pH, organic matter, moisture), reusing his stepper style.
 - Done when: a faulty simulated sensor produces a clear "not sure, please test" instead of a dose.
 
-### Step 6: voice, his way plus ours (M)
+### Step 6: voice, his way plus ours (M) - DONE on branch `step6/voice` (see section 9)
 - Keep his behaviour (each question read aloud, big "Tap and speak").
 - Replace his browser-only voice with our `useVoice` hook: Azure server voice first (works in any browser, Arabic and Darija included), browser as fallback, visible states, talk mode, voice commands ("read my tasks", "repeat", "stop").
 - Make every new screen of Steps 2 to 5 readable aloud with one button.
@@ -223,3 +223,14 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - **Honest limits.** The outline gives the centre and the size only: pixels outside the outline are not masked and the square, not the polygon, is analysed. The zones are always a 2 x 2 grid. The first picture takes minutes and
   needs clear dates in the last months (cloud cover can leave nothing). One field per server (Step 8 for one per phone). The soil-moisture sensors are still the two simulated ones of the demo, now attached to zones A and B of the farmer's field.
   Crop type is still not read from the satellite. A field outside the satellite's reach (offline server, no environment) works on weather and sensors only and says so.
+
+### Step 6 done: voice, his way plus ours
+- **One voice layer for every screen** (`frontend/lib/voice.ts`). Every existing button (onboarding questions, "Listen" on the card, Co-Pilot answers) now uses the server voice first (Azure, `/api/tts` and `/api/stt`) and the browser voice as a fallback,
+  so a phone with no Arabic voice still hears Arabic and Darija (Darija uses `ar-MA`, the Jamal voice). The server says whether it has a voice (`/api/speech/status`); without it, or offline, the browser voice is used and the app behaves as before.
+- **Speaking:** text is cut at sentence ends, the next piece is fetched while the current one plays, a stop cancels what plays and what is queued, and a failure in the middle is finished by the browser voice (never silence).
+- **Listening:** the page records a 16 kHz WAV, stops by itself 1.4 s after the farmer stops talking (6 s with no speech, 20 s at most), a second tap sends what was said so far. Chrome, Safari and Firefox work because the browser only records.
+- **Talk mode and spoken orders in the Co-Pilot:** a "Talk mode" button (listen, answer aloud, listen again; ends on "stop", a tap, an error, or two silences) and a "Read my tasks" button that reads the engine's open tasks.
+  Orders understood on the phone in four languages: read my tasks, repeat, stop. A long sentence is never taken for an order.
+- **Calm messages** under the mic: blocked microphone, nothing heard, needs https, needs a connection, did not work (four languages).
+- **Checked:** TypeScript, Darija check, `node lib/voice.check.mjs` (cutting, WAV header and resampling, orders), and for real the Azure voice from the running API: a Darija sentence came back as 24 kHz MP3 and the CORS preflight for the recording route passes.
+- **Not verified:** a real microphone in a browser and on a phone (recording, silence threshold in noise), Safari autoplay, and a native Darija listener on the voice. The recording uses a script processor node (deprecated but works everywhere).
