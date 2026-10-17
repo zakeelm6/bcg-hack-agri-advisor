@@ -85,6 +85,8 @@ class Task(Base):
     x: Mapped[float] = mapped_column(Float)
     y: Mapped[float] = mapped_column(Float)
     updated_at: Mapped[str] = mapped_column(Text)
+    verify_status: Mapped[str] = mapped_column(Text, default="verified", server_default="verified")   # verified | fixed | escalated (independent re-check)
+    verify_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class Alert(Base):

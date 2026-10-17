@@ -41,7 +41,7 @@ export function TaskCard({ t: task }: { t: TaskOut }) {
   return (
     <ListItem href={`/tasks/${task.id}`} icon={taskIcon(task.type)} iconTone={off ? "neutral" : task.type === "irrigate" ? "accent" : "neutral"} muted={off} title={task.title} sub={task.when_text}
       meta={!off ? <ConfidenceMeter conf={task.confidence} size="sm" /> : undefined}
-      end={task.status === "done" ? <Badge tone="success" icon="check">{t("done")}</Badge> : task.status === "skipped" ? <Badge tone="outline">{t("skipped")}</Badge> : undefined} chevron={!off} className="mb-2.5" />
+      end={task.status === "done" ? <Badge tone="success" icon="check">{t("done")}</Badge> : task.status === "skipped" ? <Badge tone="outline">{t("skipped")}</Badge> : task.verify_status === "escalated" ? <Badge tone="warning" icon="warning">{t("escalated")}</Badge> : undefined} chevron={!off} className="mb-2.5" />
   );
 }
 

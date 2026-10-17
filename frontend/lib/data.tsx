@@ -3,7 +3,7 @@
 // optimistic updates for the queued writes. Components never compute a number: they show what the server returned.
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { cachedGet, enqueue, flushQueue, getQueue, net, readCache, writeCache, type AnomaliesOut, type ForecastOut, type NdviSeriesOut, type OffersOut, type QueuedAction, type StateOut } from "./api";
+import { cachedGet, enqueue, flushQueue, getQueue, net, readCache, writeCache, type AnomaliesOut, type BriefingOut, type FarmerOut, type ForecastOut, type NdviSeriesOut, type OffersOut, type QueuedAction, type SeasonOut, type StateOut } from "./api";
 import { useFarm } from "./farm";
 import type { Lang } from "./i18n";
 
@@ -37,6 +37,9 @@ export const useForecast = () => { const { lang } = useFarm(); return useCached<
 export const useOffers = () => useCached<OffersOut>("offers", "/api/offers");
 export const useSeries = () => { const { lang } = useFarm(); return useCached<NdviSeriesOut>("series", `/api/ndvi-series?lang=${lang}`); };
 export const useAnomalies = () => { const { lang } = useFarm(); return useCached<AnomaliesOut>("anomalies", `/api/zones/anomalies?lang=${lang}`); };
+export const useSeason = () => { const { lang } = useFarm(); return useCached<SeasonOut>("season", `/api/season?lang=${lang}`); };
+export const useBriefing = () => { const { lang } = useFarm(); return useCached<BriefingOut>("briefing", `/api/briefing?lang=${lang}`); };
+export const useFarmer = () => { const { lang } = useFarm(); return useCached<FarmerOut>("farmer", `/api/farmer?lang=${lang}`); };
 export function useLand() {
   return useQuery<{ date: string; px: number } | null>({ queryKey: ["land"], queryFn: async () => (await cachedGet<{ date: string; px: number }>("/static/land.json")).data, initialData: () => readCache("/static/land.json") ?? undefined });
 }

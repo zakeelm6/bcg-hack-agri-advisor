@@ -3,6 +3,7 @@
 // today, soil tests, weather with today and rain emphasised.
 import { LandCard } from "@/components/Land";
 import { SoilLine } from "@/components/SoilLine";
+import { SeasonPlan } from "@/components/SeasonPlan";
 import { PageSkeleton, PageTitle, TwoCol, locale, useFmt } from "@/components/common";
 import { Badge, Button, Card, Icon, Label, Skeleton, Stat } from "@/components/ui";
 import { openTasks, useAnomalies, useAppState, useLand, useSeries } from "@/lib/data";
@@ -32,6 +33,7 @@ export default function Field() {
       </Card>
     </div>} side={<div className="space-y-3">
       <Card className="flex items-center justify-between gap-3"><Stat value={n} label={t("tasksToday")} /><Button href="/tasks" variant={n ? "primary" : "secondary"} size="sm" iconEnd="chev">{t("seeTasks")}</Button></Card>
+      <SeasonPlan />
       <Card>
         <Label>{t("soilTests")}</Label>
         <div className="mt-2 space-y-1 text-sm text-text-2">{s.soil_tests.length ? s.soil_tests.map((x) => <div key={x.zone_code}><SoilLine test={x} /></div>) : <p>{t("noneYet")}</p>}</div>

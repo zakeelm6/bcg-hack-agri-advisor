@@ -5,7 +5,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..db import models as m
-from ..processing import engine, geo
+from ..processing import engine, geo, season
 from . import field as fld
 from .satellite_layer import anomalies_available
 from .common import as_dict, clean_lang, now_iso
@@ -18,8 +18,9 @@ def refresh_advice(db: Session, force_weather: bool = False) -> dict:
     field, zones = fld.get_field(db), fld.get_zones(db)
     layers = fld.layer_inputs(db)
     weather = geo.get_weather(db, field["lat"], field["lon"], force=force_weather)
-    _, tasks, alerts = engine.build_advice(field, zones, layers["sensors"], weather, soil=fld.latest_soil(db),
-                                           bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"])
+    soil = fld.latest_soil(db)
+    est, tasks, alerts = engine.build_advice(field, zones, layers["sensors"], weather, soil=soil,
+                                             bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"])
     now = now_iso()
     keys = [t["key"] for t in tasks]
     for t in tasks:
@@ -30,6 +31,8 @@ def refresh_advice(db: Session, force_weather: bool = False) -> dict:
         row.zone_code, row.updated_at = t["zone"], now
         for k in TASK_FIELDS:
             setattr(row, k, t[k])
+        v = season.verify_task(t, est, weather, soil, layers["bad_sensors"])   # independent re-check; an escalated task stays visible
+        row.verify_status, row.verify_detail = v["status"], v["detail"]
     stale = delete(m.Task).where(m.Task.status == "open")
     db.execute(stale.where(m.Task.key.notin_(keys)) if keys else stale)
     for a in alerts:
@@ -70,6 +73,7 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
             if lt:
                 for k in ("title", "what", "when_text", "why", "cost", "conf_reason", "plan_b"):
                     t[k] = lt[k]
+                t["verify_detail"] = season.verify_task(lt, est, weather, soil, layers["bad_sensors"], lang=lang)["detail"]
         loc_a = {a["key"]: a for a in alerts_l}
         for a in alerts:
             la = loc_a.get(a["key"])

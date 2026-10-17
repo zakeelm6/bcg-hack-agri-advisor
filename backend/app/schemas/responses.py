@@ -72,6 +72,8 @@ class TaskOut(Loose):
     status: str
     x: float
     y: float
+    verify_status: str | None = None       # verified | fixed | escalated: independent re-check of the quantity (Phase 4)
+    verify_detail: str | None = None
 
 
 class AlertOut(Loose):
@@ -246,3 +248,33 @@ class FarmerOut(Loose):
     profile: dict | None = None
     applied: dict = {}
     not_applied: list[str] = []
+    needs_input: list[dict] = []           # [{field, question}] still unanswered, in the requested language
+    assumptions: list[str] = []            # what the plan uses instead, honestly
+
+
+class SeasonOut(Loose):
+    crop: str
+    crop_known: bool
+    sowing_date: str
+    cycle_days: int
+    harvest_date: str
+    day_index: int
+    week: int
+    irrigation_method: str
+    n_total_kg_ha: int
+    stage: dict
+    stages: list[dict]
+    needs_input: list[dict]
+    assumptions: list[str]
+    confidence: str
+    source: str
+
+
+class BriefingOut(Loose):
+    text: str
+    lang: str
+    stage: dict
+    week: int
+    open_tasks: int
+    escalated: int
+    source: str

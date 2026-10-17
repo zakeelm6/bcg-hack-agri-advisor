@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/briefing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Daily Briefing
+         * @description One paragraph for the day, to read aloud: stage, today's tasks, weather, next step, escalations.
+         */
+        get: operations["daily_briefing_api_briefing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/chat": {
         parameters: {
             query?: never;
@@ -82,7 +102,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Farmer */
+        /**
+         * Get Farmer
+         * @description The profile, the questions still unanswered (`needs_input`) and the assumptions the plan makes instead.
+         */
         get: operations["get_farmer_api_farmer_get"];
         put?: never;
         /** Save Farmer */
@@ -209,6 +232,26 @@ export interface paths {
         put?: never;
         /** Accept Offer */
         post: operations["accept_offer_api_offers__offer_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/season": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Season Plan
+         * @description Deterministic season plan: stages, irrigation rhythm, nitrogen splits, inspections, harvest window, with its assumptions.
+         */
+        get: operations["season_plan_api_season_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -480,6 +523,27 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** BriefingOut */
+        BriefingOut: {
+            /** Escalated */
+            escalated: number;
+            /** Lang */
+            lang: string;
+            /** Open Tasks */
+            open_tasks: number;
+            /** Source */
+            source: string;
+            /** Stage */
+            stage: {
+                [key: string]: unknown;
+            };
+            /** Text */
+            text: string;
+            /** Week */
+            week: number;
+        } & {
+            [key: string]: unknown;
+        };
         /**
          * ChatBody
          * @description What the React app (frontend/lib/copilot.ts) sends: the question, an optional photo and the app's own context.
@@ -601,6 +665,18 @@ export interface components {
             applied: {
                 [key: string]: unknown;
             };
+            /**
+             * Assumptions
+             * @default []
+             */
+            assumptions: string[];
+            /**
+             * Needs Input
+             * @default []
+             */
+            needs_input: {
+                [key: string]: unknown;
+            }[];
             /**
              * Not Applied
              * @default []
@@ -750,6 +826,47 @@ export interface components {
             moisture: number;
             /** Temp C */
             temp_c?: number | null;
+        };
+        /** SeasonOut */
+        SeasonOut: {
+            /** Assumptions */
+            assumptions: string[];
+            /** Confidence */
+            confidence: string;
+            /** Crop */
+            crop: string;
+            /** Crop Known */
+            crop_known: boolean;
+            /** Cycle Days */
+            cycle_days: number;
+            /** Day Index */
+            day_index: number;
+            /** Harvest Date */
+            harvest_date: string;
+            /** Irrigation Method */
+            irrigation_method: string;
+            /** N Total Kg Ha */
+            n_total_kg_ha: number;
+            /** Needs Input */
+            needs_input: {
+                [key: string]: unknown;
+            }[];
+            /** Source */
+            source: string;
+            /** Sowing Date */
+            sowing_date: string;
+            /** Stage */
+            stage: {
+                [key: string]: unknown;
+            };
+            /** Stages */
+            stages: {
+                [key: string]: unknown;
+            }[];
+            /** Week */
+            week: number;
+        } & {
+            [key: string]: unknown;
         };
         /** SensorOut */
         SensorOut: {
@@ -904,6 +1021,10 @@ export interface components {
             title: string;
             /** Type */
             type: string;
+            /** Verify Detail */
+            verify_detail?: string | null;
+            /** Verify Status */
+            verify_status?: string | null;
             /** What */
             what: string;
             /** When Date */
@@ -1071,6 +1192,37 @@ export interface operations {
             };
         };
     };
+    daily_briefing_api_briefing_get: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     chat_api_chat_post: {
         parameters: {
             query?: never;
@@ -1159,7 +1311,9 @@ export interface operations {
     };
     get_farmer_api_farmer_get: {
         parameters: {
-            query?: never;
+            query?: {
+                lang?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1173,6 +1327,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FarmerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1383,6 +1546,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    season_plan_api_season_get: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonOut"];
                 };
             };
             /** @description Validation Error */

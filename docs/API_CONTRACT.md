@@ -52,5 +52,10 @@ Added in Phase 2 (additive): `GET /api/zones/anomalies`; in `GET /api/state`, `s
 `zones[].sensor_quality / offset`, `data_notes.anomalies`; in `GET /api/offers`, `offers[].est_value_mad` and `harvest_mid_t`.
 `POST /api/sensors/{id}/readings` now accepts any plausible fraction (about -0.2 to 1.5) and **flags** impossible values instead of refusing them (422 only beyond that range).
 
+Added in Phase 3 / 4 (additive): `GET /api/farmer?lang` (profile + `needs_input[]` questions + `assumptions[]`), `POST /api/farmer`,
+`GET /api/season?lang` (deterministic season plan: stages, irrigation rhythm, nitrogen splits, inspections, harvest window, assumptions),
+`GET /api/briefing?lang` (one paragraph for the day), `tasks[].verify_status` / `verify_detail` in `GET /api/state` (independent re-check:
+verified, fixed, escalated), `farmer` action in `/api/sync`.
+
 ## Planned additions (not frozen yet)
-`GET/POST /api/farmer` (profile), authentication routes.
+Authentication routes.

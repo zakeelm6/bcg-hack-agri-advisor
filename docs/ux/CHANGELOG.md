@@ -198,6 +198,11 @@ living page `/design`, screenshots in `pro/design-system/`. After screenshots: `
   restyled on the system; a drawn outline saves the area to the farmer profile so the engine uses the real surface. Libraries load only when
   their tab opens.
 
+## Phase 4 in the app (17 October, same day)
+- **Season plan** card on Field (timeline of stages, planned tasks per stage, "what this plan assumes"), **verification badge** on tasks
+  (Checked / Adjusted / Ask your advisor, with the re-check detail), **"Today in one line"** briefing on Home with a read-aloud button, and a
+  **"To sharpen the advice"** card when onboarding answers are missing. The Copilot's "Read my tasks" reads the briefing when online.
+
 ## Still open
 - Real phone, real microphone in noise, screen-reader run, native Darija reader (the Darija strings are AI-written).
 - Performance on Sell and Me sits at 84–88 on the throttled mobile profile (shared bundle ~160 kB); a lighter query layer or route-level code

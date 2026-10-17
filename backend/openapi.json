@@ -187,6 +187,51 @@
         "title": "AuditOut",
         "type": "object"
       },
+      "BriefingOut": {
+        "additionalProperties": true,
+        "properties": {
+          "escalated": {
+            "title": "Escalated",
+            "type": "integer"
+          },
+          "lang": {
+            "title": "Lang",
+            "type": "string"
+          },
+          "open_tasks": {
+            "title": "Open Tasks",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "stage": {
+            "additionalProperties": true,
+            "title": "Stage",
+            "type": "object"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "week": {
+            "title": "Week",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "text",
+          "lang",
+          "stage",
+          "week",
+          "open_tasks",
+          "escalated",
+          "source"
+        ],
+        "title": "BriefingOut",
+        "type": "object"
+      },
       "ChatBody": {
         "description": "What the React app (frontend/lib/copilot.ts) sends: the question, an optional photo and the app's own context.",
         "properties": {
@@ -498,6 +543,23 @@
             "default": {},
             "title": "Applied",
             "type": "object"
+          },
+          "assumptions": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "needs_input": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Needs Input",
+            "type": "array"
           },
           "not_applied": {
             "default": [],
@@ -905,6 +967,102 @@
           "moisture"
         ],
         "title": "Reading",
+        "type": "object"
+      },
+      "SeasonOut": {
+        "additionalProperties": true,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "string"
+          },
+          "crop": {
+            "title": "Crop",
+            "type": "string"
+          },
+          "crop_known": {
+            "title": "Crop Known",
+            "type": "boolean"
+          },
+          "cycle_days": {
+            "title": "Cycle Days",
+            "type": "integer"
+          },
+          "day_index": {
+            "title": "Day Index",
+            "type": "integer"
+          },
+          "harvest_date": {
+            "title": "Harvest Date",
+            "type": "string"
+          },
+          "irrigation_method": {
+            "title": "Irrigation Method",
+            "type": "string"
+          },
+          "n_total_kg_ha": {
+            "title": "N Total Kg Ha",
+            "type": "integer"
+          },
+          "needs_input": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Needs Input",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "sowing_date": {
+            "title": "Sowing Date",
+            "type": "string"
+          },
+          "stage": {
+            "additionalProperties": true,
+            "title": "Stage",
+            "type": "object"
+          },
+          "stages": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "week": {
+            "title": "Week",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "crop",
+          "crop_known",
+          "sowing_date",
+          "cycle_days",
+          "harvest_date",
+          "day_index",
+          "week",
+          "irrigation_method",
+          "n_total_kg_ha",
+          "stage",
+          "stages",
+          "needs_input",
+          "assumptions",
+          "confidence",
+          "source"
+        ],
+        "title": "SeasonOut",
         "type": "object"
       },
       "SensorOut": {
@@ -1321,6 +1479,28 @@
           "type": {
             "title": "Type",
             "type": "string"
+          },
+          "verify_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verify Detail"
+          },
+          "verify_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verify Status"
           },
           "what": {
             "title": "What",
@@ -1761,6 +1941,47 @@
         "summary": "Audit"
       }
     },
+    "/api/briefing": {
+      "get": {
+        "description": "One paragraph for the day, to read aloud: stage, today's tasks, weather, next step, escalations.",
+        "operationId": "daily_briefing_api_briefing_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "title": "Lang",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Daily Briefing"
+      }
+    },
     "/api/chat": {
       "post": {
         "description": "Adapter for the React app's Co-Pilot: engine advice in the shape its screen displays.",
@@ -1858,7 +2079,20 @@
     },
     "/api/farmer": {
       "get": {
+        "description": "The profile, the questions still unanswered (`needs_input`) and the assumptions the plan makes instead.",
         "operationId": "get_farmer_api_farmer_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "title": "Lang",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -1869,6 +2103,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Get Farmer"
@@ -2120,6 +2364,47 @@
           }
         },
         "summary": "Accept Offer"
+      }
+    },
+    "/api/season": {
+      "get": {
+        "description": "Deterministic season plan: stages, irrigation rhythm, nitrogen splits, inspections, harvest window, with its assumptions.",
+        "operationId": "season_plan_api_season_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "title": "Lang",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Season Plan"
       }
     },
     "/api/sensors/{sensor_id}/readings": {

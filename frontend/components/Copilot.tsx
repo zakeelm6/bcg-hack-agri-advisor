@@ -6,7 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
-import { fetchJson, type CopilotOut, type CopilotStatusOut, type StateOut, type TaskOut } from "@/lib/api";
+import { fetchJson, type BriefingOut, type CopilotOut, type CopilotStatusOut, type StateOut, type TaskOut } from "@/lib/api";
 import { useAppState, useOffline } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 import type { Key } from "@/lib/i18n";
@@ -36,7 +36,7 @@ function localAnswer(t: (k: Key, v?: Record<string, string | number>) => string,
   return say(t("needConnection"));
 }
 
-type CopilotApi = { open: boolean; setOpen: (v: boolean) => void; speakTask: (task: TaskOut) => void; slot: HTMLElement | null; setSlot: (el: HTMLElement | null) => void };
+type CopilotApi = { open: boolean; setOpen: (v: boolean) => void; speakTask: (task: TaskOut) => void; speakText: (text: string) => void; slot: HTMLElement | null; setSlot: (el: HTMLElement | null) => void };
 const Ctx = createContext<CopilotApi | null>(null);
 export const useCopilot = () => useContext(Ctx)!;
 
@@ -44,10 +44,11 @@ export function CopilotProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const speakRef = useRef<(task: TaskOut) => void>(() => {});
+  const speakTextRef = useRef<(text: string) => void>(() => {});
   return (
-    <Ctx.Provider value={{ open, setOpen, slot, setSlot, speakTask: (task) => speakRef.current(task) }}>
+    <Ctx.Provider value={{ open, setOpen, slot, setSlot, speakTask: (task) => speakRef.current(task), speakText: (text) => speakTextRef.current(text) }}>
       {children}
-      <CopilotPanel speakRef={speakRef} />
+      <CopilotPanel speakRef={speakRef} speakTextRef={speakTextRef} />
     </Ctx.Provider>
   );
 }
@@ -66,7 +67,7 @@ function MicControl({ state, level, busy, onPress, label }: { state: string; lev
   );
 }
 
-function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: TaskOut) => void> }) {
+function CopilotPanel({ speakRef, speakTextRef }: { speakRef: React.MutableRefObject<(task: TaskOut) => void>; speakTextRef: React.MutableRefObject<(text: string) => void> }) {
   const t = useT();
   const { lang } = useFarm();
   const { open, setOpen, slot } = useCopilot();
@@ -103,7 +104,11 @@ function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: Ta
     const q = text.trim(); if (!q || busy) return;
     if (CMD_STOP.test(q)) { voice.stopSpeaking(); setTalk(false); setNote(t("stopped")); return; }
     if (CMD_REPEAT.test(q)) { const last = [...msgs].reverse().find((m) => m.role === "bot"); if (last) voice.speak(last.text, listenAgain); return; }
-    if (CMD_TASKS.test(q)) { const a = localAnswer(t, s, "plan for today", null); setMsgs((m) => [...m, { role: "user", text: q }, a]); voice.speak(a.text, listenAgain); return; }
+    if (CMD_TASKS.test(q)) {
+      let a = localAnswer(t, s, "plan for today", null);
+      if (!offline) { try { const b = await fetchJson<BriefingOut>(`/api/briefing?lang=${lang}`); a = { role: "bot", text: b.text, source: "engine" }; } catch { /* saved tasks instead */ } }
+      setMsgs((m) => [...m, { role: "user", text: q }, a]); voice.speak(a.text, listenAgain); return;
+    }
     setMsgs((m) => [...m, { role: "user", text: q }]); setBusy(true);
     let res: Msg;
     try {
@@ -112,7 +117,7 @@ function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: Ta
     } catch { res = localAnswer(t, s, q, taskId); }
     setBusy(false); setMsgs((m) => [...m, res]);
     if (fromVoice || readAloud || talkRef.current) voice.speak(res.text, listenAgain); else listenAgain();
-  }, [busy, msgs, voice, t, s, taskId, lang, readAloud, listenAgain]);
+  }, [busy, msgs, voice, t, s, taskId, lang, readAloud, listenAgain, offline]);
 
   const micTurn = useCallback(async () => {
     const heard = await voice.listen();
@@ -133,6 +138,7 @@ function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: Ta
     talkRef.current = true; voice.speak(a.text, listenAgain);
   };
   speakRef.current = (tk) => voice.speak(`${tk.title}. ${tk.when_text}. ${tk.why}`);
+  speakTextRef.current = (text) => voice.speak(text);
 
   const st = ((): { icon: string; text: string; cls: string } => {
     if (voice.message) return { icon: "info", text: t(voice.message as Key), cls: "text-danger" };

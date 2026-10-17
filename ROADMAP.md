@@ -113,11 +113,18 @@ The legacy app moved to `frontend-legacy/` and is still served by the API at `/`
 9. Accessibility and UX pass: measured at 390 and 1440 px in three languages: no overflow, no target under 44 px, no console error (`docs/ux/2026-10-17-react/`). Screen reader and real phone: **open**.
 10. Parity checklist: written, 3 rows open; the legacy app stays.
 
-### Phase 4: farmer profile and season plan (optional, M to L)
-From `processing/ai-and-internal-processing.md`: a farmer form with "needs input" questions when an answer is missing, a season
-calendar computed by deterministic tools (irrigation and fertilizer by crop stage and weather), a verifier per task
-(verified, fixed, escalated), and a daily step that merges the plan with live satellite, sensor and weather data.
-Do this only after Phases 1 to 3 work end to end.
+### Phase 4: farmer profile and season plan (M to L) - done locally, branch `ux/pro-polish` (99 tests)
+Transposed from `processing/ai-and-internal-processing.md` without the simulator, all in deterministic code (`backend/app/processing/season.py`):
+1. **Missing questions**: `GET /api/farmer` lists what the farmer has not answered (`needs_input`, in the four languages) and what the plan
+   assumes instead (`assumptions`). Home shows a quiet "To sharpen the advice" card that reopens the onboarding.
+2. **Season plan** (`GET /api/season`): crop stages from the sowing date (FAO-56-style Kc, demo cycle lengths), irrigation depth and rhythm
+   per stage from a reference ET0 climatology and the watering method, nitrogen splits that sum to the season total (adjusted by the
+   soil test), inspections every 10 days, the harvest window. Shown on Field as a timeline with the assumptions behind it. Labelled demo.
+3. **Verifier per task**: every engine task is re-checked independently (`verify_status`: verified / fixed / escalated, with the reason).
+   An escalated task is never hidden: it keeps its place with "Ask your advisor" and no amber Done.
+4. **Daily briefing** (`GET /api/briefing`): one paragraph (stage, today's tasks, weather, next planned step, escalations) in the four
+   languages; shown on Home and read by the Copilot for "Read my tasks" when online (saved tasks offline).
+Not done: RAG with citations, the farm simulator and the Monte Carlo judge (excluded by design).
 
 ### Phase 5: agent sandbox (optional, L)
 Orchestrator, safety check, explainer and follow-up agents as LangGraph nodes, with allow-listed tools, no secrets, time and memory limits,

@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCopilot } from "@/components/Copilot";
 import { PageSkeleton, PageTitle, TwoCol } from "@/components/common";
-import { Badge, Button, Card, ConfidenceMeter, Icon, Label, taskIcon, useToast } from "@/components/ui";
+import { Badge, Banner, Button, Card, ConfidenceMeter, Icon, Label, taskIcon, useToast } from "@/components/ui";
+import { VerifyBadge } from "@/components/VerifyBadge";
 import { useActions, useAppState } from "@/lib/data";
 import { useT } from "@/lib/farm";
 
@@ -42,9 +43,10 @@ export default function Task() {
         <div className="min-w-0 flex-1">
           <h2 className="font-display text-2xl leading-tight">{task.title}</h2>
           <p className="mt-1 inline-flex items-center gap-1.5 text-base text-text-2"><Icon name="clock" size={16} /> {task.when_text}</p>
-          <div className="mt-2"><ConfidenceMeter conf={task.confidence} /></div>
+          <div className="mt-2 flex flex-wrap items-center gap-2"><ConfidenceMeter conf={task.confidence} /><VerifyBadge status={task.verify_status} /></div>
         </div>
       </div>
+      {task.verify_status === "escalated" && <Banner tone="warning" icon="warning" title={t("escalated")} className="mt-4">{task.verify_detail}</Banner>}
       {task.status === "open" ? (skipping ? (
         <div className="anim-fade-up mt-5 rounded-lg bg-surface-2 p-4">
           <Label>{t("whyNot")}</Label>
@@ -53,7 +55,7 @@ export default function Task() {
         </div>
       ) : (
         <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button variant="accent" size="lg" icon="check" onClick={done} className="sm:flex-1">{t("done")}</Button>
+          <Button variant={task.verify_status === "escalated" ? "secondary" : "accent"} size="lg" icon="check" onClick={done} className="sm:flex-1">{t("done")}</Button>
           <Button variant="ghost" onClick={() => setSkipping(true)}>{t("cannotDo")}</Button>
         </div>
       )) : <div className="mt-5"><Badge tone={task.status === "done" ? "success" : "outline"} size="md" icon={task.status === "done" ? "check" : undefined}>{task.status === "done" ? t("done") : t("skipped")}</Badge></div>}
@@ -65,6 +67,7 @@ export default function Task() {
         <Label>{t("whyLabel")}</Label>
         <p className="mt-1.5 text-base leading-relaxed">{task.why}</p>
         <p className="mt-2 text-sm text-text-2">{task.conf_reason}</p>
+        {task.verify_status !== "escalated" && task.verify_detail && <p className="mt-2 flex items-start gap-1.5 text-xs text-text-3"><Icon name="shield" size={14} className="mt-0.5" /><span><b>{t("verifyTitle")}:</b> {task.verify_detail}</span></p>}
       </Card>
       <Card className="!p-0">
         <div className="flex gap-3 border-b border-line p-4"><Icon name="sell" size={22} className="mt-0.5 flex-none text-text-3" /><div><Label>{t("cost")}</Label><p className="mt-1 text-sm">{task.cost}</p></div></div>

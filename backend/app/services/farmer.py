@@ -30,6 +30,14 @@ def get(db: Session) -> dict | None:
     return as_dict(f) if f else None
 
 
+def status(db: Session, lang: str = "en") -> dict:
+    """The profile plus what is still missing (questions in the farmer's language) and what the plan assumes instead."""
+    from ..processing import season
+    p = get(db)
+    questions, assumptions = season.needs_input(p, as_dict(db.get(m.Field, 1)), lang)
+    return {"saved": p is not None, "profile": p, "needs_input": questions, "assumptions": assumptions}
+
+
 def save(db: Session, b: rq.FarmerBody) -> dict:
     row = db.get(m.Farmer, 1)
     if row is None:

@@ -70,6 +70,8 @@ export type QueuedAction =
   | { type: "farmer"; payload: FarmerBody };
 export type FarmerBody = components["schemas"]["FarmerBody"];
 export type FarmerOut = components["schemas"]["FarmerOut"];
+export type SeasonOut = components["schemas"]["SeasonOut"];
+export type BriefingOut = components["schemas"]["BriefingOut"];
 
 export const getQueue = () => lsGet<(QueuedAction & { ts: number })[]>("fa_queue", []);
 const setQueue = (q: (QueuedAction & { ts: number })[]) => lsSet("fa_queue", q);

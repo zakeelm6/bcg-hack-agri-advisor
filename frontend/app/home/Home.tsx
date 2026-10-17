@@ -4,9 +4,10 @@
 import { CopilotDock } from "@/components/Copilot";
 import { LandCard } from "@/components/Land";
 import { useFmt } from "@/components/common";
-import { Badge, Card, ConfidenceMeter, Icon, Label, Skeleton, taskIcon } from "@/components/ui";
+import { Badge, Button, Card, ConfidenceMeter, Icon, Label, Skeleton, taskIcon } from "@/components/ui";
 import type { StateOut } from "@/lib/api";
-import { openTasks, useAnomalies, useAppState, useLand } from "@/lib/data";
+import { openTasks, useAnomalies, useAppState, useBriefing, useFarmer, useLand } from "@/lib/data";
+import { useCopilot } from "@/components/Copilot";
 import { useT } from "@/lib/farm";
 
 export default function Home({ initial }: { initial?: StateOut | null }) {
@@ -15,7 +16,11 @@ export default function Home({ initial }: { initial?: StateOut | null }) {
   const { data: s } = useAppState(initial);
   const { data: land } = useLand();
   const { data: anomalies } = useAnomalies();
+  const { data: farmer } = useFarmer();
+  const { data: brief } = useBriefing();
+  const cp = useCopilot();
   if (!s) return <HomeSkeleton />;
+  const missing = farmer?.needs_input?.length ?? 0;
   const open = openTasks(s), first = open[0];
   return (
     <div className="md:grid md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:items-stretch md:gap-5">
@@ -35,6 +40,20 @@ export default function Home({ initial }: { initial?: StateOut | null }) {
           <Card tone="brand" className="anim-fade-up flex items-center gap-4 !p-5">
             <span className="grid h-16 w-16 flex-none place-items-center rounded-full bg-white/15"><Icon name="check" size={30} /></span>
             <span><span className="font-display block text-2xl">{t("allGood")}</span><span className="block text-base opacity-90">{t("noTaskToday")}</span></span>
+          </Card>
+        )}
+        {brief?.text && (
+          <Card className="anim-fade-up flex items-start gap-3 !py-3">
+            <Icon name="speaker" size={20} className="mt-1 flex-none text-brand" />
+            <div className="min-w-0 flex-1"><Label>{t("briefingTitle")}</Label><p className="mt-0.5 text-sm leading-relaxed">{brief.text}</p></div>
+            <Button variant="secondary" size="sm" icon="speaker" iconOnly onClick={() => cp.speakText(brief.text)}>{t("readBriefing")}</Button>
+          </Card>
+        )}
+        {missing > 0 && (
+          <Card tone="inset" className="flex items-center gap-3 !py-3">
+            <Icon name="info" size={20} className="flex-none text-text-2" />
+            <div className="min-w-0 flex-1"><b className="block text-sm">{t("missingTitle")}</b><span className="text-sm text-text-2">{t("missingBody", { n: missing })}</span></div>
+            <Button href="/?edit=1" variant="secondary" size="sm" iconEnd="chev">{t("answerNow")}</Button>
           </Card>
         )}
         <LandCard s={s} land={land} anomalies={anomalies} margin={30} title={<div className="mb-2.5 flex items-baseline justify-between gap-3 px-1"><h2 className="font-display text-xl">{s.field.name}</h2><span className="num text-sm text-text-2">{t("ha", { n: num(s.field.area_ha, 1) })}</span></div>} />

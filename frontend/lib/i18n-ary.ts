@@ -428,4 +428,21 @@ export const ARY: Partial<Record<Key, string>> = {
   notUnderstood: "ما فهمتش. عاود قولها ولا ضغط على صورة.",
   areaExact: "ولا كتب المساحة بالضبط",
   areaHint: "من الرسم العقاري ولا من قياس",
+
+  // season plan, verifier, briefing (Phase 4)
+  verified: "تحققنا منها",
+  fixed: "تعدلات",
+  escalated: "شوف المستشار ديالك",
+  verifyTitle: "تحقق مستقل",
+  seasonPlan: "برنامج الموسم",
+  seasonNow: "دابا: {stage}، الأسبوع {w}",
+  seasonHarvest: "الصابة تقريبا {d}",
+  seasonAssumptions: "شنو كيفترض هاد البرنامج",
+  seasonNote: "محسوب من الزرع وتاريخ الزريعة ومناخ مرجعي. قيم تجريبية ماشي مأكدة.",
+  stageDays: "{n} يوم",
+  missingTitle: "باش نحسنو النصايح",
+  missingBody: "{n} سؤال مازال بلا جواب.",
+  answerNow: "جاوب دابا",
+  briefingTitle: "اليوم فسطر واحد",
+  readBriefing: "قرا موجز اليوم",
 };
