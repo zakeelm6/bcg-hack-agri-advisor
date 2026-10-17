@@ -21,3 +21,5 @@ from .config import settings  # noqa: E402
 
 copilot_brake = Brake(settings.copilot_calls_per_minute)   # shared by the Copilot, photo reading and the React chat route
 voice_brake = Brake(settings.voice_calls_per_minute)
+geo_brake = Brake(30)   # place-name lookups
+device_brake = Brake(settings.new_devices_per_minute)   # new phones registered

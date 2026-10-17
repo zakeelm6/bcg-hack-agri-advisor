@@ -89,8 +89,10 @@ def test_farmer_profile_reaches_the_engine_and_says_what_it_could_not_use():
     with client() as c:
         assert c.get("/api/farmer").json()["saved"] in (False, True)
         r = c.post("/api/farmer", json={"location": "Berrechid", "crop": "tomatoes", "planted_on": "2026-09-01", "area_ha": 3.2, "irrigation": "drip", "challenge": "water", "lat": 33.2, "lon": -7.5, "lang": "fr"}).json()
-        assert r["saved"] and r["applied"] == {"crop": "Tomato", "sowing_date": "2026-09-01", "area_ha": 3.2}
-        assert len(r["not_applied"]) == 2 and "Position" in r["not_applied"][0]
+        assert r["saved"] and set(r["applied"]) == {"crop", "sowing_date", "area_ha", "position"}
+        assert r["applied"]["crop"] == "Tomato" and r["applied"]["area_ha"] == 3.2
+        assert r["applied"]["position"]["satellite"] == "none"      # the satellite download is off in the tests
+        assert len(r["not_applied"]) == 1 and "irrigation" in r["not_applied"][0].lower()
         s = c.get("/api/state").json()
         assert s["field"]["crop"] == "Tomato" and s["field"]["area_ha"] == 3.2 and s["field"]["sowing_date"] == "2026-09-01"
         assert abs(sum(z["area_ha"] for z in s["zones"]) - 3.2) < 0.01

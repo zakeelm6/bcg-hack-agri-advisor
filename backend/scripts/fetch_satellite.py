@@ -35,7 +35,7 @@ def bbox_for(lat, lon, side_m=SIDE_M):
     return (lon - dlon, lat - dlat, lon + dlon, lat + dlat)
 
 
-def download(lat, lon, days, max_cloud):
+def download(lat, lon, days, max_cloud, side=SIDE_M):
     import numpy as np
     import satellite as sat
     scenes = sat.find_scenes(lon, lat, days=days, max_cloud=max_cloud)
@@ -48,7 +48,7 @@ def download(lat, lon, days, max_cloud):
     for d in sorted(by_date):
         it = by_date[d]
         try:
-            nd, good, info = sat.read_ndvi(it, bbox_for(lat, lon))
+            nd, good, info = sat.read_ndvi(it, bbox_for(lat, lon, side))
         except Exception as e:  # one broken scene must not stop the run
             print(f"  {d}: skipped ({type(e).__name__}: {e})")
             continue
@@ -59,7 +59,7 @@ def download(lat, lon, days, max_cloud):
         rows.append({"date": d, "scene": info["id"], "scene_cloud_pct": round(info["cloud"], 1) if info["cloud"] is not None else None,
                      "clear_pixel_share": valid_share, "zones": zm, "pixels": pixels})
         print(f"  {d}  scene cloud {info['cloud']:.0f}%  clear pixels {valid_share:.0%}  zones {zm}")
-    return {"lat": lat, "lon": lon, "side_m": SIDE_M, "fetched_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+    return {"lat": lat, "lon": lon, "side_m": side, "fetched_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
             "source": "Sentinel-2 L2A via Earth Search", "rows": rows}
 
 
@@ -78,7 +78,7 @@ def _png(rgb):
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
 
 
-def save_land_image(lat, lon, scene_hint=None):
+def save_land_image(lat, lon, out_dir=None, field_side=SIDE_M):
     """True-colour picture of the land around the field from the clearest recent scene. Returns metadata or None."""
     import numpy as np
     import rasterio
@@ -89,7 +89,8 @@ def save_land_image(lat, lon, scene_hint=None):
     if not scenes:
         return None
     it = min(scenes, key=lambda x: (x.properties.get("eo:cloud_cover") or 100))
-    bbox = bbox_for(lat, lon, LAND_SIDE_M)
+    land_side = max(LAND_SIDE_M, 3 * field_side)       # the picture shows the surroundings: about three times the field
+    bbox = bbox_for(lat, lon, land_side)
     bands = []
     for name in ("red", "green", "blue"):
         a = it.assets[name]
@@ -97,15 +98,16 @@ def save_land_image(lat, lon, scene_hint=None):
             b = transform_bounds("EPSG:4326", ds.crs, *bbox)
             win = from_bounds(*b, transform=ds.transform).round_offsets().round_lengths()
             win = Window(win.col_off, win.row_off, max(1, win.width), max(1, win.height))
-            dn = ds.read(1, window=win, out_shape=(int(LAND_SIDE_M // 10), int(LAND_SIDE_M // 10)), boundless=True, fill_value=0).astype("float32")
+            dn = ds.read(1, window=win, out_shape=(int(land_side // 10), int(land_side // 10)), boundless=True, fill_value=0).astype("float32")
         sc, off = sat._scale_offset(a)
         bands.append(np.clip(dn * sc + off, 0, 1))
     refl = np.stack(bands, axis=-1)
     img = np.clip((refl / 0.28) ** 0.8, 0, 1)                      # gain and gamma for a natural look
-    out_dir = os.environ.get("FA_STATIC_DIR") or os.path.join(ROOT, "..", "frontend-legacy")   # the land picture is served by the API as /static/land.png
+    out_dir = out_dir or os.environ.get("FA_STATIC_DIR") or os.path.join(ROOT, "..", "frontend-legacy")   # the land picture is served by the API as /static/land.png
+    os.makedirs(out_dir, exist_ok=True)
     open(os.path.join(out_dir, "land.png"), "wb").write(_png((img * 255).astype("uint8")))
-    meta = {"date": it.datetime.date().isoformat(), "side_m": LAND_SIDE_M, "field_side_m": SIDE_M, "scene": it.id,
-            "source": "Sentinel-2 L2A true colour, 10 m pixels", "px": int(LAND_SIDE_M // 10)}
+    meta = {"date": it.datetime.date().isoformat(), "side_m": land_side, "field_side_m": field_side, "scene": it.id,
+            "source": "Sentinel-2 L2A true colour, 10 m pixels", "px": int(land_side // 10)}
     json.dump(meta, open(os.path.join(out_dir, "land.json"), "w"))
     return meta
 
@@ -147,23 +149,26 @@ def main():
     ap.add_argument("--max-cloud", type=float, default=60)
     ap.add_argument("--crop", default=None, help="crop grown on the parcel, if you know it (the satellite cannot tell)")
     ap.add_argument("--from-cache", action="store_true")
+    ap.add_argument("--side", type=float, default=SIDE_M, help="side of the square field in metres (default 155, a 2.4 ha field)")
+    ap.add_argument("--out-dir", default=None, help="write the cache (ndvi.json) and the land picture here and do NOT touch the database: used by the API for a farmer's own field")
     a = ap.parse_args()
+    cache_file = os.path.join(a.out_dir, "ndvi.json") if a.out_dir else CACHE
     if a.from_cache:
-        data = json.load(open(CACHE))
+        data = json.load(open(cache_file))
         print(f"Using cache from {data['fetched_at']} ({len(data['rows'])} dates)")
     else:
         print(f"Searching Sentinel-2 scenes near lat {a.lat}, lon {a.lon} (last {a.days} days)...")
-        data = download(a.lat, a.lon, a.days, a.max_cloud)
-        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
-        json.dump(data, open(CACHE, "w"), indent=1)
-        print(f"Saved cache: {os.path.relpath(CACHE)}")
+        data = download(a.lat, a.lon, a.days, a.max_cloud, a.side)
+        os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+        json.dump(data, open(cache_file, "w"), indent=1)
+        print(f"Saved cache: {os.path.relpath(cache_file)}")
     if not data["rows"]:
         sys.exit("No usable scene found. The database was not changed.")
-    updated = apply_to_db(data, a.crop)
-    if not updated:
+    updated = {} if a.out_dir else apply_to_db(data, a.crop)
+    if not a.out_dir and not updated:
         sys.exit("No zone had enough clear pixels. The database was not changed.")
     try:
-        meta = save_land_image(data["lat"], data["lon"])
+        meta = save_land_image(data["lat"], data["lon"], a.out_dir, a.side)
         print(f"Land picture saved: frontend-legacy/land.png ({meta['date']}, {meta['px']}x{meta['px']} px)" if meta else "No clear scene for the land picture.")
     except Exception as e:  # the picture is optional: the app falls back to a plain background
         print(f"Land picture skipped ({type(e).__name__}: {e})")

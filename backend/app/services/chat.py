@@ -9,13 +9,13 @@ from .copilot_service import ask
 
 TEXT = {
     "en": {"plan_b": "Plan B", "nothing": "Nothing needs doing right now.", "test": "A soil test in zone {z}",
-           "sensor": "A moisture reading in zone {z}", "photo": "A close-up photo of the leaves"},
+           "sensor": "A moisture reading in zone {z}", "photo": "A close-up photo of the leaves", "spend_hint": "Record each purchase in Activities to keep this list true."},
     "fr": {"plan_b": "Plan B", "nothing": "Rien à faire pour le moment.", "test": "Une analyse de sol dans la zone {z}",
-           "sensor": "Une mesure d'humidité dans la zone {z}", "photo": "Une photo de près des feuilles"},
+           "sensor": "Une mesure d'humidité dans la zone {z}", "photo": "Une photo de près des feuilles", "spend_hint": "Notez chaque achat dans Activités pour que cette liste reste juste."},
     "ar": {"plan_b": "الخطة البديلة", "nothing": "لا يوجد شيء يجب فعله الآن.", "test": "تحليل للتربة في المنطقة {z}",
-           "sensor": "قياس للرطوبة في المنطقة {z}", "photo": "صورة قريبة للأوراق"},
+           "sensor": "قياس للرطوبة في المنطقة {z}", "photo": "صورة قريبة للأوراق", "spend_hint": "سجّل كل شراء في الأنشطة لتبقى هذه القائمة صحيحة."},
     "ary": {"plan_b": "الخطة البديلة", "nothing": "ما كاين والو خاصك تدير دابا.", "test": "تحليل تربة فالمنطقة {z}",
-            "sensor": "قياس ديال الرطوبة فالمنطقة {z}", "photo": "صورة قريبة للورق"},
+            "sensor": "قياس ديال الرطوبة فالمنطقة {z}", "photo": "صورة قريبة للورق", "spend_hint": "سجل كل شرا فالأنشطة باش هاد اللائحة تبقى صحيحة."},
 }
 ORDER = {"irrigate": 0, "fertilize": 1, "inspect": 2}
 
@@ -25,6 +25,8 @@ def chat(db: Session, b: rq.ChatBody) -> dict:
     lang = clean_lang(b.lang if b.lang != "en" else (profile.get("language") or "en"))
     tx = TEXT[lang]
     res = ask(db, b.question, None, lang)
+    if res.get("intent") == "spend":   # a question about the farmer's own spending is not about a task
+        return {"recommendation": res["text"], "why": tx["spend_hint"], "steps": [], "missing": []}
     st = build_state(db, lang)
     open_tasks = sorted((t for t in st["tasks"] if t["status"] == "open"), key=lambda t: (t["when_date"], ORDER.get(t["type"], 9)))
     if not open_tasks:

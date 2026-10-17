@@ -4,6 +4,44 @@
  */
 
 export interface paths {
+    "/api/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Activities */
+        get: operations["list_activities_api_activities_get"];
+        put?: never;
+        /**
+         * Save Activity
+         * @description Create or update the entry with this `client_id`. Recorded watering makes the engine wait before advising it again.
+         */
+        post: operations["save_activity_api_activities_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/activities/{client_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Activity */
+        delete: operations["delete_activity_api_activities__client_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit": {
         parameters: {
             query?: never;
@@ -116,6 +154,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/field": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Field Info
+         * @description Whose field the engine works on (the demo parcel or the farmer's own), where, and the state of its satellite pictures.
+         */
+        get: operations["field_info_api_field_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/field/picture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Field Picture */
+        get: operations["field_picture_api_field_picture_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/field/satellite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Field Satellite Retry
+         * @description Try the satellite download again (after a failure, or when it was interrupted).
+         */
+        post: operations["field_satellite_retry_api_field_satellite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/forecast": {
         parameters: {
             query?: never;
@@ -125,6 +220,26 @@ export interface paths {
         };
         /** Forecast */
         get: operations["forecast_api_forecast_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/geo/place": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Place
+         * @description Town name at a position (cached). `place` is null when the name service does not answer.
+         */
+        get: operations["place_api_geo_place_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -453,6 +568,61 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** ActivitiesOut */
+        ActivitiesOut: {
+            /** Activities */
+            activities: components["schemas"]["ActivityOut"][];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * ActivityBody
+         * @description One entry of the farmer's Activities list (watered, sprayed, planted, spent money, other work).
+         */
+        ActivityBody: {
+            /** Amount Mm */
+            amount_mm?: number | null;
+            /** Client Id */
+            client_id: string;
+            /** Cost */
+            cost?: number | null;
+            /** Date */
+            date: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "irrigation" | "treatment" | "planting" | "expense" | "other";
+            /** Zone */
+            zone?: string | null;
+        };
+        /** ActivityOut */
+        ActivityOut: {
+            /** Amount Mm */
+            amount_mm?: number | null;
+            /** Client Id */
+            client_id: string;
+            /** Cost */
+            cost?: number | null;
+            /** Date */
+            date: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Type */
+            type: string;
+            /** Zone */
+            zone?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** AlertOut */
         AlertOut: {
             /** Body */
@@ -636,6 +806,8 @@ export interface components {
         FarmerBody: {
             /** Area Ha */
             area_ha?: number | null;
+            /** Boundary */
+            boundary?: number[][] | null;
             /** Challenge */
             challenge?: string | null;
             /** Crop */
@@ -691,6 +863,32 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * FieldInfoOut
+         * @description Whose field the engine works on. `source` is "demo" (the parcel the satellite data was made for) or "own" (the farmer's).
+         *     `satellite_status`: ready, pending (a download is running), failed or none (not set up on this server).
+         */
+        FieldInfoOut: {
+            /** Area Ha */
+            area_ha: number;
+            /** Boundary */
+            boundary?: number[][] | null;
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+            picture?: components["schemas"]["PictureOut"] | null;
+            /** Satellite Note */
+            satellite_note?: string | null;
+            /** Satellite Status */
+            satellite_status: string;
+            /** Side M */
+            side_m?: number | null;
+            /** Source */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** FieldOut */
         FieldOut: {
             /** Area Ha */
@@ -707,6 +905,20 @@ export interface components {
             lon: number;
             /** Name */
             name: string;
+            /** Satellite Note */
+            satellite_note?: string | null;
+            /**
+             * Satellite Status
+             * @default ready
+             */
+            satellite_status: string;
+            /** Side M */
+            side_m?: number | null;
+            /**
+             * Source
+             * @default demo
+             */
+            source: string;
             /** Sowing Date */
             sowing_date: string;
         } & {
@@ -817,6 +1029,27 @@ export interface components {
         Ok: {
             /** Ok */
             ok: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        /** PictureOut */
+        PictureOut: {
+            /** Date */
+            date: string;
+            /** Field Side M */
+            field_side_m: number;
+            /** Side M */
+            side_m: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * PlaceOut
+         * @description The town name at a position, or null when the name service did not answer.
+         */
+        PlaceOut: {
+            /** Place */
+            place?: string | null;
         } & {
             [key: string]: unknown;
         };
@@ -1015,12 +1248,16 @@ export interface components {
             key: string;
             /** Plan B */
             plan_b: string;
+            /** Qty */
+            qty?: number | null;
             /** Status */
             status: string;
             /** Title */
             title: string;
             /** Type */
             type: string;
+            /** Unit */
+            unit?: string | null;
             /** Verify Detail */
             verify_detail?: string | null;
             /** Verify Status */
@@ -1143,7 +1380,7 @@ export interface components {
             /** Moisture Source */
             moisture_source?: string | null;
             /** Ndvi */
-            ndvi: number;
+            ndvi?: number | null;
             /** Ndvi Hist */
             ndvi_hist: number[];
             /** Ndvi Source */
@@ -1172,6 +1409,90 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_activities_api_activities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivitiesOut"];
+                };
+            };
+        };
+    };
+    save_activity_api_activities_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_activity_api_activities__client_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     audit_api_audit_get: {
         parameters: {
             query?: never;
@@ -1373,6 +1694,67 @@ export interface operations {
             };
         };
     };
+    field_info_api_field_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldInfoOut"];
+                };
+            };
+        };
+    };
+    field_picture_api_field_picture_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PNG, true-colour Sentinel-2 picture around the field */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "image/png": string;
+                };
+            };
+        };
+    };
+    field_satellite_retry_api_field_satellite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldInfoOut"];
+                };
+            };
+        };
+    };
     forecast_api_forecast_get: {
         parameters: {
             query?: {
@@ -1391,6 +1773,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ForecastOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    place_api_geo_place_get: {
+        parameters: {
+            query: {
+                lat: number;
+                lon: number;
+                lang?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceOut"];
                 };
             };
             /** @description Validation Error */

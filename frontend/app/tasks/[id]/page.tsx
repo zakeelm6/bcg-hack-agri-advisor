@@ -8,7 +8,7 @@ import { PageSkeleton, PageTitle, TwoCol } from "@/components/common";
 import { Badge, Banner, Button, Card, ConfidenceMeter, Icon, Label, taskIcon, useToast } from "@/components/ui";
 import { VerifyBadge } from "@/components/VerifyBadge";
 import { useActions, useAppState } from "@/lib/data";
-import { useT } from "@/lib/farm";
+import { today, useT } from "@/lib/farm";
 
 const REASONS = [["no_means", "skipNoMeans", "drop"], ["no_time", "skipNoTime", "clock"], ["not_needed", "skipNotNeeded", "check"]] as const;
 
@@ -25,10 +25,14 @@ export default function Task() {
   const task = s.tasks.find((x) => x.id === +id);
   if (!task) return (<><PageTitle title={t("task")} back="/tasks" /><Card>{t("taskGone")}</Card></>);
 
+  // Doing a watering or a fertilizing also records it in Activities: the engine then knows what was really given.
   const done = () => {
     act({ type: "task_status", payload: { task_id: task.id, status: "done" } });
+    const kind = task.type === "irrigate" ? "irrigation" : task.type === "fertilize" ? "other" : null;
+    const client_id = crypto.randomUUID();
+    if (kind) act({ type: "activity", payload: { client_id, type: kind, date: today(), note: task.title.slice(0, 200), cost: null, zone: kind === "irrigation" ? task.zone_code : null, amount_mm: kind === "irrigation" && task.unit === "mm" && task.qty ? task.qty : null } });
     router.push(`/tasks/${task.id}/follow`);
-    toast(t("done"), { label: t("undo"), fn: () => { act({ type: "task_status", payload: { task_id: task.id, status: "open" } }); router.push(`/tasks/${task.id}`); } }, "check");
+    toast(t("done"), { label: t("undo"), fn: () => { act({ type: "task_status", payload: { task_id: task.id, status: "open" } }); if (kind) act({ type: "activity_remove", payload: { client_id } }); router.push(`/tasks/${task.id}`); } }, "check");
   };
   const skip = (reason: string) => {
     act({ type: "task_status", payload: { task_id: task.id, status: "skipped" } });

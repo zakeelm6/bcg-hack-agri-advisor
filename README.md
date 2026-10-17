@@ -60,6 +60,10 @@ React app: `cd frontend && npm install && npm run dev` (http://localhost:3000, t
 | [docs/prompts/](docs/prompts/) | Prompts used for the UX work in Cursor |
 | [docs/reference/](docs/reference/) | The hackathon brief and a reference handoff note from another project |
 
+## What was merged from the team repository
+
+On 17 October 2026 the backend work of the team repository (`bcg-hack-agri-advisor`, steps 1 to 8) was merged into this project, and this project's own Phase 4 (season plan, task verifier, daily briefing) was kept: activities that teach the engine (recorded watering, spending in MAD), the farmer's own field with on-demand Sentinel-2 pictures, the demo picture served by the API, a token per phone so that each phone has its own field, the town lookup. Database migrations 0005 to 0008 are the team's 0004 to 0007, renumbered after this project's own 0004. The team's frontend (3zden's growmate) is not part of this project; the screens here were extended to use the new routes (Activities, field status, device token). See [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the additions and [docs/HANDOFF.md](docs/HANDOFF.md) to continue.
+
 ## Honest status
 
 Real: Sentinel-2 vigor per zone and per pixel for one parcel (18 dates), the anomaly detector on those pixels, Open-Meteo weather, the rule engine, the sensor quality checks, offline queue, GPS. 84 tests.

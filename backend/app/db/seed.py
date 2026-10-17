@@ -26,22 +26,34 @@ SEED_OFFERS = [
 ]
 
 
-def seed_demo_data(db: Session):
-    if db.scalar(select(func.count()).select_from(m.Field)):
-        return
+def seed_field(db: Session, field_id: int | None = None) -> int:
+    """One demo field with its zones, its two simulated sensors and its (simulated) buyer offers. Returns the field id.
+    The first field of a database is id 1 (the shared demo); a new phone gets a copy of its own."""
     sowing = (date.today() - timedelta(days=58)).isoformat()
-    db.add(m.Field(id=1, name="Field A", crop="Potato", area_ha=2.4, lat=33.27, lon=-7.58, sowing_date=sowing, cycle_days=90))
+    field = m.Field(name="Field A", crop="Potato", area_ha=2.4, lat=33.27, lon=-7.58, sowing_date=sowing, cycle_days=90)
+    if field_id is not None:
+        field.id = field_id
+    db.add(field)
+    db.flush()
+    fid = field.id
     for code, col, row, hist in SEED_ZONES:
-        db.add(m.Zone(field_id=1, code=code, col=col, row=row, area_ha=0.6, ndvi=hist[-1], ndvi_hist=json.dumps(hist), ndvi_source="simulated"))
+        db.add(m.Zone(field_id=fid, code=code, col=col, row=row, area_ha=0.6, ndvi=hist[-1], ndvi_hist=json.dumps(hist), ndvi_source="simulated"))
     now = datetime.utcnow()
     base = {"A": 0.30, "B": 0.26}
     for code, name in SEED_SENSORS:
-        sensor = m.Sensor(field_id=1, zone_code=code, name=name, simulated=1)
+        sensor = m.Sensor(field_id=fid, zone_code=code, name=name, simulated=1)
         db.add(sensor)
         db.flush()
         for k, d in enumerate([2, 1, 0]):
             db.add(m.Reading(sensor_id=sensor.id, ts=(now - timedelta(days=d)).isoformat(timespec="seconds"),
                              moisture=round(base[code] + 0.01 * (2 - k), 3), temp_c=21.0))
     for buyer, kind, price, pickup in SEED_OFFERS:
-        db.add(m.Offer(buyer=buyer, kind=kind, price_mad_kg=price, pickup=pickup))
+        db.add(m.Offer(field_id=fid, buyer=buyer, kind=kind, price_mad_kg=price, pickup=pickup))
+    return fid
+
+
+def seed_demo_data(db: Session):
+    if db.scalar(select(func.count()).select_from(m.Field)):
+        return
+    seed_field(db, field_id=1)
     db.commit()

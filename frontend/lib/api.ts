@@ -17,8 +17,25 @@ export type SpeechStatusOut = components["schemas"]["SpeechStatusOut"];
 export type AnomaliesOut = components["schemas"]["AnomaliesOut"];
 export type VisionOut = components["schemas"]["VisionOut"];
 export type SyncResult = components["schemas"]["SyncOut"];
+export type FieldInfoOut = components["schemas"]["FieldInfoOut"];
+export type ActivitiesOut = components["schemas"]["ActivitiesOut"];
+export type ActivityBody = components["schemas"]["ActivityBody"];
 
 export const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+
+/** A random token made on first launch and kept on the phone: it is the only thing that tells the server whose field this is. */
+let memoryToken: string | null = null;   // when the browser refuses storage (private window): a token for this page only
+const newToken = () => { const b = crypto.getRandomValues(new Uint8Array(24)); return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+export function deviceToken(): string {
+  try {
+    let t = localStorage.getItem("fa_device");
+    if (!t || !/^[A-Za-z0-9_-]{22,128}$/.test(t)) {
+      t = newToken();
+      localStorage.setItem("fa_device", t);
+    }
+    return t;
+  } catch { return (memoryToken ??= newToken()); }
+}
 
 const lsGet = <T,>(k: string, d: T): T => {
   try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; }
@@ -37,7 +54,9 @@ export async function fetchJson<T>(path: string, init: RequestInit = {}, ms = 70
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetch(API + path, { ...init, signal: ctl.signal });
+    const headers = new Headers(init.headers);
+    headers.set("X-Device", deviceToken());   // one phone, one farmer, one field
+    const r = await fetch(API + path, { ...init, headers, signal: ctl.signal });
     if (!r.ok) throw new Error(`${path} ${r.status}`);
     return (await r.json()) as T;
   } finally { clearTimeout(t); }
@@ -67,7 +86,9 @@ export type QueuedAction =
   | { type: "soil_test"; payload: { zone_code: string; ph?: number | null; om_pct?: number | null; moisture?: number | null } }
   | { type: "listing"; payload: Record<string, never> }
   | { type: "offer_accept"; payload: { offer_id: number } }
-  | { type: "farmer"; payload: FarmerBody };
+  | { type: "farmer"; payload: FarmerBody }
+  | { type: "activity"; payload: ActivityBody }
+  | { type: "activity_remove"; payload: { client_id: string } };
 export type FarmerBody = components["schemas"]["FarmerBody"];
 export type FarmerOut = components["schemas"]["FarmerOut"];
 export type SeasonOut = components["schemas"]["SeasonOut"];

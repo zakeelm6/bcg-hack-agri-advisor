@@ -10,10 +10,11 @@ import { useFarm, useT } from "@/lib/farm";
 import { Badge, ConfidenceMeter, Icon, ICONS, Segmented, taskIcon } from "./ui";
 
 export type Layer = "vigor" | "moisture" | "soil" | "trust";
+export type LandMeta = { date: string; side_m: number; field_side_m: number };
 const V = { low: "var(--color-vigor-low)", mid: "var(--color-vigor-mid)", high: "var(--color-vigor-high)", wet: "var(--color-moisture-high)", none: "#CDB88E", unknown: "#9A9A9A" };
 
 function color(z: ZoneOut, layer: Layer) {
-  if (layer === "vigor") return z.ndvi < 0.45 ? V.low : z.ndvi < 0.65 ? V.mid : V.high;
+  if (layer === "vigor") return z.ndvi == null ? V.unknown : z.ndvi < 0.45 ? V.low : z.ndvi < 0.65 ? V.mid : V.high;
   if (layer === "moisture") return z.moisture == null ? V.unknown : z.moisture < 0.23 ? V.low : z.moisture < 0.28 ? V.mid : V.wet;
   if (layer === "trust") return z.confidence === "High" ? V.high : z.confidence === "Medium" ? V.mid : V.low;
   const st = z.soil_test as { ph?: number | null } | null;
@@ -22,15 +23,15 @@ function color(z: ZoneOut, layer: Layer) {
 }
 function value(z: ZoneOut, layer: Layer) {
   const st = z.soil_test as { ph?: number | null } | null;
-  if (layer === "vigor") return z.ndvi.toFixed(2);
+  if (layer === "vigor") return z.ndvi == null ? "?" : z.ndvi.toFixed(2);
   if (layer === "moisture") return z.moisture != null ? `${Math.round(z.moisture * 100)}%` : "?";
   if (layer === "soil") return st?.ph != null ? `pH ${st.ph}` : "–";
   return z.confidence === "High" ? "●●●" : z.confidence === "Medium" ? "●●○" : "●○○";
 }
 
-export function LandSvg({ s, layer, land, anomalies, margin = 32, selected, onSelect }: { s: StateOut; layer: Layer; land: { date: string } | null | undefined; anomalies: AnomaliesOut | null | undefined; margin?: number; selected?: string | null; onSelect?: (code: string | null) => void }) {
+export function LandSvg({ s, layer, land, anomalies, margin = 32, selected, onSelect }: { s: StateOut; layer: Layer; land: LandMeta | null | undefined; anomalies: AnomaliesOut | null | undefined; margin?: number; selected?: string | null; onSelect?: (code: string | null) => void }) {
   const t = useT();
-  const F = 155, fx = 240 - F / 2, fy = 240 - F / 2, w = F / 2, fs = 7.5, pr = w * 0.2;
+  const F = land ? (480 * land.field_side_m) / land.side_m : 155, fx = 240 - F / 2, fy = 240 - F / 2, w = F / 2, fs = 7.5, pr = w * 0.2;
   const vb = `${fx - margin} ${fy - margin} ${F + 2 * margin} ${F + 2 * margin}`;
   const open = s.tasks.filter((x) => x.status === "open");
   const byZone: Record<string, typeof open> = {};
@@ -40,7 +41,7 @@ export function LandSvg({ s, layer, land, anomalies, margin = 32, selected, onSe
   return (
     <svg viewBox={vb} width="100%" role="img" aria-label={t("fieldMap")} className="block w-full max-h-[62vh] select-none" style={{ direction: "ltr" }}>
       <defs><clipPath id="field-clip"><rect x={fx} y={fy} width={F} height={F} /></clipPath></defs>
-      {land ? <image href={`${API}/static/land.png?v=${land.date}`} x="0" y="0" width="480" height="480" preserveAspectRatio="none" /> : <rect x="0" y="0" width="480" height="480" fill="#B9D9BF" />}
+      {land ? <image href={`${API}/api/field/picture?v=${land.date}`} x="0" y="0" width="480" height="480" preserveAspectRatio="none" /> : <rect x="0" y="0" width="480" height="480" fill="#B9D9BF" />}
       <rect x="0" y="0" width="480" height="480" fill="#0B1208" fillOpacity=".18" />
       {s.zones.map((z) => {
         const x = fx + z.col * w, y = fy + z.row * w, sel = selected === z.code;
@@ -118,7 +119,7 @@ function Legend({ s, layer, anomalies }: { s: StateOut; layer: Layer; anomalies:
 }
 
 /** Honest labels, behind one disclosure: where the picture, the vigor and the anomalies come from; that the sensors are simulated. */
-function DataSources({ s, land, anomalies }: { s: StateOut; land: { date: string } | null | undefined; anomalies: AnomaliesOut | null | undefined }) {
+function DataSources({ s, land, anomalies }: { s: StateOut; land: LandMeta | null | undefined; anomalies: AnomaliesOut | null | undefined }) {
   const t = useT();
   const { lang } = useFarm();
   const fmt = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString(lang === "ar" || lang === "ary" ? "ar-MA-u-nu-latn" : lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" });
@@ -143,7 +144,7 @@ function ZoneLine({ z, layer }: { z: ZoneOut; layer: Layer }) {
   return (
     <div className="anim-fade-up mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-2 px-3 py-2 text-sm">
       <b className="font-display text-base">{t("zone", { z: open.code })}</b>
-      <span className="num">{t("layerVigor")} {open.ndvi.toFixed(2)}</span>
+      <span className="num">{t("layerVigor")} {open.ndvi == null ? "?" : open.ndvi.toFixed(2)}</span>
       <span className="num">{t("layerMoisture")} {open.moisture != null ? `${Math.round(open.moisture * 100)}%` : "?"}</span>
       <ConfidenceMeter conf={open.confidence} size="sm" />
       <span className="basis-full text-xs text-text-2">{open.conf_reason}</span>
@@ -152,7 +153,7 @@ function ZoneLine({ z, layer }: { z: ZoneOut; layer: Layer }) {
   );
 }
 
-export function LandCard({ s, land, anomalies, margin, title, compact }: { s: StateOut; land: { date: string } | null | undefined; anomalies: AnomaliesOut | null | undefined; margin?: number; title?: React.ReactNode; compact?: boolean }) {
+export function LandCard({ s, land, anomalies, margin, title, compact }: { s: StateOut; land: LandMeta | null | undefined; anomalies: AnomaliesOut | null | undefined; margin?: number; title?: React.ReactNode; compact?: boolean }) {
   const [layer, setLayer] = useState<Layer>("vigor");
   const [selected, setSelected] = useState<string | null>(null);
   const z = selected ? s.zones.find((x) => x.code === selected) : null;

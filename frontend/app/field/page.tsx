@@ -6,7 +6,9 @@ import { SoilLine } from "@/components/SoilLine";
 import { SeasonPlan } from "@/components/SeasonPlan";
 import { PageSkeleton, PageTitle, TwoCol, locale, useFmt } from "@/components/common";
 import { Badge, Button, Card, Icon, Label, Skeleton, Stat } from "@/components/ui";
-import { openTasks, useAnomalies, useAppState, useLand, useSeries } from "@/lib/data";
+import { openTasks, useAnomalies, useAppState, useFieldInfo, useLand, useSeries } from "@/lib/data";
+import { fetchJson, type FieldInfoOut } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { useFarm, useT } from "@/lib/farm";
 
 const ZCOL: Record<string, string> = { A: "var(--color-zone-a)", B: "var(--color-zone-b)", C: "var(--color-zone-c)", D: "var(--color-zone-d)" };
@@ -19,6 +21,8 @@ export default function Field() {
   const { data: land } = useLand();
   const { data: anomalies } = useAnomalies();
   const { data: series, isFetched } = useSeries();
+  const { data: info } = useFieldInfo();
+  const qc = useQueryClient();
   if (!s) return <PageSkeleton />;
   const unsureZone = s.zones.find((z) => z.confidence !== "High");
   const wx = s.weather as { days: { date: string; rain: number; tmax: number; tmin: number }[]; fallback?: boolean };
@@ -32,6 +36,7 @@ export default function Field() {
         {!isFetched && !series ? <Skeleton className="mt-3 h-52" /> : !series?.points.length ? <p className="mt-2 text-sm text-text-2">{series ? t("noSeries") : t("notSavedYet")}</p> : <Chart points={series.points as { zone_code: string; date: string; ndvi: number }[]} fmt={date} />}
       </Card>
     </div>} side={<div className="space-y-3">
+      <FieldNote info={info} retry={async () => { const r = await fetchJson<FieldInfoOut>("/api/field/satellite", { method: "POST" }); qc.setQueryData(["field", "/api/field"], r); }} />
       <Card className="flex items-center justify-between gap-3"><Stat value={n} label={t("tasksToday")} /><Button href="/tasks" variant={n ? "primary" : "secondary"} size="sm" iconEnd="chev">{t("seeTasks")}</Button></Card>
       <SeasonPlan />
       <Card>
@@ -40,6 +45,7 @@ export default function Field() {
         <Button href={`/field/soil/${unsureZone?.code ?? "A"}`} variant={unsureZone ? "accent" : "secondary"} icon="flask" className="mt-3" full>{t("addSoilTest")}</Button>
         {unsureZone && <p className="mt-2 text-xs text-text-3">{t("soilHint", { z: unsureZone.code })}</p>}
       </Card>
+      <Button href="/activities" variant="secondary" icon="check" full>{t("whatDidYouDo")}</Button>
       <Button href="/me#land" variant="secondary" icon="walk" full>{t("drawField")}</Button>
       <Card>
         <Label end={wx.fallback ? <Badge tone="simulated">{t("weatherFallback")}</Badge> : <Badge icon="cloud">Open-Meteo</Badge>}>{t("weather")}</Label>
@@ -87,4 +93,21 @@ function Chart({ points, fmt }: { points: { zone_code: string; date: string; ndv
     </svg>
     {gap > 0.05 && <p className="mt-1 text-sm"><b>{t("lowest", { z: low.z, v: low.v.toFixed(2) })}</b> <span className="text-text-2">{t("lowestNote")}</span></p>}
   </>);
+}
+
+/** Whose field this is and whether its satellite picture is there: the demo parcel, getting the pictures, failed, not set up, or ready. */
+function FieldNote({ info, retry }: { info: FieldInfoOut | null | undefined; retry: () => Promise<void> }) {
+  const t = useT();
+  if (!info) return null;
+  const own = info.source === "own";
+  const status = info.satellite_status;
+  const text = !own ? t("demoParcel") : status === "pending" ? t("satPending") : status === "failed" ? t("satFailed") : status === "none" ? t("satNone") : t("ownFieldNote");
+  if (own && status === "ready") return <p className="flex items-start gap-2 px-1 text-sm text-text-2"><Icon name="satellite" size={16} className="mt-0.5 flex-none" />{text}</p>;
+  return (
+    <Card className="flex items-start gap-3">
+      <Icon name={status === "pending" ? "clock" : "warning"} size={20} className="mt-0.5 flex-none text-warning" />
+      <div className="min-w-0 flex-1 text-sm"><p>{text}</p>{info.satellite_note && own && <p className="mt-1 text-text-2">{info.satellite_note}</p>}
+        {own && status === "failed" && <Button variant="secondary" size="sm" icon="refresh" className="mt-2" onClick={() => void retry()}>{t("tryAgain")}</Button>}</div>
+    </Card>
+  );
 }

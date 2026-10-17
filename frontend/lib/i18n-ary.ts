@@ -5,6 +5,18 @@
 import type { Key } from "./i18n";
 
 export const ARY: Partial<Record<Key, string>> = {
+  // Activities and the farmer's own field
+  howMuchWater: "شحال ديال الما؟",
+  waterLittle: "شوية",
+  waterNormal: "عادي",
+  waterLot: "بزاف",
+  waterUnknown: "ما عرفتش",
+  satPending: "كنجيبو تصاور القمر الصناعي ديال الأرض ديالك. غتاخد شي دقايق؛ فهاد الوقت النصايح كتعتمد على الجو والمستشعرات.",
+  satFailed: "ما قدرناش نقراو تصاور القمر الصناعي ديال الأرض ديالك.",
+  satNone: "ما كاينين حتى تصاور القمر الصناعي ديال الأرض ديالك فهاد السيرفور.",
+  tryAgain: "عاود",
+  ownFieldNote: "هاد النصايح خاصة بالأرض ديالك. قوة النبات فالمناطق جاية من القمر الصناعي؛ ومستشعرات رطوبة التربة باقين محاكاة.",
+  demoParcel: "هادي هي القطعة التجريبية، ماشي الأرض ديالك. ضغط على «استعمل موقعي» باش تشوف ديالك.",
   // Navigation + welcome + onboarding
   askCopilot: "سول المساعد",
   chooseLang: "ختار اللغة ديالك",

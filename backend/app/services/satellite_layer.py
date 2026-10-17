@@ -20,20 +20,27 @@ CACHE_FILE = os.path.join(BACKEND_DIR, "data", "ndvi_cache.json")
 CONFIG = DetectionConfig(min_persistence=3, min_zone_pixels=4, edge_buffer_px=1, baseline_dates=4)
 
 
-def _cache_path() -> str:
-    return os.environ.get("FA_NDVI_CACHE", CACHE_FILE)
+def cache_path(field: dict | None = None) -> str:
+    """The file the pixels of this field are read from: the farmer's own download for an own field, else the demo parcel's.
+    FA_NDVI_CACHE overrides both (tests and demos)."""
+    if os.environ.get("FA_NDVI_CACHE"):
+        return os.environ["FA_NDVI_CACHE"]
+    if field and field.get("source") == "own":
+        from .own_field import ndvi_path   # imported here: own_field does not import this module, but this keeps start-up light
+        return ndvi_path(field["id"])
+    return CACHE_FILE
 
 
-def _load():
+def _load(path: str | None = None):
     try:
-        with open(_cache_path(), encoding="utf-8") as f:
+        with open(path or cache_path(), encoding="utf-8") as f:
             return json.load(f)
     except (OSError, ValueError):
         return None
 
 
-def anomalies_available() -> bool:
-    d = _load()
+def anomalies_available(field: dict | None = None) -> bool:
+    d = _load(cache_path(field))
     return bool(d and any("pixels" in r for r in d.get("rows", [])))
 
 
@@ -57,7 +64,7 @@ def _grid_and_scenes(d: dict):
 
 @lru_cache(maxsize=4)
 def _detect(path: str, mtime: float):
-    d = _load()
+    d = _load(path)
     if not d:
         return None, []
     grid, scenes = _grid_and_scenes(d)
@@ -66,9 +73,9 @@ def _detect(path: str, mtime: float):
     return grid, detect(scenes, grid, CONFIG)
 
 
-def detected():
+def detected(field: dict | None = None):
     """(grid, [AnomalyZone]) from the cache file; recomputed only when the file changes."""
-    p = _cache_path()
+    p = cache_path(field)
     try:
         return _detect(p, os.path.getmtime(p))
     except OSError:
@@ -82,7 +89,7 @@ def _zone_code(grid: FieldGrid, r: int, c: int) -> str:
 
 def anomalies_for_engine(field: dict | None = None) -> list[dict]:
     """What the engine needs: one entry per anomaly with the zone, severity, persistence, deviation and the pin position (0..1 in the field)."""
-    grid, zones = detected()
+    grid, zones = detected(field)
     if grid is None:
         return []
     out = []
@@ -97,16 +104,16 @@ def anomalies_for_engine(field: dict | None = None) -> list[dict]:
     return out
 
 
-def geojson(lang: str = "en") -> dict:
+def geojson(lang: str = "en", field: dict | None = None) -> dict:
     """GeoJSON FeatureCollection of the persistent anomalies, plus honest metadata."""
-    grid, zones = detected()
-    d = _load() or {}
+    grid, zones = detected(field)
+    d = _load(cache_path(field)) or {}
     if grid is None:
         return {"type": "FeatureCollection", "features": [], "available": False, "source": None, "dates": 0,
                 "note": {"fr": "Pas encore de pixels Sentinel-2 : lancez scripts/fetch_satellite.py.",
                          "ar": "لا بكسلات Sentinel-2 بعد: شغّل scripts/fetch_satellite.py."}.get(ar_fallback(lang), "No Sentinel-2 pixels yet: run scripts/fetch_satellite.py.")}
     g = to_geojson(zones, grid)
-    for f, a, z in zip(g["features"], anomalies_for_engine(), zones):
+    for f, a, z in zip(g["features"], anomalies_for_engine(field), zones):
         f["properties"].update({"zone_code": a["zone"], "x": a["x"], "y": a["y"], "cells": [[int(r), int(c)] for r, c in z.pixel_indices]})
     g.update({"available": True, "source": d.get("source"), "dates": sum(1 for r in d.get("rows", []) if r.get("pixels")),
               "grid": {"rows": grid.rows, "cols": grid.cols, "pixel_m": grid.pixel_size_m}, "config": {"min_persistence": CONFIG.min_persistence, "mad_threshold": CONFIG.mad_threshold},

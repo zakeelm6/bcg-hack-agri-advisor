@@ -6,16 +6,17 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import models as m
+from ..db.scope import fid
 from ..processing import geo
 from .common import as_dict
 
 
 def get_field(db: Session) -> dict:
-    return as_dict(db.get(m.Field, 1))
+    return as_dict(db.get(m.Field, fid(db)))
 
 
 def get_zones(db: Session) -> list[dict]:
-    zones = [as_dict(z) for z in db.scalars(select(m.Zone).where(m.Zone.field_id == 1).order_by(m.Zone.code))]
+    zones = [as_dict(z) for z in db.scalars(select(m.Zone).where(m.Zone.field_id == fid(db)).order_by(m.Zone.code))]
     for z in zones:
         z["ndvi_hist"] = json.loads(z["ndvi_hist"])
     return zones
@@ -26,7 +27,7 @@ def latest_sensors(db: Session, bad: dict | None = None):
     A sensor whose recent readings are flagged gives no number to the engine; `bad` (if given) receives {zone: [flags]}."""
     from .sensors import qc_sensor, sensor_quality   # local import: sensors.py imports the engine inputs too
     out, detail = {}, []
-    for s in db.scalars(select(m.Sensor).where(m.Sensor.field_id == 1)):
+    for s in db.scalars(select(m.Sensor).where(m.Sensor.field_id == fid(db))):
         rows = qc_sensor(db, s)
         if not rows:
             continue
@@ -48,7 +49,7 @@ def latest_sensors(db: Session, bad: dict | None = None):
 def latest_soil(db: Session) -> dict:
     """Latest soil test per zone, with its age in days. Used by the engine and shown in the app."""
     out = {}
-    for r in db.scalars(select(m.SoilTest).where(m.SoilTest.field_id == 1).order_by(m.SoilTest.ts, m.SoilTest.id)):
+    for r in db.scalars(select(m.SoilTest).where(m.SoilTest.field_id == fid(db)).order_by(m.SoilTest.ts, m.SoilTest.id)):
         age = max(0, (datetime.utcnow() - datetime.fromisoformat(r.ts)).days)
         out[r.zone_code] = {**as_dict(r), "age_days": age}   # later rows overwrite earlier ones
     return out
