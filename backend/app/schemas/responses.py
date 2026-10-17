@@ -69,6 +69,8 @@ class TaskOut(Loose):
     confidence: str
     conf_reason: str
     plan_b: str
+    qty: float | None = None      # amount decided by the engine: mm of water, or kg of nitrogen per hectare
+    unit: str | None = None     # mm or kg_n_ha
     status: str
     x: float
     y: float
@@ -251,3 +253,17 @@ class FarmerOut(Loose):
 class PlaceOut(Loose):
     """The town name at a position, or null when the name service did not answer."""
     place: str | None = None
+
+
+class ActivityOut(Loose):
+    client_id: str
+    type: str
+    date: str
+    note: str = ""
+    cost: float | None = None
+    zone: str | None = None
+    amount_mm: float | None = None
+
+
+class ActivitiesOut(Loose):
+    activities: list[ActivityOut]

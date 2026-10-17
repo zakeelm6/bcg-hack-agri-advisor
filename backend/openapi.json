@@ -20,6 +20,162 @@
         "title": "Action",
         "type": "object"
       },
+      "ActivitiesOut": {
+        "additionalProperties": true,
+        "properties": {
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityOut"
+            },
+            "title": "Activities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "activities"
+        ],
+        "title": "ActivitiesOut",
+        "type": "object"
+      },
+      "ActivityBody": {
+        "description": "One entry of the farmer's Activities list (watered, sprayed, planted, spent money, other work).",
+        "properties": {
+          "amount_mm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 300.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Mm"
+          },
+          "client_id": {
+            "maxLength": 64,
+            "minLength": 8,
+            "title": "Client Id",
+            "type": "string"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "maximum": 10000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Note",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "irrigation",
+              "treatment",
+              "planting",
+              "expense",
+              "other"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "zone": {
+            "anyOf": [
+              {
+                "maxLength": 4,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zone"
+          }
+        },
+        "required": [
+          "client_id",
+          "type",
+          "date"
+        ],
+        "title": "ActivityBody",
+        "type": "object"
+      },
+      "ActivityOut": {
+        "additionalProperties": true,
+        "properties": {
+          "amount_mm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Mm"
+          },
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zone"
+          }
+        },
+        "required": [
+          "client_id",
+          "type",
+          "date"
+        ],
+        "title": "ActivityOut",
+        "type": "object"
+      },
       "AlertOut": {
         "additionalProperties": true,
         "properties": {
@@ -1329,6 +1485,17 @@
             "title": "Plan B",
             "type": "string"
           },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qty"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -1340,6 +1507,17 @@
           "type": {
             "title": "Type",
             "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
           },
           "what": {
             "title": "What",
@@ -1762,6 +1940,100 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/activities": {
+      "get": {
+        "operationId": "list_activities_api_activities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivitiesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Activities"
+      },
+      "post": {
+        "description": "Create or update the entry with this `client_id`. Recorded watering makes the engine wait before advising it again.",
+        "operationId": "save_activity_api_activities_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivityBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Activity"
+      }
+    },
+    "/api/activities/{client_id}": {
+      "delete": {
+        "operationId": "delete_activity_api_activities__client_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Activity"
+      }
+    },
     "/api/audit": {
       "get": {
         "operationId": "audit_api_audit_get",

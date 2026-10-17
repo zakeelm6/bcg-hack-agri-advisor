@@ -4,20 +4,21 @@
 // still shows without a connection, and the farmer's answers to it (done, can't do it and why) sent through `POST /sync`.
 // An answer given offline waits in a small queue on the phone and is sent when the connection is back, in order.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { API, get, post, unreachable } from "./api";
+import { API, get } from "./api";
+import { enqueue, flush } from "./queue";
 import type { Lang } from "./i18n";
 
 export type EngineTask = {
   id: number; key: string; type: string; zone_code: string;
   title: string; what: string; when_text: string; when_date: string;
   why: string; cost: string; confidence: "High" | "Medium" | "Low"; conf_reason: string; plan_b: string;
+  qty?: number | null; unit?: string | null; // what the engine decided: mm of water, kg of nitrogen per hectare
   status: "open" | "done" | "skipped";
 };
-export type EngineState = { tasks: EngineTask[]; data_notes: { vigor: string; sensors: string }; generated_at: string };
-type Action = { type: "task_status"; payload: { task_id: number; status: EngineTask["status"] } } | { type: "observation"; payload: { task_id: number; result: string; note: string } };
+export type EngineAlert = { key: string; kind: string; title: string; body: string };
+export type EngineState = { tasks: EngineTask[]; alerts: EngineAlert[]; data_notes: { vigor: string; sensors: string }; generated_at: string };
 
 const CACHE = "growmate-engine";
-const QUEUE = "growmate-queue";
 const read = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) ?? "") as T; } catch { return fallback; } };
 const write = (key: string, value: unknown) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage full: the advice is simply not cached */ } };
 
@@ -31,17 +32,6 @@ export function useEngine(lang: Lang) {
   const [stale, setStale] = useState(false);
   const [loading, setLoading] = useState(!!API);
   const busy = useRef(false);
-
-  const flush = useCallback(async () => {
-    const queue = read<Action[]>(QUEUE, []);
-    if (!API || queue.length === 0) return;
-    try {
-      await post("/sync", { actions: queue });   // the server reports each action; one it refuses (task replaced since) must not block the rest
-      write(QUEUE, []);
-    } catch (e) {
-      if (!unreachable(e)) write(QUEUE, []);     // refused as a whole (bad data): do not retry forever
-    }
-  }, []);
 
   const load = useCallback(async () => {
     if (!API || busy.current) return;
@@ -57,7 +47,7 @@ export function useEngine(lang: Lang) {
       busy.current = false;
       setLoading(false);
     }
-  }, [lang, flush]);
+  }, [lang]);
 
   useEffect(() => {
     load();
@@ -68,13 +58,11 @@ export function useEngine(lang: Lang) {
   /** Answer a task. The screen changes at once; the server hears about it now or when the connection is back. */
   const answer = useCallback(async (task: EngineTask, status: EngineTask["status"], reason?: string) => {
     setState((s) => (s ? { ...s, tasks: s.tasks.map((x) => (x.id === task.id ? { ...x, status } : x)) } : s));
-    const queue = read<Action[]>(QUEUE, []);
-    queue.push({ type: "task_status", payload: { task_id: task.id, status } });
-    if (status === "skipped" && reason) queue.push({ type: "observation", payload: { task_id: task.id, result: "skipped", note: reason } });
-    write(QUEUE, queue);
+    enqueue({ type: "task_status", payload: { task_id: task.id, status } });
+    if (status === "skipped" && reason) enqueue({ type: "observation", payload: { task_id: task.id, result: "skipped", note: reason } });
     write(CACHE, { lang, state: { ...(state as EngineState), tasks: (state?.tasks ?? []).map((x) => (x.id === task.id ? { ...x, status } : x)) } });
     await flush();
-  }, [flush, lang, state]);
+  }, [lang, state]);
 
   return { state, stale, loading, answer, reload: load };
 }

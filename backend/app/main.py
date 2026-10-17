@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .api.routers import copilot, farmer, health, market, pages, places, state, sync, tasks, voice
+from .api.routers import activities, copilot, farmer, health, market, pages, places, state, sync, tasks, voice
 from .core.config import settings
 from .db import init_db, session_scope
 from .services.advice import refresh_advice
@@ -34,7 +34,7 @@ async def no_stale_pages(request, call_next):
     return resp
 
 
-for r in (health, state, tasks, market, copilot, voice, sync, farmer, places, pages):
+for r in (health, state, tasks, market, copilot, voice, sync, farmer, places, activities, pages):
     app.include_router(r.router)
 
 if os.path.isdir(settings.static_dir):   # the legacy web app is optional: the React app (frontend/) runs on its own server

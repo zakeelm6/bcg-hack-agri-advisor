@@ -54,7 +54,7 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - Done links to his **Activities**: marking an irrigation task done adds a "Watered" activity automatically; the farmer only confirms the amount.
 - Done when: a farmer can do their day without opening the Co-Pilot, and what they did shows in Activities.
 
-### Step 3: his Activities teach the engine (M)
+### Step 3: his Activities teach the engine (M) - DONE on branch `step3/activities-teach-engine` (see section 9)
 - Send the activities that matter to the engine (watered, sprayed, fertilised, spent) with a small additive contract change (`POST /api/activities`; ask before changing `docs/API_CONTRACT.md`).
 - The engine uses real watering records instead of guessing the last irrigation; "Costs" questions in the Co-Pilot use the real list.
 - Done when: after recording "watered 20 mm", the engine no longer asks to irrigate the same day.
@@ -173,3 +173,35 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
   (server: skipped), the hero moving to the next task each time, an answer given while the server was stopped (queued, then delivered after the `online` event, queue empty), a reload with the server down
   (cached advice and the "saved advice" note), and Darija right to left. TypeScript, the Darija check, a production build and the backend tests pass.
 - Not done: a task answered on one phone is not shown on another (Step 8); no automated front-end tests yet (Step 11); the activity entry keeps the language the task title had when it was done.
+
+### Step 3 done: his Activities teach the engine
+- Every entry the farmer records in Activities (watered, sprayed, planted, spent money, other work), and the entries the "Done" button of the card creates, is sent to the backend
+  (`POST /api/activities`, through the same offline queue as the task answers, `lib/queue.ts`), with its own id so a retry never duplicates it and "Undo" removes it on the server too.
+  Entries written before the backend existed are sent once.
+- **The engine uses real watering instead of guessing.** A watering recorded in the last 2 days (for one zone, or for the whole field when the farmer did not say which) makes the engine
+  wait for that zone, and the card says so ("Watering recorded. You recorded watering on Saturday. No new watering is advised for 2 days, so the soil has time to show it."), in four languages.
+  Undoing the entry brings the advice back.
+- **A related bug fixed:** a task the farmer had marked done or skipped never came back, because the same task key kept its old answer forever. Now, when the same need returns on a later
+  day, it is a new occasion and the task opens again (same day: the answer already given stays).
+- **The Copilot answers "How are my costs looking?" from the farmer's real list** (total, number of entries, the biggest one), with the number check; a question about what a task costs is still
+  a task question. The farmer's amounts have no currency (the app does not ask for one), so none is shown.
+- New: `activities` table and migration `0004`; routes `GET/POST /api/activities`, `DELETE /api/activities/{client_id}`; sync actions `activity` and `activity_remove`;
+  `backend/tests/test_activities.py` (10 tests); test fixture that resets the rate limits (110 tests in all).
+- Checked in a browser against the running backend: the card asked to water zone D; after "Watered" was tapped in Activities the card dropped the irrigation and showed the watering note;
+  "Spent money 300" reached the server and the Co-Pilot answered with that real figure.
+- Follow-up, done in the same step: see "Step 3 follow-up" below. Still open: an entry edited on one phone is not seen on another (Step 8).
+
+### Step 3 follow-up: the amount of water, a real moisture estimate, a currency
+- **How much water.** Tapping "Watered" in Activities now asks with pictures: a little (10 mm), normal (20 mm), a lot (30 mm), or "not sure". The card's **Done** knows the amount itself:
+  tasks now carry the quantity the engine decided (`qty` and `unit`: mm of water, kg of nitrogen per hectare; migration `0005`), and the entry it creates has that many millimetres and the zone.
+- **Recorded water becomes a moisture estimate.** With an amount, the engine adds `mm / 300 mm` of root layer to the moisture of that zone, takes away the crop's water use since (the forecast's
+  evapotranspiration per day; rain is ignored, which errs towards watering), and does so only for readings taken *before* the watering (a sensor reading or soil sample from after it already contains the water).
+  The zone's confidence drops from High to Medium (a reading plus a calculation), its reason says "Counts your 20 mm of watering on Saturday", and when the estimate lifts the zone above the watering threshold the
+  note says so with the number ("The topsoil is now estimated at 28% (watering is advised below 23%), so none is needed yet."). A small watering (5 mm) leaves the task in place.
+  Without an amount the engine still just waits 2 days, as before.
+- **Currency.** Amounts are shown as money in the app (`MAD 300`, Latin digits in Arabic and Darija; `NEXT_PUBLIC_CURRENCY` to change) and the Copilot says "300 MAD" (`FA_CURRENCY` on the backend). The
+  farmer is not asked for a currency: the pilot is in Morocco. Changing it for another country is a setting, not a code change; two currencies in one deployment is not supported.
+- Tests: 116 backend tests (16 for activities, including fading after five days, a reading taken after the watering not corrected twice, and the currency). Checked in a browser: the picture chooser,
+  20 mm reaching the server, zone D going from 21% to 27.7%, the irrigation task gone, the note with the estimate, and "MAD 300" in the history.
+- Honest limits of the estimate: it is a one-layer bucket model with typical constants (300 mm root layer, forecast evapotranspiration), not a calibrated soil model; infiltration, runoff,
+  drip losses and rain since the watering are not modelled. It is meant to stop the engine from asking for water that was just given, and to say how it reasoned, not to replace a sensor.

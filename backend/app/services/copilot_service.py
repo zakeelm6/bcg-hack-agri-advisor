@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..db import models as m
 from ..processing import copilot, engine, llm
 from ..schemas import requests as rq
-from . import field as fld
+from . import activities, field as fld
 from .advice import build_state
 from .common import as_dict, clean_lang, now_iso
 
@@ -33,6 +33,7 @@ def ask(db: Session, question: str, task_id: int | None, lang: str, log_it: bool
         raise HTTPException(422, f"keep the question under {copilot.MAX_QUESTION} characters")
     lang = clean_lang(lang)
     st = build_state(db, lang)
+    st["spending"] = activities.spending(db)   # what the farmer recorded spending: the Copilot's only source for cost-of-the-season questions
     field, zones, sensors, weather, soil = fld.engine_inputs(db)
     res = copilot.answer(q, st, task_id, lambda d: engine.what_if_wait(field, zones, sensors, weather, soil, d, lang=lang), lang)
     if log_it:

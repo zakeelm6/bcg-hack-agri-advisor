@@ -34,8 +34,12 @@ Language parameter: `lang` is `en`, `fr`, `ar` or `ary` (Darija, Moroccan Arabic
 | `GET /api/speech/status` | none | `available`, `provider`, `langs` | voice |
 | `POST /api/stt?lang` | raw WAV body (16 kHz mono, under 2 MB) | `text` | voice in |
 | `POST /api/tts` | `{text, lang}` | audio (MP3) | voice out |
-| `POST /api/sync` | `{actions: [{type, payload}]}` where `type` is `task_status`, `observation`, `soil_test`, `listing` or `offer_accept` | `results[]` | offline replay |
+| `POST /api/sync` | `{actions: [{type, payload}]}` where `type` is `task_status`, `observation`, `soil_test`, `listing`, `offer_accept`, `farmer`, `activity` or `activity_remove` | `results[]` | offline replay |
 | `GET /api/audit` | none | `entries[]` | audit view |
+| tasks in `GET /api/state` | | each task also has `qty` and `unit` (`mm`, `kg_n_ha`) when the engine decided an amount (added in Step 3) | the card, Activities |
+| `GET /api/activities` | none | `activities[]` (`client_id`, `type`, `date`, `note`, `cost`, `zone`, `amount_mm`) | the farmer's list (added in Step 3) |
+| `POST /api/activities` | `{client_id, type (irrigation, treatment, planting, expense, other), date, note?, cost?, zone?, amount_mm?}` | the saved entry | Activities; same `client_id` sent twice updates, never duplicates; recorded irrigation makes the engine wait 2 days for that zone (whole field when no zone) |
+| `DELETE /api/activities/{client_id}` | none | `ok` | undo (safe to send twice) |
 | `GET /api/geo/place?lat&lon&lang` | position (`lang` en, fr, ar, ary) | `place` (town name, or null when the name service does not answer) | onboarding "Where is your farm?" (added in Step 1) |
 | `GET /api/zones/anomalies?lang` | none | GeoJSON `FeatureCollection` + `available`, `source`, `dates`, `grid`, `note`; each feature has `zone_code`, `severity`, `persistence`, `cells[]`, `x`, `y`, `why` | land view (Phase 2) |
 
