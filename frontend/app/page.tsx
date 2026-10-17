@@ -7,6 +7,7 @@ import { useActions } from "@/lib/data";
 import { challenges, cropName, crops, irrigations, langs, plantedChoices, tr, type Key } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { speak } from "@/lib/voice";
+import { Button } from "@/components/ui";
 
 const blank: Profile = { location: "", crop: "", plantedOn: "", area: "", irrigation: "", challenge: "" };
 const weeksAgo = (w: number) => new Date(Date.now() - w * 7 * 864e5).toISOString().slice(0, 10);
@@ -35,7 +36,7 @@ function Onboarding() {
     { q: "qCrop", pick: true, body: <>
       <Pictures value={p.crop} onPick={(crop) => pick({ crop })}
         options={crops.map((c) => ({ id: c.id, icon: c.icon, label: cropName(lang, c.id) }))} />
-      <input className="field mt-3" value={crops.some((c) => c.id === p.crop) ? "" : p.crop}
+      <input className="mt-3 min-h-[52px] w-full rounded-lg border-2 border-line bg-surface px-4 text-base outline-none focus:border-brand" value={crops.some((c) => c.id === p.crop) ? "" : p.crop}
         onChange={(e) => setP({ ...p, crop: e.target.value })} placeholder={t("otherCrop")} aria-label={t("otherCrop")} />
     </> },
     { q: "qPlanted", pick: true, body: <Pictures value={p.plantedOn} cols={2} onPick={(d) => pick({ plantedOn: d === "unknown" ? "" : d })}
@@ -83,12 +84,10 @@ function Onboarding() {
     }
     return (
       <div className="space-y-4">
-        <button type="button" onClick={locate} disabled={locating === "busy"} className="btn flex w-full items-center justify-center gap-3 py-5 text-lg">
-          <Icon name="pin" />{locating === "busy" ? t("locating") : t("useLocation")}
-        </button>
-        {p.location && p.lat !== undefined && <p className="flex items-center justify-center gap-2 text-xl font-medium"><Icon name="pin" className="h-6 w-6 text-leaf" />{p.location}<Icon name="check" className="h-6 w-6 text-leaf" /></p>}
-        {locating === "failed" && <p role="alert" className="text-sun">{t("locationFailed")}</p>}
-        <input className="field" value={p.lat === undefined ? p.location : ""} placeholder={t("typeTown")} aria-label={t("typeTown")}
+        <Button variant="secondary" size="lg" full icon="pin" loading={locating === "busy"} onClick={locate}>{locating === "busy" ? t("locating") : t("useLocation")}</Button>
+        {p.location && p.lat !== undefined && <p className="flex items-center justify-center gap-2 text-xl font-medium"><Icon name="pin" className="h-6 w-6 text-brand" />{p.location}<Icon name="check" className="h-6 w-6 text-brand" /></p>}
+        {locating === "failed" && <p role="alert" className="text-sm text-danger">{t("locationFailed")}</p>}
+        <input className="min-h-[52px] w-full rounded-lg border-2 border-line bg-surface px-4 text-base outline-none focus:border-brand" value={p.lat === undefined ? p.location : ""} placeholder={t("typeTown")} aria-label={t("typeTown")}
           onChange={(e) => setP({ ...p, location: e.target.value, lat: undefined, lon: undefined })} />
       </div>
     );
@@ -99,62 +98,63 @@ function Onboarding() {
     const setN = (v: number) => setP({ ...p, area: `${Math.max(0.5, v)} ha` });
     return (
       <div className="flex items-center justify-between gap-4">
-        <button type="button" onClick={() => setN(n - 0.5)} aria-label={t("less")} className="btn-ghost h-20 w-20 text-4xl">−</button>
+        <Button variant="secondary" size="lg" icon="minus" iconOnly onClick={() => setN(n - 0.5)}>{t("less")}</Button>
         <div className="text-center">
-          <div className="font-serif text-6xl">{n}</div>
-          <div className="text-lg text-muted">{t("hectares")}</div>
+          <div className="font-display num text-6xl">{n}</div>
+          <div className="text-lg text-text-2">{t("hectares")}</div>
         </div>
-        <button type="button" onClick={() => setN(n + 0.5)} aria-label={t("more")} className="btn-ghost h-20 w-20 text-4xl">+</button>
+        <Button variant="secondary" size="lg" icon="plus" iconOnly onClick={() => setN(n + 0.5)}>{t("more")}</Button>
       </div>
     );
   }
 
   if (step < 0) return (
-    <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-12">
-      <div role="group" aria-label={t("chooseLang")} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="anim-fade-up mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-8">
+      <div className="relative overflow-hidden rounded-2xl">
+        <img src="/images/field-drip.webp" alt="" width={960} height={640} className="aspect-[16/10] w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-neutral-900/10 to-transparent" aria-hidden />
+        <h1 className="font-display absolute inset-x-5 bottom-5 text-3xl leading-tight text-white md:text-4xl">{t("headline")}</h1>
+      </div>
+      <ul className="mt-6 space-y-3 text-base">
+        <li className="flex items-center gap-3"><Feature name="mic" />{t("feat1")}</li>
+        <li className="flex items-center gap-3"><Feature name="field-sun" />{t("feat2")}</li>
+        <li className="flex items-center gap-3"><Feature name="growth-time" />{t("feat3")}</li>
+      </ul>
+      <div role="group" aria-label={t("chooseLang")} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {langs.map((l) => (
-          <button key={l.id} type="button" aria-pressed={lang === l.id}
-            onClick={() => { setLang(l.id); speak(tr(l.id, "headline"), l.id); }}
-            className={`rounded-xl border py-3 text-lg ${lang === l.id ? "border-leaf bg-leaf-soft font-semibold text-leaf" : "border-line bg-card"}`}>
-            {l.name}
-          </button>
+          <button key={l.id} type="button" lang={l.id} aria-pressed={lang === l.id} onClick={() => { setLang(l.id); speak(tr(l.id, "headline"), l.id); }}
+            className={`pressable min-h-12 rounded-lg border text-base font-semibold transition-colors ${lang === l.id ? "border-brand bg-brand-soft text-brand" : "border-line bg-surface hover:bg-surface-2"}`}>{l.name}</button>
         ))}
       </div>
-      <img src="/images/field-drip.webp" alt="" width={960} height={640} className="mt-6 aspect-[16/9] w-full rounded-2xl object-cover" />
-      <h1 className="mt-8 font-serif text-4xl leading-tight md:text-5xl">{t("headline")}</h1>
-      <ul className="mt-8 space-y-4 text-lg">
-        <li className="flex items-center gap-4"><Feature name="mic" />{t("feat1")}</li>
-        <li className="flex items-center gap-4"><Feature name="field-sun" />{t("feat2")}</li>
-        <li className="flex items-center gap-4"><Feature name="growth-time" />{t("feat3")}</li>
-      </ul>
-      <div className="mt-auto pt-10 md:mt-12">
-        <button className="btn w-full py-4 text-lg" onClick={() => setStep(0)}>{t("getStarted")}</button>
-        <button type="button" className="btn-ghost mt-3 w-full py-3 text-muted" onClick={() => router.replace("/home")}>{t("skipToHome")}</button>
+      <div className="mt-auto space-y-2 pt-8">
+        <Button variant="accent" size="lg" full iconEnd="chev" onClick={() => setStep(0)}>{t("getStarted")}</Button>
+        <Button variant="ghost" full onClick={() => router.replace("/home")}>{t("skipToHome")}</Button>
       </div>
     </div>
   );
 
   return (
-    <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-10">
-      <div className="mt-2 flex gap-1.5" aria-label={`${step + 1} / ${steps.length}`}>
-        {steps.map((_, i) => <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-leaf" : "bg-line"}`} />)}
+    <div className="mx-auto flex min-h-[75dvh] w-full max-w-lg flex-col md:min-h-0 md:pt-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" icon="chev" iconOnly className="-ms-2 [&_svg]:-scale-x-100 rtl:[&_svg]:scale-x-100" onClick={() => setStep(step - 1)}>{t("back")}</Button>
+        <div className="flex flex-1 gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={step + 1} aria-label={`${step + 1} / ${steps.length}`}>
+          {steps.map((_, i) => <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= step ? "bg-brand" : "bg-line"}`} />)}
+        </div>
+        <span className="num text-xs text-text-3">{step + 1}/{steps.length}</span>
       </div>
-      <form className="mt-8 flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
+      <form key={step} className="anim-fade-up mt-6 flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
         <div className="flex items-start gap-3">
-          <h1 className="flex-1 font-serif text-3xl leading-tight">{t(steps[step].q)}</h1>
-          <button type="button" onClick={() => speak(t(steps[step].q), lang)} aria-label={t("listen")}
-            className="shrink-0 rounded-full bg-leaf-soft p-3 text-leaf"><Icon name="speaker" /></button>
+          <h1 className="font-display flex-1 text-3xl leading-tight">{t(steps[step].q)}</h1>
+          <Button variant="secondary" size="sm" icon="speaker" iconOnly onClick={() => speak(t(steps[step].q), lang)}>{t("listen")}</Button>
         </div>
         <div className="mt-6">{steps[step].body}</div>
-        <div className="mt-auto flex gap-3 pt-10">
-          <button type="button" className="btn-ghost" onClick={() => setStep(step - 1)}>{t("back")}</button>
-          <button type="button" className="btn-ghost flex-1 text-muted" onClick={() => next()}>{t("skip")}</button>
-          {!steps[step].pick && <button className="btn flex-1">{last ? t("start") : t("next")}</button>}
+        <div className="mt-auto flex items-center gap-3 pt-8">
+          <Button variant="ghost" onClick={() => next()}>{t("skip")}</Button>
+          {!steps[step].pick && <Button type="submit" variant="accent" size="lg" className="flex-1" iconEnd={last ? "check" : "chev"}>{last ? t("start") : t("next")}</Button>}
         </div>
       </form>
     </div>
   );
-
 }
 
 function Pictures({ options, value, onPick, cols = 4 }: { options: { id: string; icon: string; label: string }[]; value: string; onPick: (id: string) => void; cols?: 2 | 4 }) {
@@ -162,8 +162,8 @@ function Pictures({ options, value, onPick, cols = 4 }: { options: { id: string;
     <div className={`grid gap-2 ${cols === 4 ? "grid-cols-3 sm:grid-cols-4" : "grid-cols-2"}`}>
       {options.map((o) => (
         <button key={o.label} type="button" onClick={() => onPick(o.id)} aria-pressed={value === o.id}
-          className={`flex flex-col items-center gap-1 rounded-2xl border px-2 py-4 text-center ${value === o.id ? "border-leaf bg-leaf-soft font-semibold text-leaf" : "border-line bg-card"}`}>
-          <Icon name={o.icon} className="h-9 w-9 text-leaf" />
+          className={`pressable flex min-h-[96px] flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-center text-sm font-semibold transition-colors ${value === o.id ? "border-brand bg-brand-soft text-brand" : "border-line bg-surface text-text hover:bg-surface-2"}`}>
+          <Icon name={o.icon} className="h-9 w-9 text-brand" />
           <span className="leading-tight">{o.label}</span>
         </button>
       ))}
@@ -172,7 +172,7 @@ function Pictures({ options, value, onPick, cols = 4 }: { options: { id: string;
 }
 
 function Feature({ name }: { name: string }) {
-  return <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-leaf-soft text-leaf"><Icon name={name} /></span>;
+  return <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"><Icon name={name} /></span>;
 }
 
 export default function Page() {

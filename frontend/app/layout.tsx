@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Noto_Naskh_Arabic } from "next/font/google";
 import { CopilotProvider } from "@/components/Copilot";
-import { ToastProvider } from "@/components/legacy-ui";
+import { ToastProvider } from "@/components/ui";
 import { DataProvider } from "@/lib/data";
 import { FarmProvider } from "@/lib/farm";
 import { THEME_SCRIPT, ThemeProvider } from "@/lib/theme";

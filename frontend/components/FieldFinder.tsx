@@ -4,7 +4,7 @@
 import { useState } from "react";
 import type { StateOut } from "@/lib/api";
 import { useT } from "@/lib/farm";
-import { Circle, Ic } from "./legacy-ui";
+import { Button, Icon } from "./ui";
 
 type Pt = { lat: number; lon: number; acc: number };
 const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => { const R = 6371, r = (x: number) => (x * Math.PI) / 180; const dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon); const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
@@ -51,26 +51,28 @@ export function FieldFinder({ field }: { field: StateOut["field"] }) {
   };
 
   const Opt = ({ id, icon, label, children }: { id: typeof opt; icon: string; label: string; children: React.ReactNode }) => (
-    <div className={`mb-2.5 rounded-3xl bg-surface px-4 py-3 ${opt === id ? "outline outline-[2.5px] -outline-offset-[2.5px] outline-leaf" : ""}`}>
-      <button type="button" onClick={() => setOpt(id)} aria-expanded={opt === id} className="flex min-h-[52px] w-full items-center gap-3 text-start"><Circle tone={opt === id ? "green" : "soft"}><Ic name={icon} size={26} /></Circle><span className="text-lg font-bold">{label}</span></button>
-      {opt === id && <div className="mt-3">{children}</div>}
+    <div className={`rounded-xl border bg-surface transition-colors ${opt === id ? "border-brand" : "border-line"}`}>
+      <button type="button" onClick={() => setOpt(id)} aria-expanded={opt === id} className="pressable flex min-h-14 w-full items-center gap-3 px-4 text-start">
+        <span className={`grid h-10 w-10 flex-none place-items-center rounded-full ${opt === id ? "bg-brand-strong text-on-brand" : "bg-surface-2 text-brand"}`}><Icon name={icon} size={22} /></span>
+        <span className="flex-1 text-base font-semibold">{label}</span><Icon name="chevdown" size={18} className={`text-text-3 transition-transform ${opt === id ? "rotate-180" : ""}`} />
+      </button>
+      {opt === id && <div className="anim-fade-up px-4 pb-4">{children}</div>}
     </div>
   );
   return (
-    <div className="card">
-      <div className="label mb-2">{t("findField")}</div>
+    <div className="space-y-2">
       <Opt id="gps" icon="pin" label={t("useMyLocation")}>
-        {loc ? <div className="sub">{t("located", { lat: loc.lat.toFixed(4), lon: loc.lon.toFixed(4), m: Math.round(loc.acc), km: km(loc, field).toFixed(0) })}</div>
-          : <><div className="sub">{msg || t("gpsNoNet")}</div><button type="button" onClick={locate} className="btn-sec btn-sm mt-2.5">{t("findPosition")}</button></>}
+        {loc ? <p className="text-sm text-text-2">{t("located", { lat: loc.lat.toFixed(4), lon: loc.lon.toFixed(4), m: Math.round(loc.acc), km: km(loc, field).toFixed(0) })}</p>
+          : <><p className="text-sm text-text-2">{msg || t("gpsNoNet")}</p><Button size="sm" variant="secondary" icon="pin" className="mt-2.5" onClick={locate}>{t("findPosition")}</Button></>}
       </Opt>
       <Opt id="walk" icon="walk" label={t("walkEdge")}>
-        {walking ? <><div className="sub">{t("recordingPts", { n: walking.length })}</div><button type="button" onClick={() => walkStop()} className="btn btn-sm mt-2.5">{t("stopSave")}</button></>
-          : <><div className="sub">{msg || t("walkHelp")}</div><button type="button" onClick={walkStart} className="btn-sec btn-sm mt-2.5">{t("startWalking")}</button></>}
+        {walking ? <><p className="text-sm text-text-2">{t("recordingPts", { n: walking.length })}</p><Button size="sm" variant="primary" icon="stop" className="mt-2.5" onClick={() => walkStop()}>{t("stopSave")}</Button></>
+          : <><p className="text-sm text-text-2">{msg || t("walkHelp")}</p><Button size="sm" variant="secondary" icon="walk" className="mt-2.5" onClick={walkStart}>{t("startWalking")}</Button></>}
       </Opt>
       <Opt id="search" icon="search" label={t("villageName")}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("villageName")} aria-label={t("villageName")} className="field mb-2" />
-        <div className="sub">{qMsg || t("needsNet")}</div>
-        <button type="button" onClick={searchDirect} className="btn-sec btn-sm mt-2.5">{t("search")}</button>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("villageName")} aria-label={t("villageName")} className="mb-2 min-h-12 w-full rounded-lg border-2 border-line bg-surface px-4 text-base outline-none focus:border-brand" />
+        <p className="text-sm text-text-2">{qMsg || t("needsNet")}</p>
+        <Button size="sm" variant="secondary" icon="search" className="mt-2.5" onClick={searchDirect}>{t("search")}</Button>
       </Opt>
     </div>
   );

@@ -70,11 +70,6 @@
   --shadow-2: 0 4px 14px rgb(31 28 21 / .10), 0 1px 2px rgb(31 28 21 / .06);
   --shadow-3: 0 16px 40px rgb(31 28 21 / .18), 0 2px 6px rgb(31 28 21 / .08);
 
-  /* TEMPORARY aliases for screens not yet redesigned (removed at the end of the pro-polish pass) */
-  --color-paper: var(--color-on-brand); --color-page: var(--color-bg); --color-card: var(--color-surface); --color-soft: var(--color-surface-2);
-  --color-ink: var(--color-text); --color-muted: var(--color-text-2); --color-leaf: var(--color-brand-strong); --color-leaf-dark: var(--color-green-800);
-  --color-leaf-soft: var(--color-brand-soft); --color-sun: var(--color-accent); --color-violet: var(--color-brand-strong); --color-violet-soft: var(--color-brand-soft); --color-violet-line: var(--color-line);
-
   /* motion */
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   --duration-fast: 150ms; --duration-base: 200ms; --duration-slow: 250ms;
@@ -123,6 +118,7 @@ button:disabled { cursor: not-allowed; }
 :root[lang="ar"], :root[lang="ary"] { --font-sans: var(--font-arabic); --font-display: var(--font-arabic); }
 :root[lang="ar"] body, :root[lang="ary"] body { font-size: 19px; line-height: 1.65; }
 :root[lang="ar"] .font-display, :root[lang="ary"] .font-display { font-weight: 700; letter-spacing: 0; }
+:is(:root[lang="ar"], :root[lang="ary"]) :is([lang="en"], [lang="fr"]) { font-family: var(--font-geist), system-ui, sans-serif; }
 .num { font-variant-numeric: tabular-nums lining-nums; direction: ltr; unicode-bidi: isolate; font-family: var(--font-geist), system-ui, sans-serif; }
 
 /* native disclosure, styled once */
@@ -140,23 +136,3 @@ details[open] > summary::after { transform: rotate(-135deg); }
 .anim-fade-up { animation: fade-up var(--duration-base) var(--ease-out) both; }
 .anim-fade-in { animation: fade-in var(--duration-base) var(--ease-out) both; }
 .skeleton { background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-surface-3) 50%, var(--color-surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: var(--radius-md); }
-
-/* TEMPORARY component classes used by screens not yet redesigned */
-@layer components {
-  .card { @apply mb-3 rounded-xl border border-line bg-surface p-4; }
-  .btn { @apply inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand-strong px-5 font-semibold text-on-brand disabled:opacity-45; }
-  .btn-sec { @apply inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-line-strong bg-surface px-5 font-semibold text-brand disabled:opacity-45; }
-  .btn-sm { @apply min-h-11 w-auto px-4 text-sm; }
-  .btn-ghost { @apply rounded-lg border border-line bg-surface px-4 py-3 font-medium; }
-  .field { @apply w-full rounded-lg border-2 border-line bg-surface px-4 py-3 text-base text-text outline-none focus:border-brand; }
-  .label { @apply text-xs font-bold uppercase tracking-[.08em] text-text-3; }
-  .sub { @apply text-sm text-text-2; }
-  .chip { @apply inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-surface-2 px-4 text-sm font-semibold text-brand; }
-  .chip-on { @apply bg-brand-strong text-on-brand; }
-  .chip-big { @apply min-h-[52px] min-w-16 text-base; }
-  .pill { @apply inline-flex min-h-6 items-center rounded-full bg-accent-soft px-2.5 text-xs font-bold text-on-warning-soft; }
-  .pill-dk { @apply bg-brand-strong text-on-brand; }
-  .pill-ol { @apply border border-line-strong bg-surface text-brand; }
-  .pagetitle { @apply font-display mb-3 text-2xl text-text md:text-3xl; }
-  .grid2 { @apply md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-start md:gap-6; }
-}

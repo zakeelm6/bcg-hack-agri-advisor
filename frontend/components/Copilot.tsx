@@ -151,7 +151,7 @@ function CopilotPanel({ speakRef }: { speakRef: React.MutableRefObject<(task: Ta
   const chips: [string, Key][] = [["speaker", "readTasks"], ["chat", "why"], ["shield", "planBQ"], ["clock", "waitQ"], ["tasks", "planToday"]];
   const src = (m: Msg) => m.role === "bot" ? ({ engine: ["fromRules", "shield"], model: ["fromModel", "sparkle"], saved: ["fromPhone", "cloudoff"] } as Record<string, [Key, string]>)[m.source ?? ""] : undefined;
   const canTalk = voice.hasVoice && !offline;
-  const hasOwnButton = /^\/tasks\/\d+/.test(path ?? "");
+  const hasOwnButton = /^\/tasks\/\d+/.test(path ?? "") || path === "/" || path === "/design";
 
   const panel = (
     <section aria-label={t("copilot")} className={`flex flex-col overflow-hidden bg-surface ${docked ? "min-h-[560px] rounded-xl border border-line md:h-full" : "fixed inset-x-0 bottom-0 z-50 mx-auto h-[82dvh] w-full max-w-md rounded-t-2xl shadow-3 md:inset-x-auto md:end-7 md:bottom-7 md:h-[min(680px,84vh)] md:w-[420px] md:rounded-2xl"}`} style={!docked ? { animation: "sheet-up var(--duration-slow) var(--ease-out)" } : undefined}>
