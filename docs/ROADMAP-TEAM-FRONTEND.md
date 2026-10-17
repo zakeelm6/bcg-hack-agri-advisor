@@ -1,0 +1,140 @@
+# Roadmap: bring the engine, the sensors and the polish to the team's frontend (growmate), his way
+
+Written for 3zden's React app (`frontend/`, Next.js 15, React 19, Tailwind 4) and the backend added in `backend/`.
+It follows the same arc as our own roadmap (align, backend, sensors and satellite, frontend, voice, offline, deploy, harden),
+but each step is shaped to what this app already is. Sizes: S (hours), M (about a day), L (several days).
+
+## 1. What this app already is (keep it)
+
+| Trait | What it means for every step below |
+|---|---|
+| **Picture first, one question per screen.** Six questions with pictures that move on by themselves, plus a welcome screen. | New screens use big pictures, few words, one primary action. No dashboards, no tables of numbers on the first screen. |
+| **Voice first.** Each question is read aloud; the Co-Pilot starts on a big microphone. | Anything new must be speakable and listenable. |
+| **Three tabs: My Farm, Co-Pilot, Activities.** | Keep these three. New content goes inside them, not into six new tabs. |
+| **Local first.** The farmer's profile, tasks, activities and chat live in the phone (`localStorage`, key `growmate`). | The phone stays the owner of the farmer's own data. The server adds engine data on top and receives what the engine needs. |
+| **One dictionary** (`lib/i18n.ts`, rows of `[en, fr, ar]`, Darija in `lib/i18n-ary.ts`), answers stored as dictionary references so they follow language switches. | Keep that style. No i18n library. Four languages, right to left done with logical CSS. |
+| **Own identity:** a serif title face, deep green on warm paper, team icon set (`lib/farm-icons.ts`), photos. | Polish it; do not replace it with our look. |
+| **Small:** about 1,700 lines, no state library. | Add libraries only when they remove more code than they add (the data layer is the one justified addition). |
+
+## 2. Where we are (branch `integrate/engine`, commit 9d4087c, not pushed)
+
+Done: `backend/` added (95 tests); the Co-Pilot asks the engine (`POST /api/chat`), with his local keyword stand-in as the offline fallback;
+Darija as a fourth language (166 of 174 texts); right to left and locale helpers; `docs/INTEGRATION.md`.
+Verified in a browser: Darija welcome, the six questions in Darija, an engine answer in his answer card.
+Not done: everything below.
+
+## 3. The gap that matters most (read before the steps)
+
+The engine reasons about **one demo parcel near Berrechid with 4 zones**. This app asks the farmer for **their own town, crop, planting date and area**.
+Until the engine works on the farmer's own field, the advice is about the demo parcel, not about their land. Two consequences shape the plan:
+
+1. **Be honest on screen** until their field is processed: a small "demo field" label on engine advice, and a clear "waiting for satellite data for your field" state.
+2. **Make "my field" real** (Step 4): the boundary he lets the farmer draw (Measure view) and the GPS position become the input of the engine.
+
+A second gap: the backend has **one field and no login** (`field_id = 1`). His app has one farmer per phone. Step 8 gives each phone its own data.
+
+## 4. Steps (each step is a pull request; 3zden reviews anything that changes a screen)
+
+### Step 0: land what exists (S)
+- Push `integrate/engine`, open the pull request, let 3zden and Meryy4 read `docs/INTEGRATION.md`.
+- Decide with Meryy4 what happens to the root `sensors/` and `satellite/` (the backend carries tested copies in `backend/app/processing/`): one copy, moved by pull request.
+- Done when: the branch is merged or agreed, CI (`backend.yml`) runs on GitHub.
+
+### Step 1: his onboarding feeds the engine (M)
+- After the six questions (and on every "Edit"), send the answers to `POST /api/farmer` (crop, planting date, area, irrigation, challenge, position). Keep the local copy as the source of truth; if offline, send later.
+- Show what the engine actually used ("Used by the advice: crop, planting date, area"): the backend already returns it (`profileApplied`).
+- Fix the geolocation button while here: guard `navigator.geolocation`, ask for high accuracy with a fallback, timeout on the town lookup, a different message for "permission refused".
+- Privacy: the town lookup sends the position to a third party. Offer the lookup through our backend, or say it plainly.
+- Done when: changing the crop in "Edit" changes the engine's advice the next time the Co-Pilot answers.
+
+### Step 2: "Do this now" inside My Farm (M)
+- On My Farm, above his weather: one large card with the engine's top task as a picture, a short title, when, and how sure we are (a three-step meter with a word). One tap opens the detail.
+- Replace his local "Today" list by the engine's tasks (his checkbox row stays, fed by `/api/state`). Keep his `Task` shape in the UI; map the engine fields to it.
+- Task detail, picture-first: what, when, cost, plan B behind "Why?", and two big buttons: **Done** and **Can't** (reasons as pictures: no water, no time, not needed). **Undo** for six seconds after Done.
+- Done links to his **Activities**: marking an irrigation task done adds a "Watered" activity automatically; the farmer only confirms the amount.
+- Done when: a farmer can do their day without opening the Co-Pilot, and what they did shows in Activities.
+
+### Step 3: his Activities teach the engine (M)
+- Send the activities that matter to the engine (watered, sprayed, fertilised, spent) with a small additive contract change (`POST /api/activities`; ask before changing `docs/API_CONTRACT.md`).
+- The engine uses real watering records instead of guessing the last irrigation; "Costs" questions in the Co-Pilot use the real list.
+- Done when: after recording "watered 20 mm", the engine no longer asks to irrigate the same day.
+
+### Step 4: "My land" becomes the engine's field (L)
+- Keep his three views (Photo, Measure, 3D) and add a fourth, **Zones**: the Sentinel-2 picture with the vigor of each part of the field and the persistent anomalies, built from our land view, in his visual style (big, few words, honest "real / simulated" label).
+- The field the engine uses becomes the farmer's: the boundary drawn in Measure (or a square from the GPS and area) is sent to the backend, which splits it into zones.
+- Backend work: create a field and zones from a polygon (today they are a fixed 2 by 2 grid); fetch Sentinel-2 pixels for that polygon on demand (a background job, cached, a few minutes the first time); until it finishes the engine answers from weather and soil tests only and says so.
+- Be honest about cost and limits: free Sentinel-2 data, cloud cover leaves gaps, one clear date may take days.
+- Done when: a new farmer outlines their field and, after the job, sees real zones for that field.
+
+### Step 5: confidence and data quality, shown his way (M)
+- The three-step "how sure" meter and one honest line wherever advice appears ("based on the satellite only", "a soil test would make this surer").
+- "Sensor unreliable" and "satellite alert" become calm alerts with a picture and one action ("Add a soil test", "Go and look at this spot").
+- The soil test is a picture-first form in Activities (pH, organic matter, moisture), reusing his stepper style.
+- Done when: a faulty simulated sensor produces a clear "not sure, please test" instead of a dose.
+
+### Step 6: voice, his way plus ours (M)
+- Keep his behaviour (each question read aloud, big "Tap and speak").
+- Replace his browser-only voice with our `useVoice` hook: Azure server voice first (works in any browser, Arabic and Darija included), browser as fallback, visible states, talk mode, voice commands ("read my tasks", "repeat", "stop").
+- Make every new screen of Steps 2 to 5 readable aloud with one button.
+- Done when: a farmer with a phone that has no Arabic voice still hears the advice in Arabic or Darija, and the mic works in Chrome and in Safari.
+
+### Step 7: offline and weak network (M)
+- He is already local first; add what is missing: a service worker so the app opens with no network, a queue for the writes of Steps 1 to 3 (profile, task status, activities, soil tests) replayed through `POST /api/sync`, and a calm banner ("saved on your phone, will be sent").
+- The Co-Pilot already falls back to his local stand-in; label that answer ("answered on the phone, without the satellite").
+- Done when: in airplane mode a farmer opens the app, sees saved advice, marks a task done, and it arrives when the network returns.
+
+### Step 8: one farmer, one field, one phone (L)
+- Backend: farmer and field tables keyed by an anonymous device token created on first launch (no login for the demo), every route scoped to it. Later: a phone-number login for farmers who change phones, and a cooperative agent role.
+- This is the step that turns the demo into a product and it touches every route, so do it before real users, behind a migration.
+- Done when: two phones with different fields see different advice.
+
+### Step 9: professional polish in his identity (M to L)
+- Use `docs/prompts/opencode-ux-pro.md` but re-aimed: keep the serif and the green, formalise them as tokens; build the small component set; dark and high-contrast modes; the empty, loading, error and offline states; the language switcher that fits on a phone; Lighthouse targets.
+- Known rough spots to fix first: the Co-Pilot chips send an English question shown in the user's bubble; the four-language switcher is cramped; the welcome and onboarding screens are good but the Zones and task screens must reach the same standard.
+- Done when: all screens in four languages at 390 px and 1440 px pass the checklist, with before and after screenshots.
+
+### Step 10: deploy on Azure (M)
+- His `Dockerfile` (Next.js standalone) and a backend image, two Container Apps, a managed database, secrets in Key Vault, Azure AI Speech key, HTTPS only. Turn authentication on before anything is public.
+- `.github/workflows`: backend tests and contract check (exists), frontend type check and build, deploy on merge.
+- Done when: the whole scenario below runs on a public URL from a phone.
+
+### Step 11: harden (M)
+- End-to-end tests of the scenario (Playwright), tests of the offline queue and the voice hook, a real-phone checklist (Android Chrome, slow network, Arabic and Darija voice, noise), a native Darija and Arabic review of every text, a short privacy page (position goes to the weather service, the town lookup, the map imagery providers), the honest-limits slide.
+
+## 5. The scenario that means "it works" (for his app)
+1. A new farmer opens growmate on a phone, picks Darija; the welcome screen and each question are read aloud.
+2. They answer six picture questions; the position is found (or typed).
+3. My Farm shows their field, the weather, and one big "do this now" card with how sure we are.
+4. They tap "Why?" and hear the reason in Darija; they tap the mic and ask "واش نتسنى نهارين؟" and hear a simulated answer.
+5. They mark the task done; an "I watered" activity appears; they undo and redo it.
+6. A faulty sensor or a missing soil test shows a calm "not sure, please test" with one action.
+7. A persistent patch of poor crop shows in the Zones view and creates a "go and look" task.
+8. In airplane mode the app opens, shows saved advice, accepts actions; they arrive when the network returns.
+9. A second phone with another field sees different advice.
+10. All of it runs on the public URL behind HTTPS, with automated tests green.
+
+## 6. Working rules for this repository
+- One branch and one pull request per step, named `step<N>/<name>`. Small commits. Nobody pushes to `main` directly.
+- 3zden owns screens and wording; the backend owner owns routes and the contract (`backend/openapi.json`, `docs/API_CONTRACT.md`). A contract change is additive and reviewed by both.
+- The frontend never computes a number the engine decides. Honest labels ("real", "simulated", "not validated") stay.
+- Keep his conventions: the `[en, fr, ar]` rows, Darija overrides in `i18n-ary.ts`, `node lib/i18n.check.mjs` and `node_modules/.bin/tsc --noEmit` before every push, `npm run dev` (it copies the 3D map worker).
+- No secrets in the repository; keys in `backend/.env` and in the cloud. No tool or assistant signatures in commit messages.
+
+## 7. Decisions needed
+| Question | My default |
+|---|---|
+| Keep the phone as owner of the farmer's data, with the server as a second copy? | Yes (local first) |
+| Anonymous device token for the demo, phone-number login later? | Yes |
+| Fetch Sentinel-2 for each farmer on demand, or only for demo fields? | On demand with a clear waiting state, demo field until then |
+| Move the town lookup through our backend for privacy? | Yes, in Step 1 |
+| Who reviews the Darija and Arabic texts? | A native speaker from the team before the demo |
+| Merge our two frontends into one repository layout after Step 9? | Yes: his app is the product; our legacy and our React shell stay as references until parity |
+
+## 8. Risks
+| Risk | Reduce it by |
+|---|---|
+| The engine advises about the demo parcel while the farmer thinks it is their land | The "demo field" label now; Step 4 as soon as possible |
+| Step 4 and Step 8 are the two big pieces | Do Steps 1 to 3 first: they already make the app useful on the demo field |
+| His voice-first screens regress when ours replaces them | Keep his tests scenario (Step 11) and review each screen with him |
+| Two code bases drift | One repository, pull requests, the contract test, CI on both sides |
+| Satellite jobs are slow or empty (clouds) | Honest waiting and "no clear picture yet" states; weather-only advice meanwhile |
