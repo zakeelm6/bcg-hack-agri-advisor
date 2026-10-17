@@ -8,7 +8,7 @@ const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] });
 const arabic = Noto_Sans_Arabic({ variable: "--font-arabic", subsets: ["arabic"] });
 
-export const metadata: Metadata = { title: "growmate", description: "Your AI farming co-pilot" };
+export const metadata: Metadata = { title: "growmate", description: "Your AI farming co-pilot", manifest: "/manifest.webmanifest", icons: { icon: "/icon-192.png", apple: "/icon-192.png" } };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#f6f4ee" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useFarm, useT } from "@/lib/farm";
 import { isRtl, langs } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
+import { registerServiceWorker, useOfflineStatus } from "@/lib/offline";
 
 const nav = [
   { href: "/farm", key: "navFarm", icon: "M3 11l9-7 9 7v9H3zM9 20v-6h6v6" },
@@ -19,6 +20,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const onboarding = path === "/";
+  const net = useOfflineStatus();
+  useEffect(registerServiceWorker, []);
 
   useEffect(() => {
     if (ready && !profile && !onboarding) router.replace("/");
@@ -65,6 +68,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </nav>
       )}
       </header>
+      {net.enabled && (!net.online || net.pending > 0) && (
+        <p role="status" className="mx-5 mb-1 flex items-start gap-2 rounded-xl bg-leaf-soft px-3 py-2 text-base text-leaf md:mx-8">
+          <Icon name="check" className="mt-0.5 h-5 w-5 shrink-0" />{net.pending > 0 ? t("bannerPending") : t("bannerOffline")}
+        </p>
+      )}
       <main className={`flex-1 px-5 md:px-8 ${onboarding ? "pb-8" : "pb-40 md:pb-32"}`}>{children}</main>
       {!onboarding && path !== "/copilot" && (
         <Link href="/copilot" className="btn fixed end-4 bottom-[92px] z-10 flex items-center gap-2 rounded-full shadow-lg md:end-8 md:bottom-8">

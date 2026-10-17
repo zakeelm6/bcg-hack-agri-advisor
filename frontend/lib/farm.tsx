@@ -20,7 +20,7 @@ export type Profile = {
 export type Task = { id: string; title: Text; due: string; done: boolean };
 export type ActivityType = "irrigation" | "treatment" | "planting" | "expense" | "other";
 export type Activity = { id: string; type: ActivityType; date: string; note: string; cost?: number; zone?: string; mm?: number }; // zone: only that part of the field (none = all of it); mm: water applied
-export type Advice = { recommendation: Text; why: Text; steps: Text[]; missing: Text[]; icons?: string[] }; // icons[i] pictures steps[i]
+export type Advice = { recommendation: Text; why: Text; steps: Text[]; missing: Text[]; icons?: string[]; local?: boolean }; // icons[i] pictures steps[i]
 // What the engine did with the profile the last time it was sent. `pending`: still to send (offline, server down).
 export type ProfileSync = { pending: boolean; applied?: Record<string, unknown>; notApplied?: string[] };
 export type Message =
