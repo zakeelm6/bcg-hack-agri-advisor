@@ -476,4 +476,19 @@ export const ARY: Partial<Record<Key, string>> = {
   whatIsReal: "شنو حقيقي فهاد العرض",
   aboutTitle: "على المشروع",
   aboutText: "Farm Advisor نموذج أولي داروه الفريق 2 فهاكاثون BCG Platinion 2026 (الموضوع: محاربة الجوع فالعالم). كيستهدف الفلاحة الصغار فالمغرب فاللول. هادا عرض تجريبي، ماشي نصيحة فلاحية لأراضي حقيقية.",
+
+  // simple mode + setup
+  navToday: "اليوم", navMyField: "الأرض ديالي", navMore: "كثر",
+  plainWater: "سقي المنطقة {z}", plainFeed: "سمد المنطقة {z}", plainWalk: "سير شوف المنطقة {z}", plainHarvest: "حصد", plainTask: "المنطقة {z}",
+  plainWaterMany: "سقي المناطق {z}", plainFeedMany: "سمد المناطق {z}", plainWalkMany: "سير شوف المناطق {z}", checkSoil: "شوف التربة",
+  plainWaterAll: "سقي الأرض كاملة", plainFeedAll: "سمد الأرض كاملة", plainWalkAll: "دور على الأرض كاملة",
+  cant: "ما نقدرش", tellMeWhy: "علاش؟", listenToday: "سمع اليوم", callAdvisor: "عيط للمستشار ديالي",
+  alsoToday: "حتى اليوم", seeNumbers: "ورّي الأرقام", wellDone: "مزيان", nextCheck: "رجع غدا الصباح.",
+  setup: "الإعدادات", qSensors: "واش عندك مستشعرات ديال التربة؟",
+  sensNone: "لا، غير القمر الصناعي والجو", sensShared: "المستشعر المشترك ديال الدوار", sensOwn: "المستشعرات ديالي",
+  qConnection: "كيفاش كيتكونيكطا التيليفون ديالك؟", connAlways: "غالبا متكونيكطي", connSometimes: "ساعات متكونيكطي",
+  connNote: "كلشي كيتحفظ فالتيليفون ديالك وكيتصيفط ملي كتكون الشبكة. حل التطبيق مرة ملي تكون متكونيكطي باش يتجدد.",
+  qAdvisor: "التيليفون ديال المستشار ديالك (اختياري)", viewMode: "شكل التطبيق", modeSimple: "بسيط: تصاور وصوت", modeFull: "كامل: كاع الشاشات",
+  keepOffline: "حفظ باش يخدم بلا كونيكسيون", keptOffline: "تحفظ فالتيليفون ديالك باش يخدم بلا كونيكسيون.",
+  noSensorsNote: "بلا مستشعرات: الرطوبة مقدرة من الشتا والتبخر. الثقة ضعيفة حتى تحليل التربة.",
 };

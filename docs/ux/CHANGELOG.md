@@ -203,6 +203,16 @@ living page `/design`, screenshots in `pro/design-system/`. After screenshots: `
   (Checked / Adjusted / Ask your advisor, with the re-check detail), **"Today in one line"** briefing on Home with a read-aloud button, and a
   **"To sharpen the advice"** card when onboarding answers are missing. The Copilot's "Read my tasks" reads the briefing when online.
 
+## Simple mode for small farmers and the Setup place (17 October, later)
+- **Public landing page** (`/`) with one "Go in"; the questions moved to `/start` (now 8: + sensors, + connection).
+- **Simple mode** (default): two tabs, **Today** and **My field**, plus a **More** sheet (Tasks, Alerts, Sell, Me, Setup). Today shows the land
+  without numbers, **one card in plain words** ("Water the whole field", "Feed zones B, C", "Go look at zone D"), giant **Done / Can't**, a big
+  **Speak** button, **Listen to today** (the briefing), **Call my advisor**. Identical tasks across zones are grouped into one card. An escalated
+  card offers **Check the soil / Call my advisor** instead of Done. "See the numbers" opens the full task page. Full mode keeps every screen.
+- **Setup** (`/setup`): sensors (none / shared / own), connection (always / sometimes, with "Keep for offline" that stores every screen's data),
+  advisor's phone, app look (simple / full). Without sensors the backend hides the demo sensors and estimates moisture from the last week's rain
+  and evaporation (Open-Meteo `past_days`), Low confidence, said in words.
+
 ## Still open
 - Real phone, real microphone in noise, screen-reader run, native Darija reader (the Darija strings are AI-written).
 - Performance on Sell and Me sits at 84–88 on the throttled mobile profile (shared bundle ~160 kB); a lighter query layer or route-level code

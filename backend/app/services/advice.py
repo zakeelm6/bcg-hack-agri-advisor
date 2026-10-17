@@ -27,12 +27,12 @@ def refresh_advice(db: Session, force_weather: bool = False) -> dict:
     """Recompute tasks and alerts from current data. Keeps the status of tasks that still apply."""
     field, zones = fld.get_field(db), fld.get_zones(db)
     detail: list = []
-    layers = fld.layer_inputs(db, detail)
     weather = geo.get_weather(db, field["lat"], field["lon"], force=force_weather)
+    layers = fld.layer_inputs(db, detail, weather=weather)
     soil = fld.latest_soil(db)
     est, tasks, alerts = engine.build_advice(field, zones, layers["sensors"], weather, soil=soil,
                                              bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"],
-                                             waterings=activities.recent_waterings(db),
+                                             water_balance=layers["water_balance"], waterings=activities.recent_waterings(db),
                                              measured_on=_measured_on(detail, soil, date.fromisoformat(weather["days"][0]["date"])))
     now = now_iso()
     keys = [t["key"] for t in tasks]
@@ -65,15 +65,15 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
     lang = clean_lang(lang)
     weather = refresh_advice(db, force_weather=True) if refresh else None
     field, zones = fld.get_field(db), fld.get_zones(db)
-    sensor_detail = []
-    layers = fld.layer_inputs(db, sensor_detail)
-    sensors = layers["sensors"]
     if weather is None:
         weather = geo.get_weather(db, field["lat"], field["lon"])
+    sensor_detail = []
+    layers = fld.layer_inputs(db, sensor_detail, weather=weather)
+    sensors = layers["sensors"]
     soil = fld.latest_soil(db)
     est, tasks_l, alerts_l = engine.build_advice(field, zones, sensors, weather, soil=soil, lang=lang,
                                                  bad_sensors=layers["bad_sensors"], offsets=layers["offsets"], anomalies=layers["anomalies"],
-                                                 waterings=activities.recent_waterings(db),
+                                                 water_balance=layers["water_balance"], waterings=activities.recent_waterings(db),
                                                  measured_on=_measured_on(sensor_detail, soil, date.fromisoformat(weather["days"][0]["date"])))
     has_sensor = {d["zone_code"] for d in sensor_detail}
     for z in zones:
@@ -99,5 +99,5 @@ def build_state(db: Session, lang: str = "en", refresh: bool = False) -> dict:
     return {"field": field, "zones": zones, "sensors": sensor_detail, "tasks": tasks, "alerts": alerts, "weather": weather,
             "soil_tests": sorted(soil.values(), key=lambda t: t["zone_code"]),
             "generated_at": datetime.utcnow().isoformat(timespec="seconds"),
-            "data_notes": {"vigor": zones[0]["ndvi_source"] if zones else "none", "sensors": "simulated",
+            "data_notes": {"vigor": zones[0]["ndvi_source"] if zones else "none", "sensors": "none" if layers["setup"]["has_sensors"] == "none" else "simulated", "setup": layers["setup"],
                            "anomalies": "sentinel-2 pixels" if layers["anomalies"] is not None and anomalies_available(field) else "not available"}}

@@ -13,9 +13,9 @@ const AI = [["ai1t", "ai1d", "shield"], ["ai2t", "ai2d", "refresh"], ["ai3t", "a
 
 export default function Landing() {
   const t = useT();
-  const { profile, lang, setLang } = useFarm();
+  const { profile, lang, setLang, mode } = useFarm();
   const router = useRouter();
-  const goIn = () => router.push(profile ? "/home" : "/start");
+  const goIn = () => router.push(profile ? (mode === "simple" ? "/today" : "/home") : "/start");
   return (
     <div className="mx-auto max-w-5xl">
       {/* hero */}
@@ -34,7 +34,7 @@ export default function Landing() {
           </div>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button variant="accent" size="lg" iconEnd="chev" onClick={goIn} className="sm:min-w-56">{t("goIn")}</Button>
-            {!profile && <Button variant="ghost" href="/home">{t("seeDemo")}</Button>}
+            {!profile && <Button variant="ghost" href="/today">{t("seeDemo")}</Button>}
           </div>
           <p className="mt-2 text-sm text-text-3">{profile ? t("profileNote") : t("landingNote")}</p>
         </div>

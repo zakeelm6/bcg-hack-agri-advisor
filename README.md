@@ -34,7 +34,7 @@ Where each part lives in the code:
 ```bash
 cd backend
 ./run.sh                 # creates .venv, installs dependencies, serves http://127.0.0.1:8000
-python -m pytest -q      # 99 tests (activate .venv first)
+python -m pytest -q      # 143 tests (activate .venv first)
 ```
 Optional: copy `backend/.env.example` to `backend/.env` for a language model and for the Azure voice.
 Everything in containers: `docker compose up --build` (app on http://localhost:3000, API on 8000; `API_PORT` and `WEB_PORT` change the ports).

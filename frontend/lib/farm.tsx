@@ -14,7 +14,11 @@ export type Profile = {
   lat?: number; // from "Use my location"; weather uses these over the town name
   lon?: number;
   boundary?: [number, number][]; // field corners [lat, lng], drawn on the Measure map
+  hasSensors?: "none" | "shared" | "own";   // setup: where the moisture comes from
+  connection?: "always" | "sometimes";      // setup: how the phone connects (sometimes = keep everything, send when there is network)
+  advisorPhone?: string;                     // the cooperative or advisor to call
 };
+export type Mode = "simple" | "full";        // simple: Today + My field, pictures and voice, no numbers; full: every screen
 export type Task = { id: string; title: Text; due: string; done: boolean };
 export type ActivityType = "irrigation" | "treatment" | "planting" | "expense" | "other";
 export type Activity = { id: string; type: ActivityType; date: string; note: string; cost?: number };
@@ -23,8 +27,8 @@ export type Message =
   | { id: string; role: "user"; text: string; photo?: string }
   | { id: string; role: "ai"; text?: string; advice?: Advice };
 
-type State = { lang: Lang; profile: Profile | null; tasks: Task[]; activities: Activity[]; messages: Message[] };
-const empty: State = { lang: "en", profile: null, tasks: [], activities: [], messages: [] };
+type State = { lang: Lang; mode: Mode; profile: Profile | null; tasks: Task[]; activities: Activity[]; messages: Message[] };
+const empty: State = { lang: "en", mode: "simple", profile: null, tasks: [], activities: [], messages: [] };
 const browserLang = (): Lang => (["ar", "fr"] as const).find((l) => navigator.language.startsWith(l)) ?? "en";
 const KEY = "growmate";
 
@@ -60,6 +64,7 @@ function useFarmState() {
     ready: state !== null,
     ...s,
     setLang: (lang: Lang) => set({ lang }),
+    setMode: (mode: Mode) => set({ mode }),
     saveProfile: (profile: Profile) => set({ profile }),
     addTask: (title: Text, due: string) => set({ tasks: [{ id: uid(), title, due, done: false }, ...s.tasks] }),
     toggleTask: (id: string) => set({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }),

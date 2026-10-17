@@ -200,6 +200,11 @@ class Farmer(Base):
     lon: Mapped[float | None] = mapped_column(Float, nullable=True)
     lang: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[str] = mapped_column(Text)
+    # setup (Phase 4b): where the moisture comes from and how the phone connects
+    has_sensors: Mapped[str | None] = mapped_column(Text, nullable=True)     # none | shared | own  (None = not asked yet: demo sensors)
+    connection: Mapped[str | None] = mapped_column(Text, nullable=True)      # always | sometimes
+    advisor_phone: Mapped[str | None] = mapped_column(Text, nullable=True)   # the cooperative or advisor to call: the plan B that always works
+    mode: Mapped[str | None] = mapped_column(Text, nullable=True)            # simple | full (the app's view)
 
 
 class Activity(Base):

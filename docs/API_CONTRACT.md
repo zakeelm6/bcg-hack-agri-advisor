@@ -57,6 +57,11 @@ Added in Phase 3 / 4 (additive): `GET /api/farmer?lang` (profile + `needs_input[
 `GET /api/briefing?lang` (one paragraph for the day), `tasks[].verify_status` / `verify_detail` in `GET /api/state` (independent re-check:
 verified, fixed, escalated), `farmer` action in `/api/sync`.
 
+Added for the simple mode (additive): `FarmerBody.has_sensors` (none | shared | own), `connection` (always | sometimes), `advisor_phone`, `mode`
+(simple | full), kept when omitted; `data_notes.setup` and `data_notes.sensors = "none"` in `GET /api/state` when the farmer has no sensors
+(the demo sensors are hidden and moisture comes from a rain/evaporation water balance, `moisture_source = "water_balance"`, Low confidence);
+`weather.past[]` (last 7 days) next to `weather.days[]`.
+
 ## Planned additions (not frozen yet)
 Authentication routes.
 

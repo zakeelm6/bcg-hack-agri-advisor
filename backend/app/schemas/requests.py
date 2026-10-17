@@ -61,6 +61,11 @@ class FarmerBody(BaseModel):
     lon: float | None = Field(None, ge=-180, le=180)
     boundary: list[list[float]] | None = Field(None, max_length=200)   # corners [lat, lng] the farmer drew; used for the centre of the field
     lang: str | None = None
+    # setup (optional, each kept when omitted)
+    has_sensors: str | None = Field(None, pattern="^(none|shared|own)$")   # none: satellite + weather only, no sensor data used
+    connection: str | None = Field(None, pattern="^(always|sometimes)$")   # sometimes: the phone keeps everything and sends when it has network
+    advisor_phone: str | None = Field(None, max_length=30)
+    mode: str | None = Field(None, pattern="^(simple|full)$")
 
 
 class SyncBody(BaseModel):

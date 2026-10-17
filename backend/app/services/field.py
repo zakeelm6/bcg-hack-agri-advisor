@@ -62,12 +62,26 @@ def engine_inputs(db: Session):
     return field, zones, sensors, geo.get_weather(db, field["lat"], field["lon"]), latest_soil(db)
 
 
-def layer_inputs(db: Session, sensor_detail_out: list | None = None) -> dict:
-    """Phase 2 inputs for the engine: {sensors, bad_sensors, offsets, anomalies}."""
+def farmer_setup(db: Session) -> dict:
+    """{has_sensors, connection, advisor_phone, mode} from the farmer's setup; None values when not asked yet."""
+    from . import farmer
+    p = farmer.get(db) or {}
+    return {k: p.get(k) for k in ("has_sensors", "connection", "advisor_phone", "mode")}
+
+
+def layer_inputs(db: Session, sensor_detail_out: list | None = None, weather: dict | None = None) -> dict:
+    """Phase 2 inputs for the engine: {sensors, bad_sensors, offsets, anomalies, water_balance, setup}.
+    A farmer who said "no sensors" gets no sensor data at all (the demo sensors are hidden) and a water-balance estimate instead."""
+    from ..processing import engine
     from .satellite_layer import anomalies_for_engine
     from .sensors import stored_offsets
+    setup = farmer_setup(db)
     bad = {}
-    sensors, detail = latest_sensors(db, bad)
+    if setup["has_sensors"] == "none":
+        sensors, detail = {}, []
+    else:
+        sensors, detail = latest_sensors(db, bad)
     if sensor_detail_out is not None:
         sensor_detail_out.extend(detail)
-    return {"sensors": sensors, "bad_sensors": bad, "offsets": stored_offsets(db), "anomalies": anomalies_for_engine(get_field(db))}
+    wb = engine.water_balance_moisture((weather or {}).get("past") or []) if setup["has_sensors"] == "none" else None
+    return {"sensors": sensors, "bad_sensors": bad, "offsets": stored_offsets(db) if sensors else {}, "anomalies": anomalies_for_engine(get_field(db)), "water_balance": wb, "setup": setup}

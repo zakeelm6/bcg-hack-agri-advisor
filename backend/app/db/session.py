@@ -54,7 +54,8 @@ def run_migrations(url: str | None = None):
         # activities with 0005, task quantities with 0006, the farmer's own field with 0007, devices with 0008)
         task_cols = {c["name"] for c in inspect(eng).get_columns("tasks")} if "tasks" in names else set()
         field_cols = {c["name"] for c in inspect(eng).get_columns("fields")}
-        command.stamp(cfg, "0008" if "devices" in names else "0007" if "source" in field_cols else "0006" if "qty" in task_cols else "0005" if "activities" in names
+        farmer_cols = {c["name"] for c in inspect(eng).get_columns("farmers")} if "farmers" in names else set()
+        command.stamp(cfg, "0009" if "has_sensors" in farmer_cols else "0008" if "devices" in names else "0007" if "source" in field_cols else "0006" if "qty" in task_cols else "0005" if "activities" in names
                       else "0004" if "verify_status" in task_cols else "0003" if "farmers" in names else "0002" if "plot_offsets" in names else "0001")
     command.upgrade(cfg, "head")
 

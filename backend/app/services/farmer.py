@@ -47,6 +47,9 @@ def save(db: Session, b: rq.FarmerBody) -> dict:
         db.add(row)
     for k in ("location", "crop", "planted_on", "area_ha", "irrigation", "challenge", "lat", "lon", "lang"):
         setattr(row, k, getattr(b, k))
+    for k in ("has_sensors", "connection", "advisor_phone", "mode"):   # setup answers: only overwritten when sent
+        if getattr(b, k) is not None:
+            setattr(row, k, getattr(b, k))
     row.updated_at = now_iso()
     lang = ar_fallback(b.lang) if ar_fallback(b.lang) in NOT_APPLIED else "en"
     field = db.get(m.Field, fid(db))

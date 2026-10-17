@@ -34,6 +34,7 @@ TEXTS = {
         "r_sensor": "A sensor in this zone measures it.", "r_sample": "Measured from the soil sample you entered.",
         "r_none": "No sensor data yet.", "k_sensor": "sensor in zone {z}", "k_sample": "soil sample in zone {z}", "and": " and ",
         "r_est": "Estimated from the {names} and crop vigor seen from space.",
+        "r_wb": "Estimated from the rain and evaporation of the last {d} days ({rain} mm of rain), no sensor. A soil sample would make it sure.",
         "r_offset": "Estimated from the shared sensor in zone {s} plus the gap learned from your {n} soil samples in this zone (about {d} points).",
         "r_bad": "The sensor in this zone gives unreliable readings ({flags}). No dose is computed until a soil sample or a repair.",
         "sensor_title": "Sensor in zone {z} unreliable", "sensor_body": "Its readings are flagged: {flags}. A soil sample is recommended; no water dose is given from it.",
@@ -82,6 +83,7 @@ TEXTS = {
         "r_sensor": "Un capteur de cette zone la mesure.", "r_sample": "Mesurée d'après l'échantillon de sol que vous avez saisi.",
         "r_none": "Pas encore de données de capteur.", "k_sensor": "du capteur de la zone {z}", "k_sample": "de l'échantillon de sol de la zone {z}", "and": " et ",
         "r_est": "Estimée à partir {names} et de la vigueur de la culture vue depuis l'espace.",
+        "r_wb": "Estimée d'après la pluie et l'évaporation des {d} derniers jours ({rain} mm de pluie), sans capteur. Un échantillon de sol la rendrait sûre.",
         "r_offset": "Estimée à partir du capteur partagé de la zone {s} et de l'écart appris sur vos {n} échantillons de sol dans cette zone (environ {d} points).",
         "r_bad": "Le capteur de cette zone donne des mesures peu fiables ({flags}). Aucune dose n'est calculée avant un échantillon de sol ou une réparation.",
         "sensor_title": "Capteur de la zone {z} peu fiable", "sensor_body": "Ses mesures sont signalées : {flags}. Un échantillon de sol est recommandé ; aucune dose d'eau n'en est déduite.",
@@ -130,6 +132,7 @@ TEXTS = {
         "r_sensor": "يقيسها مستشعر في هذه المنطقة.", "r_sample": "مقيسة من عيّنة التربة التي أدخلتها.",
         "r_none": "لا توجد بيانات مستشعر بعد.", "k_sensor": "مستشعر المنطقة {z}", "k_sample": "عيّنة تربة المنطقة {z}", "and": " و",
         "r_est": "مقدَّرة انطلاقًا من {names} ومن قوة النبات المرصودة من الفضاء.",
+        "r_wb": "مقدَّرة من المطر والتبخر خلال آخر {d} أيام ({rain} مم مطر)، دون مستشعر. عيّنة تربة تجعلها مؤكدة.",
         "r_offset": "مقدَّرة من المستشعر المشترك في المنطقة {s} مع الفارق المتعلَّم من {n} عيّنات تربة في هذه المنطقة (حوالي {d} نقاط).",
         "r_bad": "مستشعر هذه المنطقة يعطي قراءات غير موثوقة ({flags}). لا تُحسب أي جرعة قبل عيّنة تربة أو إصلاح.",
         "sensor_title": "مستشعر المنطقة {z} غير موثوق", "sensor_body": "قراءاته موسومة: {flags}. يُنصح بعيّنة تربة؛ لا تُعطى جرعة ماء منه.",
@@ -178,6 +181,7 @@ TEXTS = {
         "r_sensor": "كاين مستشعر فهاد المنطقة كيقيسها.", "r_sample": "تقاسات من عينة التربة اللي دخلتي.",
         "r_none": "ما كايناش بيانات من المستشعر دابا.", "k_sensor": "مستشعر المنطقة {z}", "k_sample": "عينة تربة المنطقة {z}", "and": " و",
         "r_est": "تقدير من {names} ومن قوة النبات اللي كتبان من الفضاء.",
+        "r_wb": "مقدرة من الشتا والتبخر ف{d} أيام اللخرة ({rain} مم ديال الشتا)، بلا مستشعر. عينة ديال التربة غادي تأكدها.",
         "r_offset": "تقدير من المستشعر المشترك فالمنطقة {s} مع الفرق اللي تعلمناه من {n} عينات تربة فهاد المنطقة (تقريبا {d} نقط).",
         "r_bad": "مستشعر هاد المنطقة كيعطي قراءات ما يمكنش نعتامدو عليها ({flags}). ما غاديش نعطيو جرعة حتى تدير عينة تربة ولا يتصلح.",
         "sensor_title": "مستشعر المنطقة {z} ما فيهش الثقة", "sensor_body": "القراءات ديالو معلمة: {flags}. الأحسن تدير عينة تربة؛ ما غاديش نعطيو جرعة ماء منو.",
@@ -246,10 +250,26 @@ OFFSET_MIN_SAMPLES = 3     # soil samples needed before a learned offset replace
 OFFSET_GOOD_SDRD = 0.03    # spread of the learned gap under which the offset is considered transferable (sensor layer)
 
 
-def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=None):
+WB_START = 0.26        # topsoil moisture assumed after a wet week, when nothing else is known (demo value)
+
+
+def water_balance_moisture(past_days, kc=1.0):
+    """Topsoil moisture guessed from the last days of rain and evaporation (simple bucket over ROOT_DEPTH_MM).
+    Used only when the farmer has no sensor. Returns (moisture, rain_mm, n_days) or None without history."""
+    if not past_days:
+        return None
+    m = WB_START
+    for d in past_days:
+        m += (d.get("rain", 0.0) - kc * d.get("et0", 0.0)) / ROOT_DEPTH_MM
+        m = max(0.08, min(0.40, m))
+    return round(m, 3), round(sum(d.get("rain", 0.0) for d in past_days), 1), len(past_days)
+
+
+def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=None, water_balance=None):
     """sensors / manual: {zone_code: moisture} from reliable readings. A sensor beats a hand measurement in the same zone.
     bad: {zone_code: [flags]} sensors whose recent readings are flagged: no number, low confidence, no dose.
     offsets: {zone_code: {sentinel, delta, sdrd, n}} learned gap to a shared sensor, used before the nearest-sensor guess.
+    water_balance: (moisture, rain_mm, n_days) for zones with no measurement at all (farmer without sensors): Low confidence.
     Returns {zone_code: {moisture, source, confidence, reason}}."""
     manual = manual or {}
     bad = bad or {}
@@ -286,7 +306,11 @@ def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=
                 gap = 0.25 * (z["ndvi"] - s_["ndvi"]) if z["ndvi"] is not None and s_["ndvi"] is not None else 0.0   # no vigor yet: no correction
                 near.append((pc, m + gap))
         if best is None:
-            out[c] = {"moisture": None, "source": "none", "confidence": "Low", "reason": tr(lang, "r_none")}
+            if water_balance:
+                wb_m, wb_rain, wb_days = water_balance
+                out[c] = {"moisture": wb_m, "source": "water_balance", "confidence": "Low", "reason": tr(lang, "r_wb", d=wb_days, rain=wb_rain)}
+            else:
+                out[c] = {"moisture": None, "source": "none", "confidence": "Low", "reason": tr(lang, "r_none")}
             continue
         est = max(0.08, min(0.40, sum(v for _, v in near) / len(near)))
         names = tr(lang, "and").join(tr(lang, "k_" + kind[pc], z=pc) for pc, _ in near)
@@ -298,7 +322,7 @@ def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=
 RECENT_WATERING_DAYS = 2   # after the farmer recorded watering, wait this long before advising it again
 
 
-def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en", bad_sensors=None, offsets=None, anomalies=None, waterings=None, measured_on=None):
+def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en", bad_sensors=None, offsets=None, anomalies=None, waterings=None, measured_on=None, water_balance=None):
     """Returns (zone_estimates, tasks, alerts). Pure function: easy to test.
     `lang` only changes the wording; every number and decision is identical in every language.
     Phase 2 inputs (all optional): bad_sensors {zone: [flags]} from the quality checks, offsets {zone: {...}} learned per plot,
@@ -313,7 +337,7 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
     today = date.fromisoformat(days[0]["date"])
     manual = {c: t["moisture"] for c, t in soil.items()
               if t.get("moisture") is not None and t["age_days"] <= MANUAL_MOISTURE_MAX_AGE_DAYS}
-    est = estimate_moisture(zones, sensors, manual, lang, bad=bad_sensors, offsets=offsets)
+    est = estimate_moisture(zones, sensors, manual, lang, bad=bad_sensors, offsets=offsets, water_balance=water_balance)
     # Water the farmer recorded with its amount is added to what the reading says, then fades with the crop's water use.
     # (Crop use since then is taken as the forecast's evapotranspiration per day; rain is ignored, which errs on the side of watering.)
     et0_day = (sum(d["et0"] for d in days[:3]) / max(1, len(days[:3]))) or 3.0

@@ -21,7 +21,7 @@ async function townAt(lat: number, lon: number, lang: string) {
 }
 
 function Onboarding() {
-  const { profile, saveProfile, lang } = useFarm();
+  const { profile, saveProfile, lang, mode } = useFarm();
   const { act } = useActions();
   const t = useT();
   const router = useRouter();
@@ -52,6 +52,11 @@ function Onboarding() {
         options={irrigations.map((c) => ({ id: c.id, icon: c.icon, label: t(c.key) }))} /> },
     { q: "qChallenge", pick: true, body: <Pictures value={p.challenge} cols={2} onPick={(challenge) => pick({ challenge: challenge as Profile["challenge"] })}
         options={challenges.map((c) => ({ id: c.id, icon: c.icon, label: t(c.key) }))} /> },
+    // setup: where the moisture comes from, and how the phone connects (changeable later in Setup)
+    { q: "qSensors", pick: true, body: <Pictures value={p.hasSensors ?? ""} cols={2} onPick={(v) => pick({ hasSensors: v as Profile["hasSensors"] })}
+        options={[{ id: "none", icon: "field-sun", label: t("sensNone") }, { id: "shared", icon: "water", label: t("sensShared") }, { id: "own", icon: "drip", label: t("sensOwn") }]} /> },
+    { q: "qConnection", pick: true, body: <><Pictures value={p.connection ?? ""} cols={2} onPick={(v) => pick({ connection: v as Profile["connection"] })}
+        options={[{ id: "always", icon: "field-sun", label: t("connAlways") }, { id: "sometimes", icon: "unknown", label: t("connSometimes") }]} /><p className="mt-3 text-sm text-text-2">{t("connNote")}</p></> },
   ];
   const last = step === steps.length - 1;
 
@@ -61,6 +66,8 @@ function Onboarding() {
   // The farmer answers by voice: what was heard is matched to the pictures of the current question.
   const choicesFor = (i: number): Choice[] => {
     const L = (k: Key) => [tr("en", k), tr("fr", k), tr("ar", k), tr("ary", k)];
+    if (i === 6) return [{ id: "none", labels: L("sensNone") }, { id: "shared", labels: L("sensShared") }, { id: "own", labels: L("sensOwn") }];
+    if (i === 7) return [{ id: "always", labels: L("connAlways") }, { id: "sometimes", labels: L("connSometimes") }];
     if (i === 1) return crops.map((c) => ({ id: c.id, labels: [cropName("en", c.id), cropName("fr", c.id), cropName("ar", c.id), cropName("ary", c.id)] }));
     if (i === 2) return [...plantedChoices.map((c) => ({ id: weeksAgo(c.weeks), labels: L(c.key) })), { id: "unknown", labels: L("planted_unknown") }];
     if (i === 4) return irrigations.map((c) => ({ id: c.id, labels: L(c.key) }));
@@ -79,7 +86,9 @@ function Onboarding() {
     if (step === 1) pick({ crop: id });
     else if (step === 2) pick({ plantedOn: id === "unknown" ? "" : id });
     else if (step === 4) pick({ irrigation: id });
-    else pick({ challenge: id as Profile["challenge"] });
+    else if (step === 5) pick({ challenge: id as Profile["challenge"] });
+    else if (step === 6) pick({ hasSensors: id as Profile["hasSensors"] });
+    else pick({ connection: id as Profile["connection"] });
   }
 
   if (profile && !edit) return null;
@@ -88,8 +97,8 @@ function Onboarding() {
     if (!last) return setStep(step + 1);
     saveProfile(np);
     // the answers go to the server too: crop, planting date and area feed the engine; queued when offline
-    act({ type: "farmer", payload: { location: np.location || null, crop: np.crop || null, planted_on: np.plantedOn || null, area_ha: parseFloat(np.area) || null, irrigation: np.irrigation || null, challenge: np.challenge || null, lat: np.lat ?? null, lon: np.lon ?? null, lang } });
-    router.replace("/home");
+    act({ type: "farmer", payload: { location: np.location || null, crop: np.crop || null, planted_on: np.plantedOn || null, area_ha: parseFloat(np.area) || null, irrigation: np.irrigation || null, challenge: np.challenge || null, lat: np.lat ?? null, lon: np.lon ?? null, lang, has_sensors: np.hasSensors ?? null, connection: np.connection ?? null, mode } });
+    router.replace(mode === "simple" ? "/today" : "/home");
   }
   // Picture choices move on by themselves: one tap per question.
   function pick(patch: Partial<Profile>) {

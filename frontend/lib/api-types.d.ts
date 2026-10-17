@@ -804,14 +804,20 @@ export interface components {
          * @description The onboarding answers of the React app. Stable English keys for the choices; free text allowed for the crop.
          */
         FarmerBody: {
+            /** Advisor Phone */
+            advisor_phone?: string | null;
             /** Area Ha */
             area_ha?: number | null;
             /** Boundary */
             boundary?: number[][] | null;
             /** Challenge */
             challenge?: string | null;
+            /** Connection */
+            connection?: string | null;
             /** Crop */
             crop?: string | null;
+            /** Has Sensors */
+            has_sensors?: string | null;
             /** Irrigation */
             irrigation?: string | null;
             /** Lang */
@@ -822,6 +828,8 @@ export interface components {
             location?: string | null;
             /** Lon */
             lon?: number | null;
+            /** Mode */
+            mode?: string | null;
             /** Planted On */
             planted_on?: string | null;
         };

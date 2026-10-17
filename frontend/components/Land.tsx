@@ -29,7 +29,7 @@ function value(z: ZoneOut, layer: Layer) {
   return z.confidence === "High" ? "●●●" : z.confidence === "Medium" ? "●●○" : "●○○";
 }
 
-export function LandSvg({ s, layer, land, anomalies, margin = 32, selected, onSelect }: { s: StateOut; layer: Layer; land: LandMeta | null | undefined; anomalies: AnomaliesOut | null | undefined; margin?: number; selected?: string | null; onSelect?: (code: string | null) => void }) {
+export function LandSvg({ s, layer, land, anomalies, margin = 32, selected, onSelect, simple }: { s: StateOut; layer: Layer; land: LandMeta | null | undefined; anomalies: AnomaliesOut | null | undefined; margin?: number; selected?: string | null; onSelect?: (code: string | null) => void; simple?: boolean }) {
   const t = useT();
   const F = land ? (480 * land.field_side_m) / land.side_m : 155, fx = 240 - F / 2, fy = 240 - F / 2, w = F / 2, fs = 7.5, pr = w * 0.2;
   const vb = `${fx - margin} ${fy - margin} ${F + 2 * margin} ${F + 2 * margin}`;
@@ -58,7 +58,8 @@ export function LandSvg({ s, layer, land, anomalies, margin = 32, selected, onSe
         return <g key={i} clipPath="url(#field-clip)"><title>{p.zone_code}: {p.why}</title>{(p.cells ?? []).map(([rr, cc], j) => <rect key={j} x={fx + cc * cw} y={fy + rr * ch} width={cw} height={ch} fill="var(--color-zone-d)" fillOpacity=".55" stroke="#fff" strokeOpacity=".35" strokeWidth=".3" />)}</g>;
       })}
       <rect x={fx} y={fy} width={F} height={F} fill="none" stroke="#fff" strokeWidth="1.6" strokeDasharray="5 3" opacity=".9" />
-      {s.zones.map((z) => {
+      {simple && s.zones.map((z) => <text key={z.code} x={fx + z.col * w + 6} y={fy + z.row * w + 14} fontSize="11" fontWeight="700" fill="#F6F1E5" stroke="#0F1A0C" strokeWidth=".8" paintOrder="stroke" fontFamily="var(--font-geist), system-ui, sans-serif" pointerEvents="none">{z.code}</text>)}
+      {!simple && s.zones.map((z) => {
         const x = fx + z.col * w, y = fy + z.row * w, val = value(z, layer), bad = z.sensor_quality === "low" || z.sensor_quality === "insufficient";
         const chipW = 10 + (z.code.length + val.length) * fs * 0.62 + 4, chipH = fs * 1.9;
         return (
@@ -76,7 +77,7 @@ export function LandSvg({ s, layer, land, anomalies, margin = 32, selected, onSe
       })}
       {s.zones.map((z) => {
         const list = (byZone[z.code] ?? []).slice(0, 3);
-        const x = fx + z.col * w, y = fy + z.row * w, step = pr * 2.15, x0 = x + w / 2 - (list.length - 1) * step / 2, cy = y + w * 0.42;
+        const x = fx + z.col * w, y = fy + z.row * w, step = pr * 2.15, x0 = x + w / 2 - (list.length - 1) * step / 2, cy = y + w * (simple ? 0.5 : 0.42);
         return list.map((task, i) => {
           const cx = x0 + i * step, k = pr * 1.15 / 24;
           return (

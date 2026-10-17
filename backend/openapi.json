@@ -577,6 +577,18 @@
       "FarmerBody": {
         "description": "The onboarding answers of the React app. Stable English keys for the choices; free text allowed for the crop.",
         "properties": {
+          "advisor_phone": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor Phone"
+          },
           "area_ha": {
             "anyOf": [
               {
@@ -620,6 +632,18 @@
             ],
             "title": "Challenge"
           },
+          "connection": {
+            "anyOf": [
+              {
+                "pattern": "^(always|sometimes)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection"
+          },
           "crop": {
             "anyOf": [
               {
@@ -631,6 +655,18 @@
               }
             ],
             "title": "Crop"
+          },
+          "has_sensors": {
+            "anyOf": [
+              {
+                "pattern": "^(none|shared|own)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Sensors"
           },
           "irrigation": {
             "anyOf": [
@@ -692,6 +728,18 @@
               }
             ],
             "title": "Lon"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "pattern": "^(simple|full)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
           },
           "planted_on": {
             "anyOf": [
