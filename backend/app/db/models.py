@@ -81,6 +81,8 @@ class Task(Base):
     confidence: Mapped[str] = mapped_column(Text)
     conf_reason: Mapped[str] = mapped_column(Text)
     plan_b: Mapped[str] = mapped_column(Text)
+    qty: Mapped[float | None] = mapped_column(Float, nullable=True)       # the amount the engine decided (mm of water, kg of nitrogen per ha)
+    unit: Mapped[str | None] = mapped_column(Text, nullable=True)         # mm, kg_n_ha
     status: Mapped[str] = mapped_column(Text, default="open", server_default="open")
     x: Mapped[float] = mapped_column(Float)
     y: Mapped[float] = mapped_column(Float)

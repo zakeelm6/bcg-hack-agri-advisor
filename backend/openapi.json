@@ -1485,6 +1485,17 @@
             "title": "Plan B",
             "type": "string"
           },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qty"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -1496,6 +1507,17 @@
           "type": {
             "title": "Type",
             "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
           },
           "what": {
             "title": "What",

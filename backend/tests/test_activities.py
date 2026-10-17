@@ -126,10 +126,10 @@ def test_the_copilot_answers_spending_questions_from_the_real_list_and_checks_nu
         assert none["intent"] == "spend" and "not recorded" in none["text"]
         c.post("/api/activities", json=activity(cid="cccccccc-0003", type="expense", note="Urea", cost=300))
         one = c.post("/api/copilot", json={"question": "How are my costs looking?"}).json()
-        assert "300" in one["text"] and "one entry" in one["text"] and "times" not in one["text"]
+        assert "300 MAD" in one["text"] and "one entry" in one["text"] and "times" not in one["text"]
         c.post("/api/activities", json=activity(cid="cccccccc-0004", type="expense", note="Seeds", cost=200.5))
         r = c.post("/api/copilot", json={"question": "How are my costs looking?"}).json()
-        assert r["intent"] == "spend" and "500.5" in r["text"] and "2 times" in r["text"] and "Urea" in r["text"] and r["numbers_ok"] is True
+        assert r["intent"] == "spend" and "500.5 MAD" in r["text"] and "2 times" in r["text"] and "Urea" in r["text"] and r["numbers_ok"] is True
         ary = c.post("/api/copilot", json={"question": "شحال صرفت؟", "lang": "ary"}).json()
         assert ary["intent"] == "spend" and "500.5" in ary["text"]
         chat = c.post("/api/chat", json={"question": "Combien j'ai dépensé ?", "lang": "fr"}).json()
@@ -140,3 +140,64 @@ def test_a_question_about_the_cost_of_a_task_is_still_a_task_question():
     with client() as c:
         r = c.post("/api/copilot", json={"question": "How much does it cost?"}).json()
         assert r["intent"] == "cost"
+
+
+# ---- water with an amount becomes a moisture estimate (not only a wait) ----
+def moisture_of(c, zone):
+    return next(z["moisture"] for z in c.get("/api/state").json()["zones"] if z["code"] == zone)
+
+
+def test_watering_with_its_amount_raises_the_estimated_moisture_and_fades():
+    with client() as c:
+        zone = open_irrigation(c)[0]["zone_code"]
+        before = moisture_of(c, zone)
+        c.post("/api/activities", json=activity(zone=zone, amount_mm=20))
+        after = moisture_of(c, zone)
+        assert abs((after - before) - 20 / 300) < 0.01                  # 20 mm over the 300 mm root layer, a point or two of loss today
+        st = c.get("/api/state").json()
+        z = next(x for x in st["zones"] if x["code"] == zone)
+        assert "20 mm" in z["conf_reason"] and z["confidence"] != "High"
+        # five days later most of it is used by the crop and the estimate is back near the reading
+        c.post("/api/activities", json=activity(zone=zone, amount_mm=20, date=(TODAY - timedelta(days=5)).isoformat(), cid="dddddddd-0005"))
+        c.delete("/api/activities/aaaaaaaa-0001")
+        assert moisture_of(c, zone) - before < 0.005
+
+
+def test_a_big_watering_ends_the_irrigation_task_and_the_note_gives_the_estimate():
+    with client() as c:
+        zone = open_irrigation(c)[0]["zone_code"]
+        c.post("/api/activities", json=activity(zone=zone, amount_mm=30))
+        assert zone not in {t["zone_code"] for t in open_irrigation(c)}
+        note = next(a for a in c.get("/api/state").json()["alerts"] if a["key"] == "watered")
+        assert "30 mm" in note["body"] and "estimated" in note["body"] and "%" in note["body"]
+
+
+def test_a_small_watering_can_leave_the_need_in_place():
+    with client() as c:
+        zone = open_irrigation(c)[0]["zone_code"]
+        c.post("/api/activities", json=activity(zone=zone, amount_mm=5))      # 5 mm adds under two points: still below the trigger
+        assert zone in {t["zone_code"] for t in open_irrigation(c)}
+
+
+def test_a_reading_taken_after_the_watering_is_not_corrected_twice():
+    with client() as c:
+        st = c.get("/api/state").json()
+        sensor = st["sensors"][0]
+        zone = sensor["zone_code"]
+        base = moisture_of(c, zone)
+        c.post("/api/activities", json=activity(zone=zone, amount_mm=20, date=(TODAY - timedelta(days=1)).isoformat()))   # the sensor reading is from after it
+        newest = sensor["updated_at"][:10]
+        if newest >= (TODAY - timedelta(days=1)).isoformat():
+            assert abs(moisture_of(c, zone) - base) < 0.001
+
+
+def test_tasks_carry_the_amount_the_engine_decided():
+    with client() as c:
+        t = open_irrigation(c)[0]
+        assert t["unit"] == "mm" and 5 <= t["qty"] <= 30 and f"{int(t['qty'])} mm" in t["title"]
+
+
+def test_spending_is_shown_with_the_currency():
+    with client() as c:
+        c.post("/api/activities", json=activity(cid="eeeeeeee-0006", type="expense", note="Seeds", cost=150))
+        assert "150 MAD" in c.post("/api/copilot", json={"question": "How are my costs looking?"}).json()["text"]

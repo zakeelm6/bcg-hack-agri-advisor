@@ -45,7 +45,7 @@ export default function EngineCard() {
   function done(task: EngineTask) {
     answer(task, "done");
     const kind = ACTIVITY[task.type as keyof typeof ACTIVITY];
-    const activity = kind ? logActivity({ type: kind, date: today(), note: task.title, ...(kind === "irrigation" ? { zone: task.zone_code } : {}) }) : undefined; // the Activities list follows by itself
+    const activity = kind ? logActivity({ type: kind, date: today(), note: task.title, ...(kind === "irrigation" ? { zone: task.zone_code, ...(task.unit === "mm" && task.qty ? { mm: task.qty } : {}) } : {}) }) : undefined; // the Activities list follows by itself
     clearTimeout(timer.current);
     setLast({ task, activity });
     timer.current = setTimeout(() => setLast(undefined), 6000);

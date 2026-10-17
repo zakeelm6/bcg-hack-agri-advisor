@@ -282,9 +282,11 @@ def engine_answer(intent, extra, facts, task_id, whatif, lang="en"):
         sp = facts.get("spending") or {}
         if not sp.get("n"):
             return ct(lang, "spend_none"), [{"label": ct(lang, "tasks_btn"), "go": "#/tasks"}]
+        cur = sp.get("currency") or ""
+        money = lambda v: f"{v:g} {cur}".strip()
         if sp["n"] == 1:
-            return ct(lang, "spend_one", total=f"{sp['total']:g}", top=sp.get("top_note") or ct(lang, "spend_top_unnamed")), []
-        return ct(lang, "spend_has", total=f"{sp['total']:g}", n=sp["n"], top=sp.get("top_note") or ct(lang, "spend_top_unnamed"), top_cost=f"{sp['top_cost']:g}"), []
+            return ct(lang, "spend_one", total=money(sp["total"]), top=sp.get("top_note") or ct(lang, "spend_top_unnamed")), []
+        return ct(lang, "spend_has", total=money(sp["total"]), n=sp["n"], top=sp.get("top_note") or ct(lang, "spend_top_unnamed"), top_cost=money(sp["top_cost"])), []
     if intent == "cost":
         return ct(lang, "cost", t=title, c=t["cost"]), []
     if intent == "confidence":

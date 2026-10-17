@@ -69,6 +69,8 @@ class TaskOut(Loose):
     confidence: str
     conf_reason: str
     plan_b: str
+    qty: float | None = None      # amount decided by the engine: mm of water, or kg of nitrogen per hectare
+    unit: str | None = None     # mm or kg_n_ha
     status: str
     x: float
     y: float

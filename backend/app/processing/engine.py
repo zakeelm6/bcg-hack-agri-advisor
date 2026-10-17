@@ -25,6 +25,8 @@ WEEKDAYS = {"en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satu
 # Texts shown to the farmer, in English (reference) and French. Numbers are never in the catalogue: they are inserted.
 TEXTS = {
     "en": {
+        "r_watered": " Counts your {mm} mm of watering on {day}.",
+        "watered_est_body": "You recorded {what} on {day}. The topsoil is now estimated at {pct}% (watering is advised below {trigger}%), so none is needed yet.",
         "watered_title": "Watering recorded", "watered_some": "watering",
         "watered_body": "You recorded {what} on {day}. No new watering is advised for {days} days, so the soil has time to show it.",
         "today": "Today", "tomorrow": "Tomorrow", "morning": "morning", "before_rain": "before the rain",
@@ -70,6 +72,8 @@ TEXTS = {
         "wi_short": "The forecast is too short to look that far ahead.",
     },
     "fr": {
+        "r_watered": " Tient compte de votre arrosage de {mm} mm le {day}.",
+        "watered_est_body": "Vous avez noté {what} le {day}. Le sol de surface est maintenant estimé à {pct}% (l'arrosage est conseillé sous {trigger}%), il n'en faut donc pas encore.",
         "watered_title": "Arrosage noté", "watered_some": "un arrosage",
         "watered_body": "Vous avez noté {what} le {day}. Aucun nouvel arrosage n'est conseillé pendant {days} jours, le temps que le sol le montre.",
         "today": "Aujourd'hui", "tomorrow": "Demain", "morning": "matin", "before_rain": "avant la pluie",
@@ -115,6 +119,8 @@ TEXTS = {
         "wi_short": "Les prévisions sont trop courtes pour regarder si loin.",
     },
     "ar": {
+        "r_watered": " تُحتسب فيها سقيتك {mm} مم يوم {day}.",
+        "watered_est_body": "سجّلتَ {what} يوم {day}. رطوبة التربة السطحية مقدَّرة الآن بـ {pct}% (يُنصح بالسقي تحت {trigger}%)، فلا حاجة إليه بعد.",
         "watered_title": "تم تسجيل السقي", "watered_some": "سقيًا",
         "watered_body": "سجّلتَ {what} يوم {day}. لا يُنصح بسقي جديد في الأيام القليلة القادمة ليظهر أثره في التربة.",
         "today": "اليوم", "tomorrow": "غدًا", "morning": "صباحًا", "before_rain": "قبل المطر",
@@ -160,6 +166,8 @@ TEXTS = {
         "wi_short": "التوقعات قصيرة جدًا للنظر إلى هذا المدى.",
     },
     "ary": {   # Darija (Moroccan Arabic) in Arabic script. Needs a native speaker's review before real use.
+        "r_watered": " فيها السقي ديالك {mm} مم نهار {day}.",
+        "watered_est_body": "سجلتي {what} نهار {day}. رطوبة التربة من فوق دابا تقريبا {pct}% (كنقترحو السقي تحت {trigger}%)، يعني باقي ما خاصش.",
         "watered_title": "تسجل السقي", "watered_some": "شي سقي",
         "watered_body": "سجلتي {what} نهار {day}. ما غاديش نقترحو سقي جديد فالأيام الجايين باش التربة تبين.",
         "today": "اليوم", "tomorrow": "غدا", "morning": "الصباح", "before_rain": "قبل الشتا",
@@ -285,7 +293,7 @@ def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=
 RECENT_WATERING_DAYS = 2   # after the farmer recorded watering, wait this long before advising it again
 
 
-def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en", bad_sensors=None, offsets=None, anomalies=None, waterings=None):
+def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en", bad_sensors=None, offsets=None, anomalies=None, waterings=None, measured_on=None):
     """Returns (zone_estimates, tasks, alerts). Pure function: easy to test.
     `lang` only changes the wording; every number and decision is identical in every language.
     Phase 2 inputs (all optional): bad_sensors {zone: [flags]} from the quality checks, offsets {zone: {...}} learned per plot,
@@ -295,11 +303,36 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
     bad_sensors = bad_sensors or {}
     anomalies = anomalies or []
     waterings = waterings or []   # [{date, zone (None = whole field), mm}] recorded by the farmer in the last days
+    measured_on = measured_on or {}   # {zone: date of the reading the moisture rests on}: water given after it is not in the reading yet
     days = weather["days"]
     today = date.fromisoformat(days[0]["date"])
     manual = {c: t["moisture"] for c, t in soil.items()
               if t.get("moisture") is not None and t["age_days"] <= MANUAL_MOISTURE_MAX_AGE_DAYS}
     est = estimate_moisture(zones, sensors, manual, lang, bad=bad_sensors, offsets=offsets)
+    # Water the farmer recorded with its amount is added to what the reading says, then fades with the crop's water use.
+    # (Crop use since then is taken as the forecast's evapotranspiration per day; rain is ignored, which errs on the side of watering.)
+    et0_day = (sum(d["et0"] for d in days[:3]) / max(1, len(days[:3]))) or 3.0
+    pre_water = {}
+    for z in zones:
+        c, e = z["code"], est[z["code"]]
+        if e["moisture"] is None:
+            continue
+        gain, latest = 0.0, None
+        for w in waterings:
+            if not w.get("mm") or w.get("zone") not in (None, "", c):
+                continue
+            wd, md = date.fromisoformat(w["date"]), measured_on.get(c)
+            ago = (today - wd).days
+            if ago < 0 or (md is not None and wd <= md):
+                continue
+            gain += max(0.0, w["mm"] / ROOT_DEPTH_MM - ago * et0_day / ROOT_DEPTH_MM)
+            latest = max(latest, w, key=lambda x: x["date"]) if latest else w
+        if gain > 0 and latest:
+            pre_water[c] = (e["moisture"], latest)
+            e["moisture"] = round(min(0.45, e["moisture"] + gain), 3)
+            e["reason"] += tr(lang, "r_watered", mm=f"{latest['mm']:g}", day=_wd(latest["date"], lang))
+            if e["confidence"] == "High":
+                e["confidence"] = "Medium"   # a measurement plus a calculation is less sure than the measurement alone
     nr = next_rain(days)
     rain3 = sum(d["rain"] for d in days[:3])
     rain2 = sum(d["rain"] for d in days[:2])
@@ -313,9 +346,13 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
     for z in zones:
         e = est[z["code"]]
         m = e["moisture"]
+        if m is not None and z["code"] in pre_water and m >= TRIGGER_MOISTURE > pre_water[z["code"]][0] and rain3 < 5:
+            w = pre_water[z["code"]][1]   # it would have needed water without the farmer's watering
+            watered_note = {"key": "watered", "kind": "water", "title": tr(lang, "watered_title"),
+                            "body": tr(lang, "watered_est_body", what=f"{w['mm']:g} mm", day=_wd(w["date"], lang), pct=round(m * 100), trigger=round(TRIGGER_MOISTURE * 100))}
         if m is None or m >= TRIGGER_MOISTURE or rain3 >= 5:
             continue
-        seen = [w for w in waterings if w.get("zone") in (None, "", z["code"]) and 0 <= (today - date.fromisoformat(w["date"])).days <= RECENT_WATERING_DAYS]
+        seen = [w for w in waterings if not w.get("mm") and w.get("zone") in (None, "", z["code"]) and 0 <= (today - date.fromisoformat(w["date"])).days <= RECENT_WATERING_DAYS]
         if seen:   # the farmer watered this zone a moment ago: wait, and say why
             w = max(seen, key=lambda x: x["date"])
             what = f"{w['mm']:g} mm" if w.get("mm") else tr(lang, "watered_some")
@@ -325,7 +362,7 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
         mm = int(min(MAX_IRRIGATION_MM, max(5, round((TARGET_MOISTURE - m) * ROOT_DEPTH_MM / 5) * 5)))
         m3 = round(mm * z["area_ha"] * 10)
         tasks.append({
-            "key": f"irrigate:{z['code']}", "type": "irrigate", "zone": z["code"],
+            "key": f"irrigate:{z['code']}", "type": "irrigate", "zone": z["code"], "qty": mm, "unit": "mm",
             "title": tr(lang, "irr_title", z=z["code"], mm=mm), "what": tr(lang, "irr_what", z=z["code"], mm=mm),
             "when_text": f"{go_word} 07:00", "when_date": go_date.isoformat(),
             "why": tr(lang, "irr_why", m=round(m * 100), t=round(TARGET_MOISTURE * 100), rain=rain_txt),
@@ -364,7 +401,7 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
             fdate = date.fromisoformat(nr["date"]) - timedelta(days=1)
             when = f"{_wd(fdate.isoformat(), lang)}, {tr(lang, 'before_rain')}"
         tasks.append({
-            "key": f"fertilize:{z['code']}", "type": "fertilize", "zone": z["code"],
+            "key": f"fertilize:{z['code']}", "type": "fertilize", "zone": z["code"], "qty": dose, "unit": "kg_n_ha",
             "title": tr(lang, "fert_title", z=z["code"], dose=dose), "what": tr(lang, "fert_what", z=z["code"], dose=dose),
             "when_text": when, "when_date": fdate.isoformat(),
             "why": tr(lang, "fert_why", z=z["code"], ndvi=f"{z['ndvi']:.2f}", target=f"{TARGET_NDVI:.2f}") + om_txt,
@@ -389,7 +426,7 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
             continue
         anomaly_zones.add(a["zone"])
         tasks.append({
-            "key": f"inspect:{z['code']}", "type": "inspect", "zone": z["code"],
+            "key": f"inspect:{z['code']}", "type": "inspect", "zone": z["code"], "qty": None, "unit": None,
             "title": tr(lang, "anom_title", z=z["code"]), "what": tr(lang, "anom_what", z=z["code"]),
             "when_text": morning, "when_date": go_date.isoformat(),
             "why": tr(lang, "anom_why", z=z["code"], ha=f"{a['area_ha']:.2f}", dev=f"{abs(a['deviation']):.2f}", n=a["persistence"],

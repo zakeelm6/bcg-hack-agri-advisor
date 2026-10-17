@@ -189,5 +189,19 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
   `backend/tests/test_activities.py` (10 tests); test fixture that resets the rate limits (110 tests in all).
 - Checked in a browser against the running backend: the card asked to water zone D; after "Watered" was tapped in Activities the card dropped the irrigation and showed the watering note;
   "Spent money 300" reached the server and the Co-Pilot answered with that real figure.
-- Not done: the farmer cannot say how many millimetres they watered (the form has no such field; the card's "Done" does not know it either); an entry edited on one phone is not seen on another (Step 8);
-  the engine does not turn recorded watering into a moisture estimate, it only waits.
+- Follow-up, done in the same step: see "Step 3 follow-up" below. Still open: an entry edited on one phone is not seen on another (Step 8).
+
+### Step 3 follow-up: the amount of water, a real moisture estimate, a currency
+- **How much water.** Tapping "Watered" in Activities now asks with pictures: a little (10 mm), normal (20 mm), a lot (30 mm), or "not sure". The card's **Done** knows the amount itself:
+  tasks now carry the quantity the engine decided (`qty` and `unit`: mm of water, kg of nitrogen per hectare; migration `0005`), and the entry it creates has that many millimetres and the zone.
+- **Recorded water becomes a moisture estimate.** With an amount, the engine adds `mm / 300 mm` of root layer to the moisture of that zone, takes away the crop's water use since (the forecast's
+  evapotranspiration per day; rain is ignored, which errs towards watering), and does so only for readings taken *before* the watering (a sensor reading or soil sample from after it already contains the water).
+  The zone's confidence drops from High to Medium (a reading plus a calculation), its reason says "Counts your 20 mm of watering on Saturday", and when the estimate lifts the zone above the watering threshold the
+  note says so with the number ("The topsoil is now estimated at 28% (watering is advised below 23%), so none is needed yet."). A small watering (5 mm) leaves the task in place.
+  Without an amount the engine still just waits 2 days, as before.
+- **Currency.** Amounts are shown as money in the app (`MAD 300`, Latin digits in Arabic and Darija; `NEXT_PUBLIC_CURRENCY` to change) and the Copilot says "300 MAD" (`FA_CURRENCY` on the backend). The
+  farmer is not asked for a currency: the pilot is in Morocco. Changing it for another country is a setting, not a code change; two currencies in one deployment is not supported.
+- Tests: 116 backend tests (16 for activities, including fading after five days, a reading taken after the watering not corrected twice, and the currency). Checked in a browser: the picture chooser,
+  20 mm reaching the server, zone D going from 21% to 27.7%, the irrigation task gone, the note with the estimate, and "MAD 300" in the history.
+- Honest limits of the estimate: it is a one-layer bucket model with typical constants (300 mm root layer, forecast evapotranspiration), not a calibrated soil model; infiltration, runoff,
+  drip losses and rain since the watering are not modelled. It is meant to stop the engine from asking for water that was just given, and to say how it reasoned, not to replace a sensor.

@@ -12,6 +12,7 @@ export type EngineTask = {
   id: number; key: string; type: string; zone_code: string;
   title: string; what: string; when_text: string; when_date: string;
   why: string; cost: string; confidence: "High" | "Medium" | "Low"; conf_reason: string; plan_b: string;
+  qty?: number | null; unit?: string | null; // what the engine decided: mm of water, kg of nitrogen per hectare
   status: "open" | "done" | "skipped";
 };
 export type EngineAlert = { key: string; kind: string; title: string; body: string };

@@ -36,6 +36,7 @@ Language parameter: `lang` is `en`, `fr`, `ar` or `ary` (Darija, Moroccan Arabic
 | `POST /api/tts` | `{text, lang}` | audio (MP3) | voice out |
 | `POST /api/sync` | `{actions: [{type, payload}]}` where `type` is `task_status`, `observation`, `soil_test`, `listing`, `offer_accept`, `farmer`, `activity` or `activity_remove` | `results[]` | offline replay |
 | `GET /api/audit` | none | `entries[]` | audit view |
+| tasks in `GET /api/state` | | each task also has `qty` and `unit` (`mm`, `kg_n_ha`) when the engine decided an amount (added in Step 3) | the card, Activities |
 | `GET /api/activities` | none | `activities[]` (`client_id`, `type`, `date`, `note`, `cost`, `zone`, `amount_mm`) | the farmer's list (added in Step 3) |
 | `POST /api/activities` | `{client_id, type (irrigation, treatment, planting, expense, other), date, note?, cost?, zone?, amount_mm?}` | the saved entry | Activities; same `client_id` sent twice updates, never duplicates; recorded irrigation makes the engine wait 2 days for that zone (whole field when no zone) |
 | `DELETE /api/activities/{client_id}` | none | `ok` | undo (safe to send twice) |

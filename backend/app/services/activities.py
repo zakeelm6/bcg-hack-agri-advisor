@@ -5,11 +5,12 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..core.config import settings
 from ..db import models as m
 from ..schemas import requests as rq
 from .common import as_dict, now_iso
 
-RECENT_WATERING_DAYS = 2   # after the farmer recorded watering, the engine waits this long before advising it again
+WATERING_LOOKBACK_DAYS = 7   # watering of the last week reaches the engine; one with an amount fades by itself, one without makes it wait 2 days
 
 
 def _to_out(a: m.Activity) -> dict:
@@ -55,7 +56,7 @@ def listing(db: Session) -> list[dict]:
 def recent_waterings(db: Session, today: date | None = None) -> list[dict]:
     """Irrigation entries of the last days, in the form the engine takes: {date, zone, mm}. Entries dated after today are ignored."""
     today = today or datetime.utcnow().date()
-    since = (today - timedelta(days=RECENT_WATERING_DAYS)).isoformat()
+    since = (today - timedelta(days=WATERING_LOOKBACK_DAYS)).isoformat()
     rows = db.scalars(select(m.Activity).where(m.Activity.type == "irrigation", m.Activity.date >= since, m.Activity.date <= today.isoformat())).all()
     return [{"date": r.date, "zone": r.zone_code, "mm": r.amount_mm} for r in rows]
 
@@ -64,7 +65,7 @@ def spending(db: Session) -> dict:
     """What the farmer recorded spending: total, number of entries and the biggest one. Numbers only, for the Copilot's facts."""
     rows = [a for a in db.scalars(select(m.Activity)).all() if a.cost]
     if not rows:
-        return {"total": 0, "n": 0, "top_note": None, "top_cost": None}
+        return {"total": 0, "n": 0, "top_note": None, "top_cost": None, "currency": settings.currency}
     top = max(rows, key=lambda a: a.cost)
     total = sum(a.cost for a in rows)
-    return {"total": round(total, 2), "n": len(rows), "top_note": (top.note or "")[:60] or None, "top_cost": round(top.cost, 2)}
+    return {"total": round(total, 2), "n": len(rows), "top_note": (top.note or "")[:60] or None, "top_cost": round(top.cost, 2), "currency": settings.currency}
