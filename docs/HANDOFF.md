@@ -7,7 +7,7 @@ For another coding agent (opencode) or a person. Read this, then [README.md](../
 - A tested rule engine decides every number; a language model (optional) only words the answer, and a check rejects numbers that are not in the facts.
 - `backend/`: FastAPI, SQLAlchemy, Alembic (migrations 0001 to 0008), SQLite by default (`FA_DATABASE_URL` for PostgreSQL). `frontend/`: Next.js 15, React 19, TypeScript, Tailwind 4, a design system (`/design`), four languages (en, fr, ar, ary = Darija), offline, Azure voice.
 - Honest labels everywhere: real, simulated, not validated.
-- Repository: branch `final-project` of `github.com/zakeelm6/bcg-hack-agri-advisor` (local branch `merge/team-best` while this merge is not pushed, see below). Local folder: `/home/arthur-leywin/Documents/prof/events/finalproject`.
+- Repository: branch `final-project` of `github.com/zakeelm6/bcg-hack-agri-advisor` (pushed from the local branch `merge/team-best`). Local folder: `/home/arthur-leywin/Documents/prof/events/finalproject`.
 
 ## State on 17 October 2026
 - Backend: 141 tests pass. The team's backend (activities, own field with Sentinel-2, places, devices, MAD) was merged with this project's Phase 4 (season plan, verifier, briefing).
