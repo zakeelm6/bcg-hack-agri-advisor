@@ -62,7 +62,7 @@ export default function MyFarm() {
   ].filter(Boolean) as [string, string][];
 
   // What the engine did with the answers: honest about what it used and what it did not (for example: still the demo parcel).
-  const used = Object.keys(sync?.applied ?? {}).map((k) => ({ crop: t("m_crop"), sowing_date: t("m_planted"), area_ha: t("m_area") })[k as "crop"]).filter(Boolean);
+  const used = Object.keys(sync?.applied ?? {}).map((k) => ({ crop: t("m_crop"), sowing_date: t("m_planted"), area_ha: t("m_area"), position: t("m_position") })[k as "crop"]).filter(Boolean);
   const engineNotes = sync ? (
     <div className="mt-4 space-y-1.5 text-base text-muted" aria-live="polite">
       {sync.pending && <p className="flex items-center gap-2"><Icon name="hourglass" className="h-4 w-4 shrink-0" />{t("waitingSync")}</p>}

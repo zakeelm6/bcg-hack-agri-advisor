@@ -11,11 +11,13 @@ import { IMAGERY_ATTR, staticMap, type LatLng } from "@/lib/map";
 const Loading = () => <MapLoading />;
 const Map2D = dynamic(() => import("./map-2d"), { ssr: false, loading: Loading });
 const Map3D = dynamic(() => import("./map-3d"), { ssr: false, loading: Loading });
+const ZonesView = dynamic(() => import("./zones-view"), { ssr: false, loading: Loading });
 
 const views = [
   { id: "photo", key: "viewPhoto", icon: "camera" },
   { id: "measure", key: "viewMeasure", icon: "ruler" },
   { id: "3d", key: "view3d", icon: "field-sun" },
+  { id: "zones", key: "viewZones", icon: "sprout" },
 ] as const;
 
 export default function FieldMap({ center }: { center?: LatLng }) {
@@ -42,7 +44,7 @@ export default function FieldMap({ center }: { center?: LatLng }) {
         )}
       </div>
 
-      <div role="tablist" className="mt-4 grid grid-cols-3 gap-1 rounded-xl border border-line bg-card p-1">
+      <div role="tablist" className="mt-4 grid grid-cols-4 gap-1 rounded-xl border border-line bg-card p-1">
         {views.map((v) => (
           <button key={v.id} role="tab" aria-selected={view === v.id} onClick={() => setView(v.id)}
             className={`flex items-center justify-center gap-2 rounded-lg py-2.5 ${view === v.id ? "bg-leaf text-white" : "text-muted"}`}>
@@ -58,6 +60,8 @@ export default function FieldMap({ center }: { center?: LatLng }) {
           <StaticMap center={center} boundary={boundary} onDraw={() => setView("measure")} />
         ) : view === "measure" ? (
           <Map2D center={center} boundary={boundary} onSave={save} />
+        ) : view === "zones" ? (
+          <ZonesView />
         ) : (
           <Map3D center={center} boundary={boundary} />
         )}

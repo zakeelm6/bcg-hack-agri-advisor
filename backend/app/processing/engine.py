@@ -25,6 +25,7 @@ WEEKDAYS = {"en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satu
 # Texts shown to the farmer, in English (reference) and French. Numbers are never in the catalogue: they are inserted.
 TEXTS = {
     "en": {
+        "h_novigor": " There is no satellite picture of the field yet, so a middling vigor is assumed.",
         "r_watered": " Counts your {mm} mm of watering on {day}.",
         "watered_est_body": "You recorded {what} on {day}. The topsoil is now estimated at {pct}% (watering is advised below {trigger}%), so none is needed yet.",
         "watered_title": "Watering recorded", "watered_some": "watering",
@@ -72,6 +73,7 @@ TEXTS = {
         "wi_short": "The forecast is too short to look that far ahead.",
     },
     "fr": {
+        "h_novigor": " Il n'y a pas encore d'image satellite du champ : une vigueur moyenne est supposée.",
         "r_watered": " Tient compte de votre arrosage de {mm} mm le {day}.",
         "watered_est_body": "Vous avez noté {what} le {day}. Le sol de surface est maintenant estimé à {pct}% (l'arrosage est conseillé sous {trigger}%), il n'en faut donc pas encore.",
         "watered_title": "Arrosage noté", "watered_some": "un arrosage",
@@ -119,6 +121,7 @@ TEXTS = {
         "wi_short": "Les prévisions sont trop courtes pour regarder si loin.",
     },
     "ar": {
+        "h_novigor": " لا توجد صورة من القمر الصناعي للحقل بعد، لذلك تُفترض قوة نبات متوسطة.",
         "r_watered": " تُحتسب فيها سقيتك {mm} مم يوم {day}.",
         "watered_est_body": "سجّلتَ {what} يوم {day}. رطوبة التربة السطحية مقدَّرة الآن بـ {pct}% (يُنصح بالسقي تحت {trigger}%)، فلا حاجة إليه بعد.",
         "watered_title": "تم تسجيل السقي", "watered_some": "سقيًا",
@@ -166,6 +169,7 @@ TEXTS = {
         "wi_short": "التوقعات قصيرة جدًا للنظر إلى هذا المدى.",
     },
     "ary": {   # Darija (Moroccan Arabic) in Arabic script. Needs a native speaker's review before real use.
+        "h_novigor": " باقي ما كاينة حتى تصويرة ديال القمر الصناعي للأرض، علاش كنفترضو قوة نبات وسط.",
         "r_watered": " فيها السقي ديالك {mm} مم نهار {day}.",
         "watered_est_body": "سجلتي {what} نهار {day}. رطوبة التربة من فوق دابا تقريبا {pct}% (كنقترحو السقي تحت {trigger}%)، يعني باقي ما خاصش.",
         "watered_title": "تسجل السقي", "watered_some": "شي سقي",
@@ -279,7 +283,8 @@ def estimate_moisture(zones, sensors, manual=None, lang="en", bad=None, offsets=
             if best is None or dist < best:
                 best, near = dist, []
             if dist == best:
-                near.append((pc, m + 0.25 * (z["ndvi"] - s_["ndvi"])))
+                gap = 0.25 * (z["ndvi"] - s_["ndvi"]) if z["ndvi"] is not None and s_["ndvi"] is not None else 0.0   # no vigor yet: no correction
+                near.append((pc, m + gap))
         if best is None:
             out[c] = {"moisture": None, "source": "none", "confidence": "Low", "reason": tr(lang, "r_none")}
             continue
@@ -381,7 +386,7 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
 
     # --- Fertilizer (nitrogen from vigor gap), only if no heavy rain would wash it away ---
     for z in zones:
-        if not (0.45 <= z["ndvi"] < 0.62) or rain2 >= 10:
+        if z["ndvi"] is None or not (0.45 <= z["ndvi"] < 0.62) or rain2 >= 10:   # no satellite picture of this zone yet: no vigor rule
             continue
         dose = int(min(60, max(20, round((TARGET_NDVI - z["ndvi"]) * 400 / 5) * 5)))
         st = soil.get(z["code"])
@@ -484,7 +489,8 @@ def build_advice(field, zones, sensors, weather, now=None, soil=None, lang="en",
 def harvest_forecast(field, zones, now=None, lang="en"):
     """Very simple yield model: crop reference yield scaled by mean vigor. NOT validated: shown as an estimate."""
     total = sum(z["area_ha"] for z in zones)
-    mean = sum(z["ndvi"] * z["area_ha"] for z in zones) / total
+    seen = [z for z in zones if z["ndvi"] is not None]
+    mean = sum(z["ndvi"] * z["area_ha"] for z in seen) / sum(z["area_ha"] for z in seen) if seen else 0.45   # no picture yet: a middling vigor, said so below
     factor = max(0.3, min(1.0, (mean - 0.2) / 0.5))
     known = field["crop"] in YIELD_T_HA
     mid = YIELD_T_HA.get(field["crop"], 20.0) * factor * field["area_ha"]
@@ -493,7 +499,7 @@ def harvest_forecast(field, zones, now=None, lang="en"):
         "crop": field["crop"], "qty_min_t": round(mid * 0.9, 1), "qty_max_t": round(mid * 1.1, 1),
         "window_start": (ready - timedelta(days=3)).isoformat(), "window_end": (ready + timedelta(days=3)).isoformat(),
         "confidence": "Low", "mean_vigor": round(mean, 2),
-        "note": tr(lang, "h_known" if known else "h_unknown"),
+        "note": tr(lang, "h_known" if known else "h_unknown") + ("" if seen else tr(lang, "h_novigor")),
         "advice": tr(lang, "h_advice"),
     }
 

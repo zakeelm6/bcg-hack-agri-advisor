@@ -59,6 +59,7 @@ class FarmerBody(BaseModel):
     challenge: str | None = Field(None, max_length=40)
     lat: float | None = Field(None, ge=-90, le=90)
     lon: float | None = Field(None, ge=-180, le=180)
+    boundary: list[list[float]] | None = Field(None, max_length=200)   # corners [lat, lng] the farmer drew; used for the centre of the field
     lang: str | None = None
 
 

@@ -545,6 +545,24 @@
             ],
             "title": "Area Ha"
           },
+          "boundary": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boundary"
+          },
           "challenge": {
             "anyOf": [
               {
@@ -686,6 +704,90 @@
         "title": "FarmerOut",
         "type": "object"
       },
+      "FieldInfoOut": {
+        "additionalProperties": true,
+        "description": "Whose field the engine works on. `source` is \"demo\" (the parcel the satellite data was made for) or \"own\" (the farmer's).\n`satellite_status`: ready, pending (a download is running), failed or none (not set up on this server).",
+        "properties": {
+          "area_ha": {
+            "title": "Area Ha",
+            "type": "number"
+          },
+          "boundary": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boundary"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "picture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PictureOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "satellite_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Satellite Note"
+          },
+          "satellite_status": {
+            "title": "Satellite Status",
+            "type": "string"
+          },
+          "side_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Side M"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "satellite_status",
+          "lat",
+          "lon",
+          "area_ha"
+        ],
+        "title": "FieldInfoOut",
+        "type": "object"
+      },
       "FieldOut": {
         "additionalProperties": true,
         "properties": {
@@ -715,6 +817,38 @@
           },
           "name": {
             "title": "Name",
+            "type": "string"
+          },
+          "satellite_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Satellite Note"
+          },
+          "satellite_status": {
+            "default": "ready",
+            "title": "Satellite Status",
+            "type": "string"
+          },
+          "side_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Side M"
+          },
+          "source": {
+            "default": "demo",
+            "title": "Source",
             "type": "string"
           },
           "sowing_date": {
@@ -1037,6 +1171,30 @@
           "ok"
         ],
         "title": "Ok",
+        "type": "object"
+      },
+      "PictureOut": {
+        "additionalProperties": true,
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "field_side_m": {
+            "title": "Field Side M",
+            "type": "number"
+          },
+          "side_m": {
+            "title": "Side M",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "side_m",
+          "field_side_m"
+        ],
+        "title": "PictureOut",
         "type": "object"
       },
       "PlaceOut": {
@@ -1861,8 +2019,15 @@
             "title": "Moisture Source"
           },
           "ndvi": {
-            "title": "Ndvi",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ndvi"
           },
           "ndvi_hist": {
             "items": {
@@ -1922,7 +2087,6 @@
           "col",
           "row",
           "area_ha",
-          "ndvi",
           "ndvi_hist",
           "ndvi_source",
           "confidence",
@@ -2199,6 +2363,66 @@
           }
         },
         "summary": "Save Farmer"
+      }
+    },
+    "/api/field": {
+      "get": {
+        "description": "Whose field the engine works on (the demo parcel or the farmer's own), where, and the state of its satellite pictures.",
+        "operationId": "field_info_api_field_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldInfoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Field Info"
+      }
+    },
+    "/api/field/picture": {
+      "get": {
+        "operationId": "field_picture_api_field_picture_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "PNG, true-colour Sentinel-2 picture around the field"
+          }
+        },
+        "summary": "Field Picture"
+      }
+    },
+    "/api/field/satellite": {
+      "post": {
+        "description": "Try the satellite download again (after a failure, or when it was interrupted).",
+        "operationId": "field_satellite_retry_api_field_satellite_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldInfoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Field Satellite Retry"
       }
     },
     "/api/forecast": {

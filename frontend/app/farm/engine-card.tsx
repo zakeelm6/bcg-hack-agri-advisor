@@ -27,6 +27,10 @@ function Meter({ level }: { level: EngineTask["confidence"] }) {
   );
 }
 
+// Whose field the advice is about, and whether the satellite has seen it yet.
+const fieldNote = (f: { source: string; satellite_status: string } | undefined) =>
+  f?.source !== "own" ? "demoFieldNote" : f.satellite_status === "pending" ? "satPending" : f.satellite_status === "failed" ? "satFailed" : f.satellite_status === "none" ? "satNone" : "ownFieldNote";
+
 export default function EngineCard() {
   const { lang, logActivity, removeActivity } = useFarm();
   const t = useT();
@@ -148,7 +152,7 @@ export default function EngineCard() {
       {state && (
         <p className="mt-3 flex items-start gap-2 text-base text-muted">
           <Icon name="alert" className="mt-1 h-4 w-4 shrink-0 text-sun" />
-          <span>{t("demoFieldNote")}{stale && ` ${t("savedAdvice")}.`}</span>
+          <span>{t(fieldNote(state.field))}{stale && ` ${t("savedAdvice")}.`}</span>
         </p>
       )}
     </section>

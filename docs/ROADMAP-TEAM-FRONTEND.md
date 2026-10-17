@@ -59,7 +59,7 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - The engine uses real watering records instead of guessing the last irrigation; "Costs" questions in the Co-Pilot use the real list.
 - Done when: after recording "watered 20 mm", the engine no longer asks to irrigate the same day.
 
-### Step 4: "My land" becomes the engine's field (L)
+### Step 4: "My land" becomes the engine's field (L) - DONE on branch `step4/own-field` for the zones and the pictures (see section 9)
 - Keep his three views (Photo, Measure, 3D) and add a fourth, **Zones**: the Sentinel-2 picture with the vigor of each part of the field and the persistent anomalies, built from our land view, in his visual style (big, few words, honest "real / simulated" label).
 - The field the engine uses becomes the farmer's: the boundary drawn in Measure (or a square from the GPS and area) is sent to the backend, which splits it into zones.
 - Backend work: create a field and zones from a polygon (today they are a fixed 2 by 2 grid); fetch Sentinel-2 pixels for that polygon on demand (a background job, cached, a few minutes the first time); until it finishes the engine answers from weather and soil tests only and says so.
@@ -205,3 +205,21 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
   20 mm reaching the server, zone D going from 21% to 27.7%, the irrigation task gone, the note with the estimate, and "MAD 300" in the history.
 - Honest limits of the estimate: it is a one-layer bucket model with typical constants (300 mm root layer, forecast evapotranspiration), not a calibrated soil model; infiltration, runoff,
   drip losses and rain since the watering are not modelled. It is meant to stop the engine from asking for water that was just given, and to say how it reasoned, not to replace a sensor.
+
+### Step 4 done: "My land" becomes the engine's field
+- **The engine now works on the farmer's own field.** When the farmer gives a position (GPS, or the outline drawn in Measure) and a size, the backend replaces the demo parcel by a square of that area centred on it,
+  cut into the four zones A B / C D. The weather follows the position at once (it used to stay on the demo parcel). A zone has no vigor (`ndvi` null) until a satellite picture of *this* field has been read,
+  and the engine then runs no vigor rule (no fertilizer or "inspect" task from vigor) and says so instead of using the demo parcel's numbers.
+- **Satellite pictures on demand.** A background job runs `scripts/fetch_satellite.py --side ... --out-dir backend/data/own` in the satellite environment (`backend/.venv-sat`, or `FA_SAT_PYTHON`; `requirements-sat.txt`),
+  reads the pixels of that square from the free Sentinel-2 catalog (only the field's pixels), drops clouds and shadows, and the API reads the result into the zones, the vigor-over-time series and the problem-spot detector.
+  `GET /api/field` reports `pending`, `ready`, `failed` or `none` (not set up on this server) with a plain note, `POST /api/field/satellite` tries again, `GET /api/field/picture` serves the true-colour picture.
+  A job survives only as long as the server: after a restart a download that was running is marked failed ("interrupted") and can be retried.
+- **A new view in "My land": Zones.** The picture around the field, zoomed to it, with the four zones coloured by vigor, each with its letter, number and a word (strong, medium, weak: never colour alone), the persistent problem
+  spots as dashed squares, the picture date, and honest messages: demo parcel, getting the pictures (minutes), failed with "Try again", not set up. It keeps the last view on the phone when offline.
+  The "do this now" card's note follows whose field it is. "Used by the advice" now lists the field position.
+- **Checked for real, not only in tests.** With the satellite environment and the network, a farmer at 33.2716, -7.5819 with 2.4 ha got their own field: the job took about five minutes, read 16 dates, the picture of 23 August and
+  the zones A 0.23, B 0.20, C 0.62, D 0.37 (a mostly bare field: not the irrigated demo parcel's 0.8), and the engine answered with "Inspect point P" for it; the Zones view in the browser shows exactly this over the picture.
+  Backend: 126 tests (10 new in `test_own_field.py`, the download itself is faked in them); TypeScript, the Darija check and a production build pass.
+- **Honest limits.** The outline gives the centre and the size only: pixels outside the outline are not masked and the square, not the polygon, is analysed. The zones are always a 2 x 2 grid. The first picture takes minutes and
+  needs clear dates in the last months (cloud cover can leave nothing). One field per server (Step 8 for one per phone). The soil-moisture sensors are still the two simulated ones of the demo, now attached to zones A and B of the farmer's field.
+  Crop type is still not read from the satellite. A field outside the satellite's reach (offline server, no environment) works on weather and sensors only and says so.

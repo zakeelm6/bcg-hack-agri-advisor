@@ -17,6 +17,13 @@ class Field(Base):
     lon: Mapped[float] = mapped_column(Float)
     sowing_date: Mapped[str] = mapped_column(Text)
     cycle_days: Mapped[int] = mapped_column(Integer)
+    # Whose field this is. 'demo': the parcel the satellite data was downloaded for. 'own': the farmer's field, its zones and its
+    # satellite pictures are made on demand. satellite_status: ready, pending (a download is running), failed, or none (not set up on this server).
+    source: Mapped[str] = mapped_column(Text, default="demo", server_default="demo")
+    satellite_status: Mapped[str] = mapped_column(Text, default="ready", server_default="ready")
+    satellite_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    side_m: Mapped[float | None] = mapped_column(Float, nullable=True)           # side of the square the zones cover
+    boundary: Mapped[str | None] = mapped_column(Text, nullable=True)            # JSON [[lat, lng], ...] drawn by the farmer
 
 
 class Zone(Base):
@@ -27,7 +34,7 @@ class Zone(Base):
     col: Mapped[int] = mapped_column(Integer)
     row: Mapped[int] = mapped_column(Integer)
     area_ha: Mapped[float] = mapped_column(Float)
-    ndvi: Mapped[float] = mapped_column(Float)
+    ndvi: Mapped[float | None] = mapped_column(Float, nullable=True)   # null until a satellite picture of this field has been read
     ndvi_hist: Mapped[str] = mapped_column(Text)          # JSON list, oldest first
     ndvi_source: Mapped[str] = mapped_column(Text)
 

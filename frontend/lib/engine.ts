@@ -16,7 +16,7 @@ export type EngineTask = {
   status: "open" | "done" | "skipped";
 };
 export type EngineAlert = { key: string; kind: string; title: string; body: string };
-export type EngineState = { tasks: EngineTask[]; alerts: EngineAlert[]; data_notes: { vigor: string; sensors: string }; generated_at: string };
+export type EngineState = { tasks: EngineTask[]; alerts: EngineAlert[]; field?: { source: "demo" | "own"; satellite_status: string; satellite_note?: string | null }; data_notes: { vigor: string; sensors: string }; generated_at: string };
 
 const CACHE = "growmate-engine";
 const read = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) ?? "") as T; } catch { return fallback; } };

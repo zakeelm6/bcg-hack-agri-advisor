@@ -20,8 +20,17 @@ CACHE_FILE = os.path.join(BACKEND_DIR, "data", "ndvi_cache.json")
 CONFIG = DetectionConfig(min_persistence=3, min_zone_pixels=4, edge_buffer_px=1, baseline_dates=4)
 
 
+_active: str | None = None   # the farmer's own field has its own cache file; None = the demo parcel's
+
+
+def use_cache(path: str | None):
+    """Choose the file the pixels are read from (set at start-up and when the farmer's field changes)."""
+    global _active
+    _active = path
+
+
 def _cache_path() -> str:
-    return os.environ.get("FA_NDVI_CACHE", CACHE_FILE)
+    return os.environ.get("FA_NDVI_CACHE") or _active or CACHE_FILE
 
 
 def _load():

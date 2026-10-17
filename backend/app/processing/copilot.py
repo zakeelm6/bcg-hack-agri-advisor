@@ -152,7 +152,7 @@ def make_facts(state):
     tasks = [t for t in state["tasks"] if t["status"] == "open"]
     return {
         "field": {"name": f["name"], "crop": f["crop"], "area_ha": f["area_ha"]},
-        "zones": [{"code": z["code"], "vigor_ndvi": round(z["ndvi"], 2), "vigor_source": z["ndvi_source"],
+        "zones": [{"code": z["code"], "vigor_ndvi": None if z["ndvi"] is None else round(z["ndvi"], 2), "vigor_source": z["ndvi_source"],
                    "moisture_pct": None if z["moisture"] is None else round(z["moisture"] * 100),
                    "moisture_source": z["moisture_source"], "confidence": z["confidence"]} for z in state["zones"]],
         "open_tasks": [{"id": t["id"], "kind": t["type"], "title": t["title"], "zone": t["zone_code"], "when": t["when_text"], "why": t["why"],
