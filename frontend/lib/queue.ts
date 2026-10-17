@@ -8,7 +8,12 @@ export type Action = { type: string; payload: Record<string, unknown> };
 const KEY = "growmate-queue";
 
 const read = (): Action[] => { try { return JSON.parse(localStorage.getItem(KEY) ?? "[]"); } catch { return []; } };
-const write = (q: Action[]) => { try { localStorage.setItem(KEY, JSON.stringify(q)); } catch { /* storage full: the action is lost, the screen already shows it */ } };
+const listeners = new Set<() => void>();
+const write = (q: Action[]) => { try { localStorage.setItem(KEY, JSON.stringify(q)); } catch { /* storage full: the action is lost, the screen already shows it */ } listeners.forEach((f) => f()); };
+
+/** How many answers wait on the phone to be sent, and a way to hear when that changes (for the "saved on your phone" banner). */
+export const pendingCount = () => read().length;
+export function onQueueChange(f: () => void) { listeners.add(f); return () => { listeners.delete(f); }; }
 
 export function enqueue(...actions: Action[]) {
   write([...read(), ...actions]);

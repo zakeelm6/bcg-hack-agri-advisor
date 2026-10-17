@@ -250,6 +250,7 @@ function AdviceCard({ advice, autoPlay }: { advice: Advice; autoPlay: boolean })
           </li>
         ))}
       </ol>
+      {advice.local && <p className="text-base text-muted">{t("answeredLocal")}</p>}
       <details className="text-muted">
         <summary className="cursor-pointer py-1">{t("why")}</summary>
         <p className="mt-1 leading-relaxed">{x(advice.why)}</p>

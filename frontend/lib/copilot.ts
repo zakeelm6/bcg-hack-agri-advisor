@@ -24,7 +24,7 @@ export async function askCopilot(question: string, photo: string | undefined, ct
     }
   }
   await new Promise((r) => setTimeout(r, 700));
-  return mockAdvice(question, !!photo, ctx);
+  return { ...mockAdvice(question, !!photo, ctx), local: true };   // labelled in the answer: no satellite, no sensors behind it
 }
 
 // ponytail: keyword matching in en/fr/ar, not reasoning.

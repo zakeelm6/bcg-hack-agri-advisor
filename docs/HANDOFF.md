@@ -19,7 +19,7 @@ This file is written so that another coding agent (opencode) or a person can tak
 | 4 | The farmer's own field with Sentinel-2 pictures and a Zones view | Pull request #8, branch `step4/own-field`, not merged yet |
 | 5 | Calm data alerts, honest data lines, soil test form | Done on branch `step6/voice` (commit `663b9aa`), not pushed |
 | 6 | Voice: Azure server voice first, browser fallback, talk mode, spoken orders | Done on branch `step6/voice` (commit `133fb40`), not pushed |
-| 7 | Offline and weak network (service worker, banner) | **To do** |
+| 7 | Offline and weak network (service worker, banner) | Done on branch `step7/offline` (stacked on `step6/voice`), not pushed |
 | 8 | One farmer, one field, one phone (device token) | **To do** (needed before anything public) |
 | 9 | Professional polish in his identity | **To do** |
 | 10 | Deploy on Azure | **To do** (runbook in section 7) |

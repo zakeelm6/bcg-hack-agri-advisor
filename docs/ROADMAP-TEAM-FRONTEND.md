@@ -78,7 +78,7 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - Make every new screen of Steps 2 to 5 readable aloud with one button.
 - Done when: a farmer with a phone that has no Arabic voice still hears the advice in Arabic or Darija, and the mic works in Chrome and in Safari.
 
-### Step 7: offline and weak network (M)
+### Step 7: offline and weak network (M) - DONE on branch `step7/offline` (see section 9)
 - He is already local first; add what is missing: a service worker so the app opens with no network, a queue for the writes of Steps 1 to 3 (profile, task status, activities, soil tests) replayed through `POST /api/sync`, and a calm banner ("saved on your phone, will be sent").
 - The Co-Pilot already falls back to his local stand-in; label that answer ("answered on the phone, without the satellite").
 - Done when: in airplane mode a farmer opens the app, sees saved advice, marks a task done, and it arrives when the network returns.
@@ -243,3 +243,12 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
   "Soil sample needed in zone D" and the estimated irrigation task from the engine's answer.
 - The three-step "how sure" meter and the reason were already on every task (Step 2); a faulty sensor gives "not sure, please test" and never a dose (backend rule, tested).
 - Not done: a history of soil tests in the app (the engine keeps them; the phone does not list them yet), editing or deleting a test.
+
+### Step 7 done: offline and weak network
+- **A service worker** (`frontend/public/sw.js`, registered in production only): pages and the data Next.js fetches try the network first and keep a copy; built files, fonts and pictures are served from the saved copy first. Only same-origin GET requests: the API is another origin and
+  the last advice stays in `localStorage` (Step 2). A PWA manifest and icons make the app installable.
+- **A calm banner** under the header ("Saved on your phone. It will be sent when the connection is back." while answers wait in the queue; "No connection. You can keep working" when offline). The queue is flushed when the connection returns and every 20 seconds while something waits and the phone is online (a server that was down).
+- **A local Co-Pilot answer is labelled** ("Answered on the phone, without the satellite or the sensors").
+- **Checked for real** with a production build in Chrome: the worker is active and cached 7 files; with the API and the web server both stopped, `/farm` still opened from the saved copy with the saved advice and the "saved advice" note; an activity recorded while the API was down waited in the queue with the banner shown,
+  and after the servers were restarted it was sent by itself and appeared in `GET /api/activities`.
+- **Not verified:** airplane mode on a real phone, iOS Safari install behaviour, behaviour after a new deployment (the cache name `growmate-v2` must be bumped when the worker changes; hashed build files are safe). Map tiles and the satellite picture are not cached by the worker.
