@@ -21,7 +21,7 @@ const subscribers = new Set<() => void>();
 
 function askServer() {
   if (server !== null || asking || !API) return;
-  asking = get<{ available: boolean }>("/api/speech/status", 4000)
+  asking = get<{ available: boolean }>("/speech/status", 4000)
     .then((s) => { server = !!s.available; }, () => { server = null; })   // unreachable now: ask again next time
     .finally(() => { asking = null; subscribers.forEach((f) => f()); });
 }
@@ -56,7 +56,7 @@ let run = 0;                       // each call to speak() or stopSpeaking() sta
 let audio: HTMLAudioElement | null = null;
 
 async function fetchMp3(text: string, lang: Lang): Promise<string> {
-  const res = await fetch(`${API}/api/tts`, {
+  const res = await fetch(`${API}/tts`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, lang }),
     signal: AbortSignal.timeout(15000),
   });
@@ -184,7 +184,7 @@ function serverListen(lang: Lang, onText: (t: string) => void, onEnd: () => void
     let o = 0; for (const p of parts) { all.set(p, o); o += p.length; }
     try {
       const wav = toWav(all, rate);
-      const res = await fetch(`${API}/api/stt?lang=${lang}`, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav as BodyInit, signal: AbortSignal.timeout(20000) });
+      const res = await fetch(`${API}/stt?lang=${lang}`, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav as BodyInit, signal: AbortSignal.timeout(20000) });
       if (!res.ok) throw new Error(`stt ${res.status}`);
       const { text } = await res.json();
       if (text?.trim()) onText(text.trim()); else onError?.("nothing");

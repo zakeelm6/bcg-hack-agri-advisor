@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { API } from "@/lib/api";
 import { openTasks, useEngine, type EngineTask } from "@/lib/engine";
@@ -45,6 +46,8 @@ export default function EngineCard() {
 
   const tasks = state ? openTasks(state.tasks) : [];
   const [first, ...others] = tasks;
+  // Calm alerts besides the tasks. A vigor alert that already is an open task ("Inspect zone D") is not said twice.
+  const shown = (state?.alerts ?? []).filter((a) => a.kind !== "water" && !(a.kind === "crop" && tasks.some((k) => k.key === `inspect:${a.key.split(":")[1]}`)));
 
   function done(task: EngineTask) {
     answer(task, "done");
@@ -149,6 +152,35 @@ export default function EngineCard() {
       {state?.alerts.filter((a) => a.kind === "water").map((a) => (
         <p key={a.key} className="mt-3 flex items-start gap-2 text-lg"><Icon name="drip" className="mt-1 h-5 w-5 shrink-0 text-leaf" /><span><b>{a.title}.</b> {a.body}</span></p>
       ))}
+      {state && shown.length > 0 && (
+        <div className="mt-6">
+          <p className="label">{t("alertsTitle")}</p>
+          <ul className="mt-2 space-y-3">
+            {shown.map((a) => {
+              const zone = a.key.split(":")[1];
+              const action = a.kind === "data" && zone ? { href: `/activities?soil=${zone}`, text: t("alertAddTest") } : a.kind === "crop" ? { href: "/farm", text: t("alertLook") } : null;
+              return (
+                <li key={a.key} className="card flex items-start gap-3 p-4">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-leaf-soft text-leaf"><Icon name={a.kind === "data" ? "search" : a.kind === "crop" ? "sprout" : "alert"} className="h-6 w-6" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg font-medium leading-snug">{a.title}</p>
+                    <p className="mt-1 text-base text-muted">{a.body}</p>
+                    {action && <Link href={action.href} className="btn-ghost mt-3 inline-flex py-2.5">{action.text}</Link>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {state && (
+        <ul className="mt-4 space-y-1 text-base text-muted">
+          {state.data_notes.vigor.startsWith("sentinel") && <li>{t("noteSatOnly")}</li>}
+          {state.data_notes.vigor === "simulated" && <li>{t("noteVigorSim")}</li>}
+          {state.data_notes.vigor === "none" && <li>{t("noteNoSat")}</li>}
+          {state.data_notes.sensors === "simulated" && <li>{t("noteSensorsSim")}</li>}
+        </ul>
+      )}
       {state && (
         <p className="mt-3 flex items-start gap-2 text-base text-muted">
           <Icon name="alert" className="mt-1 h-4 w-4 shrink-0 text-sun" />

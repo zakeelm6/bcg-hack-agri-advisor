@@ -66,7 +66,7 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - Be honest about cost and limits: free Sentinel-2 data, cloud cover leaves gaps, one clear date may take days.
 - Done when: a new farmer outlines their field and, after the job, sees real zones for that field.
 
-### Step 5: confidence and data quality, shown his way (M)
+### Step 5: confidence and data quality, shown his way (M) - DONE on branch `step6/voice` (see section 9)
 - The three-step "how sure" meter and one honest line wherever advice appears ("based on the satellite only", "a soil test would make this surer").
 - "Sensor unreliable" and "satellite alert" become calm alerts with a picture and one action ("Add a soil test", "Go and look at this spot").
 - The soil test is a picture-first form in Activities (pH, organic matter, moisture), reusing his stepper style.
@@ -234,3 +234,12 @@ A second gap: the backend has **one field and no login** (`field_id = 1`). His a
 - **Calm messages** under the mic: blocked microphone, nothing heard, needs https, needs a connection, did not work (four languages).
 - **Checked:** TypeScript, Darija check, `node lib/voice.check.mjs` (cutting, WAV header and resampling, orders), and for real the Azure voice from the running API: a Darija sentence came back as 24 kHz MP3 and the CORS preflight for the recording route passes.
 - **Not verified:** a real microphone in a browser and on a phone (recording, silence threshold in noise), Safari autoplay, and a native Darija listener on the voice. The recording uses a script processor node (deprecated but works everywhere).
+
+### Step 5 done: confidence and data quality, shown his way
+- **Calm alert cards under the "do this now" card** ("Also worth knowing"): each has an icon, a title, one sentence and one action. A sensor or sample alert offers "Add a soil test" (opens the form on that zone), a vigor alert offers "See the zones", weather alerts have no button.
+  A vigor alert that already is an open task is not said twice.
+- **One honest line per data source** under the card: the plant vigor of the demo field is simulated, the soil sensors are simulated, "based on the satellite only, a soil test would make it surer" for a real picture, "no satellite picture yet" for an own field without one.
+- **A picture-first soil test in Activities** (zone A to D chips, pH, organic matter, moisture, one value is enough), sent through the same offline queue as everything else (`soil_test` action). Checked for real: pH 6.8 and moisture 24 % for zone D removed
+  "Soil sample needed in zone D" and the estimated irrigation task from the engine's answer.
+- The three-step "how sure" meter and the reason were already on every task (Step 2); a faulty sensor gives "not sure, please test" and never a dose (backend rule, tested).
+- Not done: a history of soil tests in the app (the engine keeps them; the phone does not list them yet), editing or deleting a test.
