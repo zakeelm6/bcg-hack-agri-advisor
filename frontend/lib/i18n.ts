@@ -89,7 +89,7 @@ const S = {
   viewMeasure: ["Measure", "Mesurer", "قياس"],
   view3d: ["3D", "3D", "ثلاثي الأبعاد"],
   drawField: ["Draw my field", "Tracer mon champ", "ارسم حقلي"],
-  redrawField: ["Draw again", "Retracer", "ارسم من جديد"],
+  redrawField: ["Draw again", "Retracer", "ارسم من جديد"], removeOutline: ["Remove the outline", "Supprimer le contour", "احذف الحدود"], outlineRemoved: ["Outline removed.", "Contour supprimé.", "تم حذف الحدود."],
   drawHelp: ["Tap each corner of your field, then tap Done.", "Touchez chaque coin de votre champ, puis Terminé.", "اضغط على كل زاوية من حقلك، ثم اضغط تم."],
   drawMore: ["Tap at least 3 corners.", "Touchez au moins 3 coins.", "اضغط على 3 زوايا على الأقل."],
   done: ["Done", "Terminé", "تم"],

@@ -6,6 +6,10 @@ no console errors on any route · Lighthouse accessibility / best-practices / SE
 Files touched: `static/style.css` (rewritten), `static/app.js`, `static/i18n.js`, `static/sw.js` (cache v3 → v4).
 Untouched, as required: `app/engine.py`, `app/copilot.py`, `tests/`.
 
+## 2026-10-17 (evening): remove a drawn outline; satellite on Azure
+- Me, My land: when an outline is drawn, the photo view shows two buttons, Draw again and **Remove the outline** (trash icon). Removing forgets the drawing on the phone and says so; the surface typed by the farmer stays.
+- Azure: the API image now ships the geospatial libraries (and `libexpat1`), so the server downloads the Sentinel-2 pictures of the farmer's own field instead of saying "not set up on this server".
+
 ## 2026-10-17 (later): tap a zone, hear what to do there
 - Today (simple mode): tapping A, B, C or D on the land says, in the farmer's language, what to do in that zone today (plain title, when, then the engine's reason) or "nothing to do, it is fine"; a line under the land repeats it without numbers and replays on tap. A hint under the land says so when nothing is selected.
 - Fix: the local copy of each API read was treated as fresh for a minute after a reload (`initialData` without its timestamp), so the Today screen could show yesterday's "all good" until the next navigation. The copy now carries its write time and is refreshed at once when older than the stale time.

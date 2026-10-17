@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useActions } from "@/lib/data";
 import { useFarm, useT } from "@/lib/farm";
 import { IMAGERY_ATTR, staticMap, type LatLng } from "@/lib/map";
-import { Badge, Button, Segmented } from "@/components/ui";
+import { Badge, Button, Segmented, useToast } from "@/components/ui";
 
 const Loading = () => <MapLoading />;
 const Map2D = dynamic(() => import("./Map2D"), { ssr: false, loading: Loading });
@@ -18,6 +18,7 @@ export default function FieldMap({ center, fallbackHa }: { center?: LatLng; fall
   const { profile: p, saveProfile, lang } = useFarm();
   const { act } = useActions();
   const t = useT();
+  const toast = useToast();
   const [view, setView] = useState<View>("photo");
   const boundary = p?.boundary;
   const ha = parseFloat(p?.area ?? "") || fallbackHa || 0;
@@ -27,6 +28,13 @@ export default function FieldMap({ center, fallbackHa }: { center?: LatLng; fall
     saveProfile({ ...(p ?? { location: "", crop: "", plantedOn: "", area: "", irrigation: "", challenge: "" }), boundary: pts, area: `${area} ha` });
     act({ type: "farmer", payload: { area_ha: area, lat: pts[0][0], lon: pts[0][1] } });   // the engine spreads the surface over the zones
     setView("photo");
+  }
+  // remove the drawn outline: the phone forgets it; the surface the farmer typed stays until drawn or typed again
+  function clear() {
+    if (!p) return;
+    saveProfile({ ...p, boundary: undefined });
+    setView("photo");
+    toast(t("outlineRemoved"), undefined, "check");
   }
 
   return (
@@ -40,7 +48,7 @@ export default function FieldMap({ center, fallbackHa }: { center?: LatLng; fall
         {!center ? (
           <p className="flex h-full items-center justify-center p-6 text-center text-base text-text-2">{t("noMapLocation")}</p>
         ) : view === "photo" ? (
-          <StaticMap center={center} boundary={boundary} onDraw={() => setView("measure")} />
+          <StaticMap center={center} boundary={boundary} onDraw={() => setView("measure")} onClear={clear} />
         ) : view === "measure" ? (
           <Map2D center={center} boundary={boundary} onSave={save} />
         ) : (
@@ -52,12 +60,18 @@ export default function FieldMap({ center, fallbackHa }: { center?: LatLng; fall
   );
 }
 
-function StaticMap({ center, boundary, onDraw }: { center: LatLng; boundary?: LatLng[]; onDraw: () => void }) {
+function StaticMap({ center, boundary, onDraw, onClear }: { center: LatLng; boundary?: LatLng[]; onDraw: () => void; onClear: () => void }) {
   const t = useT();
   const { url, outline } = staticMap(center, boundary, 800, 600);
   return (<>
     <img src={url} alt="" width={800} height={600} className="h-full w-full object-cover" />
     {outline && <svg viewBox="0 0 800 600" className="absolute inset-0 h-full w-full" aria-hidden><polygon points={outline} fill="rgb(224 154 46 / .25)" stroke="var(--color-accent)" strokeWidth={4} strokeLinejoin="round" /></svg>}
+    {outline && (
+      <div className="absolute inset-x-3 bottom-3 grid grid-cols-2 gap-2">
+        <Button variant="secondary" icon="walk" onClick={onDraw} className="shadow-2">{t("redrawField")}</Button>
+        <Button variant="secondary" icon="trash" onClick={onClear} className="shadow-2">{t("removeOutline")}</Button>
+      </div>
+    )}
     {!outline && (
       <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2">
         <p className="rounded-lg bg-surface/95 px-3 py-2 text-center text-sm font-medium">{t("noField")}</p>

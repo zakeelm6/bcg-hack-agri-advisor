@@ -72,7 +72,7 @@ export const ARY: Partial<Record<Key, string>> = {
   viewPhoto: "تصويرة",
   viewMeasure: "قيس",
   drawField: "رسم الأرض ديالي",
-  redrawField: "رسم عاود",
+  redrawField: "رسم عاود", removeOutline: "حيّد الحدود", outlineRemoved: "تحيّدات الحدود.",
   drawHelp: "ضغط على كل ركن ديال الأرض ديالك، من بعد ضغط على تم.",
   drawMore: "ضغط على 3 ديال الأركان على الأقل.",
   noField: "رسم الأرض ديالك باش تشوف المساحة ديالها.",

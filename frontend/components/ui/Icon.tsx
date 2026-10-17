@@ -32,6 +32,7 @@ export const ICONS: Record<string, string> = {
   refresh: '<path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/>',
   chat: '<path d="M4 5h16v11H9l-5 4z"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
   chev: '<path d="M9 5l7 7-7 7"/>',
   chevdown: '<path d="M5 9l7 7 7-7"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>',
