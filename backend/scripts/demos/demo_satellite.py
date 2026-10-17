@@ -1,6 +1,6 @@
 """End-to-end demonstration of the Farm Advisor satellite layer.
 
-Run:  python3 demo_satellite.py
+Run:  python scripts/demos/demo_satellite.py   (from backend/)
 
 All scenes are SIMULATED and labelled as such. The detection code is the
 same code that would run on real Sentinel-2 Level-2A input.
@@ -8,9 +8,14 @@ same code that would run on real Sentinel-2 Level-2A input.
 
 from __future__ import annotations
 
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))   # run from anywhere: the packages live in backend/app/processing
+
 import numpy as np
 
-from satellite import (
+from app.processing.satellite import (
     DetectionConfig,
     FieldRecipe,
     delineate_zones,
@@ -21,8 +26,8 @@ from satellite import (
     score_detection,
     to_geojson,
 )
-from satellite.anomaly import learn_baseline
-from satellite.zones import zone_summary
+from app.processing.satellite.anomaly import learn_baseline
+from app.processing.satellite.zones import zone_summary
 
 
 def rule(title: str) -> None:

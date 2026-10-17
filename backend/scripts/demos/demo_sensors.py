@@ -1,6 +1,6 @@
 """End-to-end demonstration of the Farm Advisor sensor layer.
 
-Run:  python demo_sensors.py
+Run:  python scripts/demos/demo_sensors.py   (from backend/)
 
 Everything printed below is computed from simulated data, labelled as such.
 No figure here is presented as a field measurement.
@@ -8,7 +8,12 @@ No figure here is presented as a field measurement.
 
 from __future__ import annotations
 
-from sensors import (
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))   # run from anywhere: the packages live in backend/app/processing
+
+from app.processing.sensors import (
     TENSION_FLOOR_KPA,
     FaultType,
     Node,
@@ -33,7 +38,7 @@ from sensors import (
     wilting_point,
     zone_confidence,
 )
-from sensors.qc import FLAG_DESCRIPTIONS
+from app.processing.sensors.qc import FLAG_DESCRIPTIONS
 
 
 def rule(title: str) -> None:
