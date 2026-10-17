@@ -11,12 +11,13 @@ import "./globals.css";
 // Self-hosted by next/font (font-display: swap). Geist for the interface, Fraunces for titles, Noto Naskh for Arabic and Darija.
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], weight: ["600"] });
-const naskh = Noto_Naskh_Arabic({ variable: "--font-naskh", subsets: ["arabic"], weight: ["400", "700"] });
+const naskh = Noto_Naskh_Arabic({ variable: "--font-naskh", subsets: ["arabic"], weight: ["400", "700"], preload: false });   // loaded when Arabic or Darija is chosen
 
 export const metadata: Metadata = {
   title: "Farm Advisor - AI advice from your field data",
   description: "Farm Advisor reads your land (satellite vigor, weather, soil sensors, soil tests) and tells you what to do, when and why, then follows up. Works offline.",
   manifest: "/manifest.json",
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: [{ media: "(prefers-color-scheme: light)", color: "#254B22" }, { media: "(prefers-color-scheme: dark)", color: "#11150E" }] };
 

@@ -17,20 +17,21 @@ export function useOffline() {
   return useSyncExternalStore((cb) => net.subscribe(cb), () => net.offline, () => false);
 }
 
-function useCached<T>(key: string, path: string, enabled = true) {
+function useCached<T>(key: string, path: string, enabled = true, initial?: T | null) {
   return useQuery<T | null>({
     queryKey: [key, path],
     enabled,
     queryFn: async () => (await cachedGet<T>(path)).data,
-    initialData: () => (typeof window === "undefined" ? undefined : readCache<T>(path) ?? undefined),
+    initialData: () => (typeof window === "undefined" ? initial ?? undefined : readCache<T>(path) ?? initial ?? undefined),
     placeholderData: (prev) => prev,
   });
 }
 
 export const stateKey = (lang: Lang) => `/api/state?lang=${lang}`;
-export function useAppState() {
+/** `initial` is the state rendered by the server for the first paint (English); the client refetches in the farmer's language. */
+export function useAppState(initial?: StateOut | null) {
   const { lang } = useFarm();
-  return useCached<StateOut>("state", stateKey(lang));
+  return useCached<StateOut>("state", stateKey(lang), true, lang === "en" ? initial : undefined);
 }
 export const useForecast = () => { const { lang } = useFarm(); return useCached<ForecastOut>("forecast", `/api/forecast?lang=${lang}`); };
 export const useOffers = () => useCached<OffersOut>("offers", "/api/offers");
