@@ -1,4 +1,5 @@
 """Farm Advisor API. Run (from backend/): uvicorn app.main:app --reload"""
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -36,4 +37,5 @@ async def no_stale_pages(request, call_next):
 for r in (health, state, tasks, market, copilot, voice, sync, farmer, pages):
     app.include_router(r.router)
 
-app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
+if os.path.isdir(settings.static_dir):   # the legacy web app is optional: the React app runs on its own server, and the API image does not carry it
+    app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")

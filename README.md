@@ -37,6 +37,7 @@ cd backend
 python -m pytest -q      # 84 tests (activate .venv first)
 ```
 Optional: copy `backend/.env.example` to `backend/.env` for a language model and for the Azure voice.
+Everything in containers: `docker compose up --build` (app on http://localhost:3000, API on 8000; `API_PORT` and `WEB_PORT` change the ports).
 React app: `cd frontend && npm install && npm run dev` (http://localhost:3000, talks to the API on 8000). The legacy app is at http://127.0.0.1:8000/.
 
 ## Read next
@@ -54,6 +55,8 @@ React app: `cd frontend && npm install && npm run dev` (http://localhost:3000, t
 | [processing/sensors-and-differentiators.md](processing/sensors-and-differentiators.md) | Which sensors, how to detect errors, ideas that differentiate the project |
 | [backend/README.md](backend/README.md) | API, what is real and what is simulated, satellite data, Copilot |
 | [docs/ux/CHANGELOG.md](docs/ux/CHANGELOG.md) | UX redesign and the October 2026 audit fixes, with before and after screenshots ([audit table](docs/ux/AUDIT-2026-10-16.md)) |
+| [docs/DEPLOY-AZURE.md](docs/DEPLOY-AZURE.md) | Deploy on Azure Container Apps step by step, costs, secrets, updates, how to delete everything |
+| [docs/GITHUB.md](docs/GITHUB.md) | Publish the repository safely, branches and pull requests, keeping it clean |
 | [docs/prompts/](docs/prompts/) | Prompts used for the UX work in Cursor |
 | [docs/reference/](docs/reference/) | The hackathon brief and a reference handoff note from another project |
 
@@ -65,4 +68,3 @@ Not tested for real yet: a real language model, the Azure voice with a real key,
 Tested for real on 17 Oct 2026: browser read-aloud in Google Chrome on Linux (English and French voices; no Arabic voice without Azure).
 It is a hackathon prototype, not agronomic advice for real fields.
 
-`_archive/` holds files that are not part of the project (loose images, an earlier copy of the README). Nothing in it is needed to run.

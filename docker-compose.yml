@@ -1,0 +1,22 @@
+# The whole project on one machine:  docker compose up --build   then open http://localhost:3000
+# Ports can be changed:  API_PORT=8010 WEB_PORT=3010 docker compose up --build
+# The API has no login yet: keep these ports on 127.0.0.1 and do not expose them on the internet.
+services:
+  api:
+    build: ./backend
+    ports: ["127.0.0.1:${API_PORT:-8000}:8000"]
+    env_file:
+      - path: ./backend/.env        # optional: model key, Azure speech key
+        required: false
+    environment:
+      FA_CORS_ORIGINS: "http://localhost:${WEB_PORT:-3000},http://127.0.0.1:${WEB_PORT:-3000}"
+    volumes: ["farm-data:/data"]
+  web:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: "http://127.0.0.1:${API_PORT:-8000}"   # read by the browser, so it is the address of the API as seen from your machine
+    ports: ["127.0.0.1:${WEB_PORT:-3000}:3000"]
+    depends_on: [api]
+volumes:
+  farm-data:
